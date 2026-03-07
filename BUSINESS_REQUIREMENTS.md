@@ -45,11 +45,11 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 ### F-01 Uwierzytelnianie i konta
 
-- [ ] Rejestracja z e-mailem i hasłem (bcrypt/Argon2)
+- [ ] **Rejestracja** — e-mail (jako login) + hasło (Argon2); **bez weryfikacji e-mail** — konto aktywne od razu po rejestracji
 - [ ] Logowanie przez przeglądarkę i aplikację mobilną (JWT + Refresh Token)
 - [ ] Zaproszenia do grupy rodzinnej przez link/kod
 - [ ] Zarządzanie profilem (avatar, imię, waluta domyślna)
-- [ ] Resetowanie hasła przez e-mail
+- [ ] **Resetowanie hasła** — kod/link resetujący dostarczany **powiadomieniem in-app** (nie e-mailem); alternatywnie: pytanie zabezpieczające lub kod SMS (do decyzji)
 - [ ] Opcjonalne: 2FA (TOTP / Google Authenticator)
 
 ### F-01a Konta i portfele (źródła środków)
@@ -177,7 +177,7 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 #### Zgoda na usunięcie i edycję zasobów wspólnych
 - [ ] **Usunięcie wspólnego portfela / konta bankowego wspólnego** — wymagana akceptacja WSZYSTKICH właścicieli:
   1. Inicjator wysyła wniosek o usunięcie (opcjonalny komentarz, np. „konto zamknięte w banku")
-  2. Pozostali właściciele otrzymują powiadomienie push + e-mail z prośbą o zatwierdzenie
+  2. Pozostali właściciele otrzymują powiadomienie push + in-app z prośbą o zatwierdzenie
   3. Zasób jest usuwany dopiero gdy WSZYSCY zatwierdzą wniosek
   4. Jeśli którykolwiek właściciel odrzuci — wniosek anulowany, wszyscy dostają powiadomienie
   5. Wniosek wygasa automatycznie po 7 dniach bez odpowiedzi (konfigurowalne)
@@ -318,8 +318,8 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 #### Kanały dostarczania
 - [ ] Push notification (aplikacja mobilna)
-- [ ] E-mail
-- [ ] Powiadomienie in-app (dzwonek w nagłówku)
+- [ ] Powiadomienie in-app (dzwonek w nagłówku / centrum powiadomień)
+- ~~E-mail~~ — **nie używamy kanału e-mail do powiadomień**
 
 #### Alerty dla wydatków jednorazowych (planowanych)
 - [ ] Przy tworzeniu planowanego wydatku użytkownik ustawia **własny alert** z wyprzedzeniem (np. 7 dni, 3 dni, 1 dzień przed)
@@ -411,7 +411,7 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 | Cache | Redis 7 | Sesje, rate limiting, kursy walut |
 | Auth | python-jose (JWT) + passlib (Argon2) | |
 | Zadania cykliczne | APScheduler lub Celery + Redis | Powiadomienia, przypomnienia |
-| Email | FastMail / SendGrid | |
+| Push / in-app | FCM (Firebase Cloud Messaging) | Powiadomienia mobilne i in-app; brak integracji e-mail |
 | Eksport Excel | **openpyxl** | Wieloarkuszowe .xlsx z formatowaniem, walutami, sumami |
 | Testy | pytest + httpx | |
 
@@ -488,7 +488,7 @@ Docker Compose (development + produkcja):
 | P0 | Budżet miesięczny |
 | P1 | Oszczędności (cele) |
 | P1 | Dashboard + podstawowe wykresy |
-| P1 | Wydatki cykliczne + powiadomienia e-mail |
+| P1 | Wydatki cykliczne + powiadomienia push/in-app |
 | P2 | Import CSV |
 
 ### Faza 2 (Web + Mobile, ~6–8 tygodni)
