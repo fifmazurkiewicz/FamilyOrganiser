@@ -106,9 +106,34 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 ### F-07 Przychody
 
-- [ ] Rejestracja przychodów: wynagrodzenie, premia, freelance, wynajem, dywidenda
-- [ ] Przychody cykliczne (wynagrodzenie automatycznie co miesiąc)
+#### Stałe wpływy cykliczne
+- [ ] Definiowanie szablonu stałego wpływu: nazwa, kwota bazowa, dzień miesiąca, waluta, kategoria
+  - Przykłady: Wynagrodzenie (10. każdego miesiąca, 8 000 zł), Wynajem mieszkania (1. każdego miesiąca, 2 500 zł)
+- [ ] Automatyczne generowanie wpływu w danym miesiącu na podstawie szablonu
+- [ ] **Edycja kwoty dla konkretnego miesiąca** bez zmiany szablonu — nadpisanie wartości bazowej
+  - Przykład: wynagrodzenie bazowe 8 000 zł, w marcu wpisano 9 200 zł (premia) → szablon pozostaje 8 000 zł
+  - Edytowana kwota oznaczona wizualnie jako „zmodyfikowana" (ikona/kolor)
+- [ ] Dodanie wpływu dodatkowego do miesiąca (np. premia, nadgodziny) obok stałego
+- [ ] Historia zmian kwot per miesiąc — widać kiedy i o ile zarobiono więcej/mniej niż bazowo
+- [ ] Możliwość pominięcia wpływu w danym miesiącu (np. urlop bezpłatny, zwolnienie lekarskie)
+
+#### Wpływy jednorazowe
+- [ ] Rejestracja ręczna: kwota, data, kategoria (premia, freelance, sprzedaż, dywidenda, darowizna, inne)
+- [ ] Opcjonalny opis i załącznik (np. rachunek)
+
+#### Kategorie przychodów
+- [ ] Wynagrodzenie etatowe
+- [ ] Premia / nadgodziny
+- [ ] Freelance / zlecenie
+- [ ] Wynajem nieruchomości
+- [ ] Dywidenda / zyski z inwestycji
+- [ ] Sprzedaż (np. rzeczy używanych)
+- [ ] Inne (edytowalne przez użytkownika)
+
+#### Widoki i analityki
 - [ ] Podział na przychody osobiste i rodzinne
+- [ ] Porównanie przychody vs wydatki per miesiąc
+- [ ] Trend przychodów — wykres liniowy z zaznaczonymi miesiącami z premią/odbiegającymi od bazy
 
 ### F-08 Raporty i analityki
 
