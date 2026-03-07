@@ -20,8 +20,8 @@ FamilyOrganiser to prywatna aplikacja webowa i mobilna dla rodziny, umożliwiaj�
 
 | Rola | Opis |
 |------|------|
-| **Admin rodziny** | Tworzy grupę rodzinną, zaprasza członków, widzi dane, które zostały mu udostępnione |
-| **Członek rodziny** | Pełna kontrola nad własnymi danymi; sam decyduje, co udostępnia grupie |
+| **Admin rodziny** | Tworzy grupę rodzinną, zaprasza członków, widzi tylko to co mu udostępniono; może usuwać członków i przekazać swoją rolę |
+| **Członek rodziny** | Pełna kontrola nad własnymi danymi; sam decyduje, co udostępnia grupie; nie może edytować/usuwać transakcji innych |
 | **Obserwator (opcjonalnie)** | Dziecko lub osoba z ograniczonym dostępem — tylko odczyt wybranych kategorii |
 
 ### 2.2 Model udostępniania
@@ -34,10 +34,15 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - Budżet miesięczny (tak/nie)
 - Cele finansowe (publiczne / prywatne)
 
-### 2.3 Przewidywana liczba użytkowników
+### 2.3 Grupy rodzinne — zasady
 
-- Docelowo: 2–6 członków w jednej grupie rodzinnej
-- Jedna instancja aplikacji (jedna rodzina)
+- Max **20 członków** w jednej grupie rodzinnej
+- Jedna osoba może należeć do **wielu grup rodzinnych** jednocześnie (np. własna rodzina + rodzina rodziców)
+- Przełączanie między grupami w interfejsie (np. selektor grupy w nagłówku)
+
+### 2.4 Przewidywana liczba użytkowników
+
+- Docelowo: 2–6 aktywnych członków w typowej grupie (max 20)
 
 ---
 
@@ -47,12 +52,29 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 - [ ] **Rejestracja** — e-mail (jako login) + hasło (Argon2); **bez weryfikacji e-mail** — konto aktywne od razu po rejestracji
 - [ ] Logowanie przez przeglądarkę i aplikację mobilną (JWT + Refresh Token)
-- [ ] Zaproszenia do grupy rodzinnej przez link/kod
 - [ ] Zarządzanie profilem (avatar, imię, waluta domyślna)
+
+#### Zaproszenia do grupy rodzinnej
+- [ ] Admin generuje link zaproszeniowy (jednorazowy lub wielokrotnego użytku, wygasa po X dniach)
+- [ ] Osoba **bez konta** otwiera link → przechodzi przez rejestrację → automatycznie dołącza do grupy
+- [ ] Osoba **z kontem** otwiera link → potwierdza dołączenie do grupy → dołącza od razu
+- [ ] Admin może unieważnić link przed jego wykorzystaniem
+- [ ] Limit: max 20 członków w grupie — próba dołączenia powyżej limitu kończy się błędem
+
+#### Zarządzanie grupą rodzinną
+- [ ] **Usunięcie członka** — tylko admin rodziny może usunąć członka z grupy
+  - Dane historyczne (transakcje, cele itp.) **pozostają** w grupie po usunięciu
+  - Usunięty członek dostaje powiadomienie in-app: „Zostałeś usunięty z grupy [nazwa]"
+- [ ] **Przekazanie roli admina** — admin może przekazać rolę dowolnemu członkowi grupy; stary admin staje się zwykłym członkiem
+- [ ] **Usunięcie konta przez admina** — admin **musi najpierw przekazać rolę** innemu członkowi; dopiero potem może usunąć własne konto
+- [ ] **Usunięcie konta (nie-admin)** — dostępne bezpośrednio; dane osobiste usuwane natychmiast (brak okresu karencji)
 - [ ] Opcjonalne: 2FA (TOTP / Google Authenticator)
 
 #### Resetowanie hasła
 - [ ] **Pytanie zabezpieczające** — użytkownik ustawia pytanie + odpowiedź podczas rejestracji; poprawna odpowiedź umożliwia ustawienie nowego hasła (bez żadnego e-maila)
+  - Pytanie: wybór z listy predefiniowanej **lub** wpisanie własnego pytania
+  - Odpowiedź: porównywana **case-insensitive** (wielkie/małe litery nie mają znaczenia)
+  - **5 nieudanych prób** → tymczasowa blokada konta; odblokowanie przez admina rodziny lub admina aplikacji
 - [ ] **Admin rodziny resetuje hasło członka** — admin grupy rodzinnej może ustawić nowe hasło dowolnemu członkowi swojej grupy; akcja logowana w historii grupy z informacją kto i kiedy zresetował
 - [ ] **Admin aplikacji resetuje hasło** — administrator całej aplikacji może zresetować hasło dowolnego użytkownika; akcja logowana w systemowym logu audytowym
 - [ ] Po resecie przez admina użytkownik dostaje powiadomienie in-app: „Twoje hasło zostało zmienione przez administratora" (bez podawania nowego hasła w powiadomieniu)
