@@ -113,13 +113,24 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 ### F-08 Raporty i analityki
 
 - [ ] Dashboard główny: saldo, wydatki miesiąc, oszczędności, portfel inwestycyjny
-- [ ] Wykresy:
-  - Wydatki wg kategorii (donut chart)
-  - Trend wydatków (linia, ostatnie 12 miesięcy)
-  - Budżet vs rzeczywistość (bar chart)
-  - Wzrost wartości portfela
-  - Networth (majątek netto) w czasie
+- [ ] Wykresy dynamiczne (interaktywne):
+  - Wydatki wg kategorii (donut chart — kliknięcie → drill-down do podkategorii)
+  - Trend wydatków (linia, ostatnie 12 miesięcy — zoom, hover z detalami)
+  - Budżet vs rzeczywistość (bar chart — porównanie plan/wykonanie)
+  - Wzrost wartości portfela (area chart z tooltipem per aktywo)
+  - Networth (majątek netto) w czasie (linia z punktami granicznymi)
+  - Cashflow miesięczny — przychody vs wydatki (grouped bar)
+  - Heatmapa wydatków — intensywność wydatków per dzień tygodnia/miesiąc
+  - Filtrowanie wykresów: zakres dat, kategorie, członek rodziny
+  - Przełączanie widoku: osobisty / rodzinny
 - [ ] Raporty miesięczne i roczne (PDF export)
+- [ ] **Eksport do Excela (.xlsx):**
+  - Eksport listy transakcji (z filtrami: zakres dat, kategoria, użytkownik)
+  - Eksport budżetu (plan vs wykonanie per miesiąc)
+  - Eksport portfela inwestycyjnego (wszystkie aktywa + ROI)
+  - Eksport celów oszczędnościowych (postęp, wpłaty)
+  - Plik wieloarkuszowy (każdy moduł = osobny arkusz)
+  - Gotowe formatowanie tabeli w Excelu (nagłówki, sumowanie, waluta)
 - [ ] Widok rodzinny: suma finansów wszystkich członków (tylko to, co udostępnili)
 
 ### F-09 Powiadomienia
@@ -179,7 +190,9 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 | Router | React Router v6 | Standard |
 | State | Zustand lub Redux Toolkit | Prosty state globalny |
 | UI | Shadcn/ui + Tailwind CSS | Gotowe komponenty, łatwa customizacja |
-| Wykresy | Recharts lub ApexCharts | SVG, React-native, licencja MIT |
+| Wykresy | **Recharts** (web) + **Victory Native** (mobile) | Recharts: interaktywność, drill-down, zoom; wspólne API |
+| Eksport Excel | **SheetJS (xlsx)** po stronie klienta | Generowanie .xlsx w przeglądarce bez backendu |
+| Eksport Excel (alt.) | **openpyxl** po stronie backendu | Zaawansowane formatowanie, wieloarkuszowe raporty |
 | Formularze | React Hook Form + Zod | Walidacja schema-first |
 | HTTP | Axios + React Query (TanStack) | Cache, refetch, optimistic updates |
 | Testy | Vitest + React Testing Library | |
@@ -195,6 +208,7 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 | Auth | python-jose (JWT) + passlib (Argon2) | |
 | Zadania cykliczne | APScheduler lub Celery + Redis | Powiadomienia, przypomnienia |
 | Email | FastMail / SendGrid | |
+| Eksport Excel | **openpyxl** | Wieloarkuszowe .xlsx z formatowaniem, walutami, sumami |
 | Testy | pytest + httpx | |
 
 ### 5.3 Aplikacja mobilna (rekomendacja)
