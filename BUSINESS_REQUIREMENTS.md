@@ -20,9 +20,9 @@ FamilyOrganiser to prywatna aplikacja webowa i mobilna dla rodziny, umożliwiaj�
 
 | Rola | Opis |
 |------|------|
+| **Admin aplikacji** | Właściciel/operator serwisu; reset haseł dowolnego użytkownika, blokowanie kont, wgląd w logi audytowe |
 | **Admin rodziny** | Tworzy grupę rodzinną, zaprasza członków, widzi tylko to co mu udostępniono; może usuwać członków i przekazać swoją rolę |
 | **Członek rodziny** | Pełna kontrola nad własnymi danymi; sam decyduje, co udostępnia grupie; nie może edytować/usuwać transakcji innych |
-| **Obserwator (opcjonalnie)** | Dziecko lub osoba z ograniczonym dostępem — tylko odczyt wybranych kategorii |
 
 ### 2.2 Model udostępniania
 
@@ -197,24 +197,34 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] **Role w portfelu wspólnym**:
   - *Właściciel* — pełne uprawnienia; usunięcie portfela wymaga zgody wszystkich właścicieli (patrz niżej)
   - *Współzarządzający* — dodawanie transakcji, zasilanie, przeglądanie
-  - *Obserwator* — tylko podgląd salda i historii
 - [ ] Saldo wspólnego portfela widoczne na dashboardzie każdego uczestnika
 - [ ] Historia transakcji wspólnego portfela — kto, kiedy, co
 - [ ] Powiadomienie dla uczestników przy każdej transakcji na wspólnym portfelu (konfigurowalne)
 
 #### Zgoda na usunięcie i edycję zasobów wspólnych
+
+Stany wniosku: `OCZEKUJĄCY` → `ZATWIERDZONY` / `ODRZUCONY` / `WYCOFANY` / `WYGASŁY`
+
+W czasie trwania wniosku zasób jest **zablokowany** (nie można go edytować).
+
 - [ ] **Usunięcie wspólnego portfela / konta bankowego wspólnego** — wymagana akceptacja WSZYSTKICH właścicieli:
-  1. Inicjator wysyła wniosek o usunięcie (opcjonalny komentarz, np. „konto zamknięte w banku")
+  1. Inicjator klika „Usuń" → wpisuje opcjonalny komentarz → klika „Wyślij wniosek"
   2. Pozostali właściciele otrzymują powiadomienie push + in-app z prośbą o zatwierdzenie
-  3. Zasób jest usuwany dopiero gdy WSZYSCY zatwierdzą wniosek
-  4. Jeśli którykolwiek właściciel odrzuci — wniosek anulowany, wszyscy dostają powiadomienie
-  5. Wniosek wygasa automatycznie po 7 dniach bez odpowiedzi (konfigurowalne)
+  3. Każdy właściciel zatwierdza lub odrzuca (opcjonalny komentarz)
+  4. Zasób usuwany gdy WSZYSCY zatwierdzą; wszyscy dostają powiadomienie o wykonaniu
+  5. Gdy KTOKOLWIEK odrzuci — wniosek anulowany; wszyscy dostają powiadomienie z informacją kto odrzucił
+  6. Wniosek wygasa automatycznie po 7 dniach bez odpowiedzi (konfigurowalne)
+  7. Inicjator może **wycofać wniosek** w dowolnym momencie zanim wszyscy odpowiedzą
 - [ ] **Usunięcie wspólnej transakcji** — ten sam mechanizm wniosek → zatwierdzenie przez wszystkich właścicieli konta/portfela
 - [ ] **Edycja wspólnej transakcji** (zmiana kwoty, kategorii, daty) — konfigurowalne per portfel:
   - *Wymagaj zgody* — jak wyżej, zmiana aktywna po akceptacji wszystkich
   - *Tylko powiadom* — zmiana zapisywana od razu, pozostali dostają powiadomienie
-- [ ] **Panel „Oczekujące wnioski"** — widok wszystkich otwartych wniosków czekających na moją decyzję (Zatwierdź / Odrzuć)
-- [ ] Historia wniosków — kto wnioskował, kto zatwierdził / odrzucił, kiedy
+- [ ] **Panel „Oczekujące wnioski"** — widok wszystkich otwartych wniosków czekających na moją decyzję:
+  - Dla każdego wniosku: typ akcji, inicjator, data, komentarz, kto już odpowiedział (✓/⏳)
+  - Przyciski: [Zatwierdź] [Odrzuć] (+ pole na komentarz)
+  - Inicjator widzi swoje wnioski z przyciskiem [Wycofaj]
+- [ ] **Historia wniosków** — archiwum z filtrowaniem po statusie; widać kto wnioskował, kto zatwierdził/odrzucił, kiedy
+- [ ] Badge z liczbą oczekujących wniosków widoczny na ikonie dzwonka oraz w zakładce „Wnioski" w ustawieniach grupy
 
 #### Widoki i raporty
 - [ ] Lista celów z paskiem postępu, datą realizacji i prognozowaną datą osiągnięcia
