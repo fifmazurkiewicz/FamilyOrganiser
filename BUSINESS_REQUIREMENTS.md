@@ -89,12 +89,56 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
   - **Akcje / ETF / Fundusze** — ticker + liczba jednostek + cena zakupu
   - **Nieruchomości** — adres, wartość zakupu, bieżąca wycena, przychód z najmu
   - **Kryptowaluty** — ticker + ilość + cena zakupu
-  - **Lokaty / Obligacje** — kwota, oprocentowanie, data zapadalności
+  - **Polskie Obligacje Skarbowe** — szczegóły poniżej (F-05a)
+  - **Lokaty bankowe** — kwota, oprocentowanie stałe, data zapadalności, bank
 - [ ] Ręczne aktualizacje wycen (v1)
 - [ ] Automatyczne kursy z zewnętrznego API (v2): giełda, krypto, NBP
 - [ ] Historia wartości portfela (wykres liniowy)
 - [ ] ROI (return on investment) per aktywo i całego portfela
 - [ ] Podgląd rodzinny (łączna wartość portfeli — jeśli udostępnione)
+
+### F-05a Polskie Obligacje Skarbowe (szczegółowy moduł)
+
+#### Obsługiwane typy obligacji (oferta PKO/MF)
+
+| Symbol | Nazwa | Okres | Oprocentowanie |
+|--------|-------|-------|----------------|
+| OFL | Obligacje 3-miesięczne | 3 miesiące | Stałe |
+| ROR | Obligacje roczne | 1 rok | Zmienne (stopa ref. NBP + marża) |
+| DOR | Obligacje 2-letnie | 2 lata | Zmienne (stopa ref. NBP + marża) |
+| TOS | Obligacje 3-letnie | 3 lata | Stałe |
+| COI | Obligacje 4-letnie | 4 lata | Zmienne (inflacja CPI + marża) |
+| EDO | Obligacje 10-letnie (emerytalne) | 10 lat | Zmienne (inflacja CPI + marża) |
+| ROS / ROD | Rodzinne Obligacje Skarbowe | 6 / 12 lat | Zmienne (inflacja CPI + marża), dla beneficjentów 800+ |
+
+#### Dane wprowadzane przy zakupie
+- [ ] Typ obligacji (lista z tabeli powyżej)
+- [ ] Seria obligacji (np. `EDO0336` — identyfikator z potwierdzenia zakupu)
+- [ ] Liczba sztuk (1 sztuka = 100 zł wartości nominalnej)
+- [ ] Data zakupu (= data emisji serii)
+- [ ] Oprocentowanie pierwszego okresu odsetkowego (wpisywane ręcznie z prospektu emisyjnego)
+
+#### Automatyczne obliczenia
+- [ ] **Wartość bieżąca** = liczba sztuk × 100 zł × (1 + narosłe odsetki za bieżący okres)
+- [ ] **Narosłe odsetki** — kalkulacja na podstawie daty zakupu, długości okresu odsetkowego i oprocentowania
+- [ ] **Data zapadalności** — liczona automatycznie z daty zakupu + okres obligacji
+- [ ] **Kolejne okresy odsetkowe** dla obligacji zmiennych:
+  - Dla ROR/DOR: aktualna stopa referencyjna NBP (wprowadzana ręcznie lub pobierana z API NBP v2)
+  - Dla COI/EDO/ROS/ROD: inflacja CPI z ostatniego odczytu GUS + marża (ręcznie lub API GUS v2)
+- [ ] **Harmonogram odsetek** — tabela: data, oprocentowanie okresu, odsetki, wartość obligacji
+- [ ] **Efektywna stopa zwrotu** (uwzględnia podatek Belki 19%)
+- [ ] **Podatek Belki** — szacunkowa kwota przy wykupie / przy każdym okresie
+
+#### Wcześniejszy wykup
+- [ ] Symulacja wcześniejszego wykupu: ile otrzymam jeśli sprzedam dziś?
+  - Uwzględnia opłatę za przedterminowy wykup (np. 0,70 zł / sztukę dla EDO, zależnie od okresu)
+- [ ] Porównanie: trzymaj do zapadalności vs wykup teraz (różnica w PLN i %)
+
+#### Widoki i raporty
+- [ ] Lista wszystkich serii z: wartością bieżącą, datą zapadalności, oprocentowaniem aktualnego okresu, narosłymi odsetkami
+- [ ] Łączna wartość portfela obligacji + prognoza wartości na datę zapadalności
+- [ ] Kalendarz wykupów — które serie zapadają w kolejnych miesiącach
+- [ ] Eksport do Excela: harmonogram odsetkowy per seria
 
 ### F-06 Planowanie wydatków (cele i prognozy)
 
