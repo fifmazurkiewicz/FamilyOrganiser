@@ -61,12 +61,25 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 | Typ | Przykłady |
 |-----|-----------|
-| **Konto bankowe** | mBank, PKO BP, Santander, ING, Pekao |
+| **Konto bankowe (indywidualne)** | mBank, PKO BP, Santander, ING, Pekao |
+| **Konto bankowe (wspólne / joint account)** | Konto małżeńskie, konto dla pary, konto rodzinne |
 | **Karta prepaid / e-portfel** | Revolut, Wise, BLIK-portfel |
 | **Gotówka** | Portfel, sejf domowy |
 | **Karta kredytowa** | limit, saldo zadłużenia, dzień spłaty |
 | **Konto oszczędnościowe** | Konto oszcz. w mBanku, eKonto Santander |
 | **Kryptogiełda** | Binance, Coinbase (saldo FIAT lub crypto) |
+
+#### Konto bankowe wspólne (joint account)
+- [ ] Oznaczenie konta jako **wspólne** podczas tworzenia lub edycji
+- [ ] **Właściciele konta** — lista członków rodziny ze współdostępem (np. mąż + żona)
+  - Każdy właściciel widzi pełną historię transakcji i saldo
+  - Każdy właściciel może dodawać transakcje z tego konta
+- [ ] **Widoczność konta w profilach** — konto pojawia się na dashboardzie KAŻDEGO właściciela
+- [ ] **Saldo zsumowane** — w widoku rodzinnym konto wspólne wliczone tylko raz (nie podwójnie)
+- [ ] Import wyciągu dla konta wspólnego dostępny dla każdego właściciela (transakcje nie duplikują się)
+- [ ] Wyróżnik wizualny konta wspólnego (np. ikona dwóch osób / inny kolor ramki)
+- [ ] **Powiadomienia** — opcja: każdy właściciel dostaje push o transakcji na wspólnym koncie
+- [ ] Historia zmian salda widoczna dla wszystkich właścicieli (kto dodał jaką transakcję)
 
 #### Zarządzanie saldem
 - [ ] **Saldo bieżące** — automatycznie aktualizowane na podstawie zarejestrowanych transakcji
