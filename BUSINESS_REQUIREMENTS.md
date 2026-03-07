@@ -113,14 +113,57 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] Budżet kroczący (rolling budget)
 - [ ] Historia budżetów (archiwum miesięczne)
 
-### F-04 Oszczędności
+### F-04 Oszczędności i cele
 
-- [ ] Konta oszczędnościowe / „skarbonki" z celem kwotowym i datą
-  - Przykłady: wakacje, fundusz awaryjny, wymiana samochodu
-- [ ] Śledzenie postępu (procent osiągnięcia celu)
-- [ ] Wpłaty manualne lub automatyczne z budżetu
-- [ ] Konta prywatne i rodzinne
-- [ ] Powiadomienia o osiągnięciu celu lub opóźnieniu
+#### Tworzenie celu oszczędnościowego
+- [ ] Dane celu: nazwa, krótki opis (do czego służy), ikona/emoji, kolor
+  - Przykłady: „Wakacje Grecja 2027 — wyjazd całą rodziną w sierpniu", „Fundusz awaryjny — 6 miesięcy wydatków na nieprzewidziane sytuacje", „Nowy laptop — MacBook Pro M4"
+- [ ] Kwota docelowa i opcjonalna data realizacji
+- [ ] Typ celu: **osobisty** / **rodzinny** (wspólny dla wszystkich lub wybranych członków)
+- [ ] Powiązanie z kontem źródłowym (środki fizycznie na konkretnym koncie bankowym lub „wirtualny" cel bez konta)
+
+#### Prognoza i śledzenie postępu
+- [ ] Pasek postępu (X zł z Y zł, Z%)
+- [ ] **Szacowany czas osiągnięcia celu** — automatyczna kalkulacja:
+  - Na podstawie historycznego tempa wpłat (średnia z ostatnich 3 miesięcy)
+  - Na podstawie zadeklarowanej miesięcznej kwoty wpłat
+  - Wyświetlenie: „Osiągniesz cel za ~8 miesięcy (listopad 2026)"
+- [ ] Alert jeśli cel nie zostanie osiągnięty na czas — „Aby zdążyć do X, musisz wpłacać Y zł/mies."
+- [ ] **Scenariusze**: co jeśli wpłacę więcej / mniej miesięcznie? (suwak → aktualizacja daty)
+- [ ] Historia wpłat z datą, kwotą i źródłem (konto, użytkownik)
+
+#### Zasilanie celów — skąd mogą płynąć środki
+- [ ] **Ręczna wpłata** — użytkownik podaje kwotę i konto źródłowe
+- [ ] **Wpłata cykliczna** — automatyczna rezerwacja X zł miesięcznie z wybranego konta (np. co 1. miesiąca)
+- [ ] **Przelew z konta indywidualnego** na cel (osobisty lub rodzinny)
+- [ ] **Przelew z konta rodzinnego/wspólnego** na cel
+- [ ] **Wpłaty wielu członków rodziny** do jednego celu rodzinnego — widać kto ile wpłacił
+
+#### Transfery między kontami i celami (F-04a)
+- [ ] **Transfer konto → konto** (np. mBank → Revolut) — bez kategorii wydatku, tylko przesunięcie
+- [ ] **Transfer konto → cel oszczędnościowy** — zasilanie skarbonki
+- [ ] **Transfer cel → konto** — wypłata z celu (np. kiedy cel osiągnięty lub anulowany)
+- [ ] **Transfer między celami** — przeniesienie nadwyżki z jednego celu do drugiego
+- [ ] Każdy transfer: data, kwota, waluta, konto źródłowe, konto docelowe / cel, opcjonalny opis
+- [ ] Historia wszystkich transferów z filtrowaniem
+
+#### Konta i portfele wspólne (rodzinne)
+- [ ] **Tworzenie wspólnego konta/portfela** — widoczne i zarządzane przez wybranych członków rodziny
+  - Przykłady: „Budżet domowy", „Fundusz wakacyjny rodziny", „Oszczędności na remont"
+- [ ] Admin wspólnego portfela zaprasza innych członków rodziny do współzarządzania
+- [ ] **Role w portfelu wspólnym**:
+  - *Właściciel* — pełne uprawnienia, może usunąć portfel
+  - *Współzarządzający* — dodawanie transakcji, zasilanie, przeglądanie
+  - *Obserwator* — tylko podgląd salda i historii
+- [ ] Saldo wspólnego portfela widoczne na dashboardzie każdego uczestnika
+- [ ] Historia transakcji wspólnego portfela — kto, kiedy, co
+- [ ] Powiadomienie dla uczestników przy każdej transakcji na wspólnym portfelu (konfigurowalne)
+
+#### Widoki i raporty
+- [ ] Lista celów z paskiem postępu, datą realizacji i prognozowaną datą osiągnięcia
+- [ ] Sortowanie: według priorytetu, % ukończenia, daty realizacji
+- [ ] Dashboard oszczędności: łączna kwota odłożona (osobista + rodzinna), suma aktywnych celów
+- [ ] Powiadomienia: osiągnięcie celu, opóźnienie, zbliżający się termin wpłaty cyklicznej
 
 ### F-05 Inwestycje
 
