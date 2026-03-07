@@ -49,8 +49,14 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] Logowanie przez przeglądarkę i aplikację mobilną (JWT + Refresh Token)
 - [ ] Zaproszenia do grupy rodzinnej przez link/kod
 - [ ] Zarządzanie profilem (avatar, imię, waluta domyślna)
-- [ ] **Resetowanie hasła** — kod/link resetujący dostarczany **powiadomieniem in-app** (nie e-mailem); alternatywnie: pytanie zabezpieczające lub kod SMS (do decyzji)
 - [ ] Opcjonalne: 2FA (TOTP / Google Authenticator)
+
+#### Resetowanie hasła
+- [ ] **Pytanie zabezpieczające** — użytkownik ustawia pytanie + odpowiedź podczas rejestracji; poprawna odpowiedź umożliwia ustawienie nowego hasła (bez żadnego e-maila)
+- [ ] **Admin rodziny resetuje hasło członka** — admin grupy rodzinnej może ustawić nowe hasło dowolnemu członkowi swojej grupy; akcja logowana w historii grupy z informacją kto i kiedy zresetował
+- [ ] **Admin aplikacji resetuje hasło** — administrator całej aplikacji może zresetować hasło dowolnego użytkownika; akcja logowana w systemowym logu audytowym
+- [ ] Po resecie przez admina użytkownik dostaje powiadomienie in-app: „Twoje hasło zostało zmienione przez administratora" (bez podawania nowego hasła w powiadomieniu)
+- [ ] Użytkownik może samodzielnie zmienić hasło po zalogowaniu (stare hasło → nowe hasło)
 
 ### F-01a Konta i portfele (źródła środków)
 
