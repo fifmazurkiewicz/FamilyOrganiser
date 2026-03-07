@@ -135,11 +135,34 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 ### F-09 Powiadomienia
 
-- [ ] Push notification (mobile) i e-mail:
-  - Przekroczenie budżetu
-  - Zbliżający się termin cyklicznego wydatku
-  - Osiągnięcie celu oszczędnościowego
-  - Cotygodniowe podsumowanie finansów
+#### Kanały dostarczania
+- [ ] Push notification (aplikacja mobilna)
+- [ ] E-mail
+- [ ] Powiadomienie in-app (dzwonek w nagłówku)
+
+#### Alerty dla wydatków jednorazowych (planowanych)
+- [ ] Przy tworzeniu planowanego wydatku użytkownik ustawia **własny alert** z wyprzedzeniem (np. 7 dni, 3 dni, 1 dzień przed)
+- [ ] Możliwość ustawienia **wielu przypomnień** dla jednego wydatku (np. 30 dni + 7 dni + 1 dzień)
+- [ ] Powiadomienie zawiera: nazwę wydatku, kwotę, datę płatności, ile dni zostało
+- [ ] Alert gdy brak wystarczających środków na planowany wydatek
+
+#### Alerty dla wydatków stałych / cyklicznych
+- [ ] Przy tworzeniu wydatku cyklicznego (rata za auto, czynsz, abonament) użytkownik ustawia przypomnienie z wyprzedzeniem (np. 5 dni przed terminem)
+- [ ] Domyślne wyprzedzenie konfigurowalne globalnie w ustawieniach (np. zawsze 3 dni wcześniej)
+- [ ] Powiadomienie zawiera: nazwę (np. „Rata za auto"), kwotę, datę płatności, numer raty (np. „rata 8/60")
+- [ ] Alert o niepotwierdzonym wydatku cyklicznym — jeśli termin minął, a transakcja nie została zarejestrowana
+- [ ] Opcja „Potwierdź płatność" bezpośrednio z powiadomienia (szybka akcja)
+
+#### Pozostałe alerty
+- [ ] Przekroczenie X% budżetu miesięcznego (próg konfigurowalny, np. 80% i 100%)
+- [ ] Osiągnięcie celu oszczędnościowego
+- [ ] Zbliżający się termin lokaty / obligacji (np. 14 dni przed zapadalnością)
+- [ ] Cotygodniowe podsumowanie finansów (opcjonalne, dzień i godzina do wyboru)
+
+#### Zarządzanie powiadomieniami
+- [ ] Centrum powiadomień — historia wszystkich alertów z odczytem/nieodczytem
+- [ ] Każdy użytkownik konfiguruje własne preferencje (co, kiedy, jakim kanałem)
+- [ ] Możliwość wyciszenia powiadomień na wybrany okres (urlop)
 
 ### F-10 Wielowalutowość
 
