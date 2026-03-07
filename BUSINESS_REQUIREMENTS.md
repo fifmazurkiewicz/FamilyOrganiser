@@ -52,9 +52,49 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] Resetowanie hasła przez e-mail
 - [ ] Opcjonalne: 2FA (TOTP / Google Authenticator)
 
+### F-01a Konta i portfele (źródła środków)
+
+#### Definiowanie kont
+- [ ] Każdy użytkownik definiuje własne konta finansowe
+- [ ] Dane konta: nazwa, typ, waluta, kolor/ikona, saldo początkowe, data otwarcia
+- [ ] Typy kont:
+
+| Typ | Przykłady |
+|-----|-----------|
+| **Konto bankowe** | mBank, PKO BP, Santander, ING, Pekao |
+| **Karta prepaid / e-portfel** | Revolut, Wise, BLIK-portfel |
+| **Gotówka** | Portfel, sejf domowy |
+| **Karta kredytowa** | limit, saldo zadłużenia, dzień spłaty |
+| **Konto oszczędnościowe** | Konto oszcz. w mBanku, eKonto Santander |
+| **Kryptogiełda** | Binance, Coinbase (saldo FIAT lub crypto) |
+
+#### Zarządzanie saldem
+- [ ] **Saldo bieżące** — automatycznie aktualizowane na podstawie zarejestrowanych transakcji
+- [ ] **Ręczna korekta salda** — wpisanie rzeczywistego salda z banku (np. po imporcie wyciągu) z adnotacją „korekta"
+- [ ] **Historia salda** — wykres salda konta w czasie
+- [ ] Obsługa kart kredytowych:
+  - Limit kredytowy, aktualne zadłużenie, dostępny limit
+  - Dzień generowania wyciągu, dzień spłaty
+  - Alert przed terminem spłaty
+
+#### Powiązanie z transakcjami
+- [ ] Każda transakcja (wydatek / wpływ) przypisana do konkretnego konta
+- [ ] Transfer między kontami (np. przelew z mBanku na Revolut) — nie generuje wydatku, tylko przenosi środki
+- [ ] Przy dodawaniu transakcji — domyślne konto konfigurowalne per użytkownik
+
+#### Widoki
+- [ ] **Przegląd wszystkich kont** — kafelki z nazwą, saldem bieżącym, walutą i ikoną banku
+- [ ] **Łączne saldo** — suma wszystkich kont użytkownika (w PLN po przeliczeniu walut)
+- [ ] Widok rodzinny — łączne salda członków rodziny (jeśli udostępnione)
+- [ ] Sortowanie: według salda, nazwy, ostatniej aktywności
+
+#### Udostępnianie
+- [ ] Użytkownik decyduje, które konta są widoczne dla rodziny (tylko saldo lub też transakcje)
+- [ ] Możliwość ukrycia wybranego konta całkowicie (np. konto prywatne)
+
 ### F-02 Zarządzanie wydatkami
 
-- [ ] Dodawanie transakcji: kwota, data, kategoria, opis, osoba płacąca
+- [ ] Dodawanie transakcji: kwota, data, kategoria, opis, osoba płacąca, **konto źródłowe**
 - [ ] Kategorie wydatków (edytowalne): jedzenie, transport, zdrowie, edukacja, rozrywka, mieszkanie, ubrania, inne
 - [ ] Podkategorie (np. Jedzenie → sklep spożywczy, restauracja)
 - [ ] Tagi dowolne (np. „wakacje 2026", „remont kuchni")
