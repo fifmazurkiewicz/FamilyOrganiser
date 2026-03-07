@@ -80,6 +80,8 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] Wyróżnik wizualny konta wspólnego (np. ikona dwóch osób / inny kolor ramki)
 - [ ] **Powiadomienia** — opcja: każdy właściciel dostaje push o transakcji na wspólnym koncie
 - [ ] Historia zmian salda widoczna dla wszystkich właścicieli (kto dodał jaką transakcję)
+- [ ] **Usunięcie / edycja transakcji na wspólnym koncie** — obowiązuje mechanizm zgody (patrz F-04 „Zgoda na usunięcie i edycję zasobów wspólnych")
+- [ ] **Zamknięcie (usunięcie) wspólnego konta** — wymagana zgoda wszystkich właścicieli; ten sam przepływ wniosek → zatwierdzenie
 
 #### Zarządzanie saldem
 - [ ] **Saldo bieżące** — automatycznie aktualizowane na podstawie zarejestrowanych transakcji
@@ -165,12 +167,26 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
   - Przykłady: „Budżet domowy", „Fundusz wakacyjny rodziny", „Oszczędności na remont"
 - [ ] Admin wspólnego portfela zaprasza innych członków rodziny do współzarządzania
 - [ ] **Role w portfelu wspólnym**:
-  - *Właściciel* — pełne uprawnienia, może usunąć portfel
+  - *Właściciel* — pełne uprawnienia; usunięcie portfela wymaga zgody wszystkich właścicieli (patrz niżej)
   - *Współzarządzający* — dodawanie transakcji, zasilanie, przeglądanie
   - *Obserwator* — tylko podgląd salda i historii
 - [ ] Saldo wspólnego portfela widoczne na dashboardzie każdego uczestnika
 - [ ] Historia transakcji wspólnego portfela — kto, kiedy, co
 - [ ] Powiadomienie dla uczestników przy każdej transakcji na wspólnym portfelu (konfigurowalne)
+
+#### Zgoda na usunięcie i edycję zasobów wspólnych
+- [ ] **Usunięcie wspólnego portfela / konta bankowego wspólnego** — wymagana akceptacja WSZYSTKICH właścicieli:
+  1. Inicjator wysyła wniosek o usunięcie (opcjonalny komentarz, np. „konto zamknięte w banku")
+  2. Pozostali właściciele otrzymują powiadomienie push + e-mail z prośbą o zatwierdzenie
+  3. Zasób jest usuwany dopiero gdy WSZYSCY zatwierdzą wniosek
+  4. Jeśli którykolwiek właściciel odrzuci — wniosek anulowany, wszyscy dostają powiadomienie
+  5. Wniosek wygasa automatycznie po 7 dniach bez odpowiedzi (konfigurowalne)
+- [ ] **Usunięcie wspólnej transakcji** — ten sam mechanizm wniosek → zatwierdzenie przez wszystkich właścicieli konta/portfela
+- [ ] **Edycja wspólnej transakcji** (zmiana kwoty, kategorii, daty) — konfigurowalne per portfel:
+  - *Wymagaj zgody* — jak wyżej, zmiana aktywna po akceptacji wszystkich
+  - *Tylko powiadom* — zmiana zapisywana od razu, pozostali dostają powiadomienie
+- [ ] **Panel „Oczekujące wnioski"** — widok wszystkich otwartych wniosków czekających na moją decyzję (Zatwierdź / Odrzuć)
+- [ ] Historia wniosków — kto wnioskował, kto zatwierdził / odrzucił, kiedy
 
 #### Widoki i raporty
 - [ ] Lista celów z paskiem postępu, datą realizacji i prognozowaną datą osiągnięcia
