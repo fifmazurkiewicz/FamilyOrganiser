@@ -1,140 +1,89 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "@/api/client";
 import { useAuthStore } from "@/stores/authStore";
-import { User, Lock, Save } from "lucide-react";
+import { usersApi } from "@/lib/api/users";
+import { authApi } from "@/lib/api/auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuthStore();
-  const qc = useQueryClient();
+  const { user, setUser, logout } = useAuthStore();
+  const [name, setName] = useState(user?.full_name ?? "");
+  const [currency, setCurrency] = useState(user?.default_currency ?? "PLN");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const [name, setName] = useState(user?.full_name || "");
-  const [currency, setCurrency] = useState(user?.default_currency || "PLN");
   const [oldPwd, setOldPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
-  const [pwdMsg, setPwdMsg] = useState<string | null>(null);
-  const [profileMsg, setProfileMsg] = useState<string | null>(null);
+  const [pwdError, setPwdError] = useState("");
+  const [pwdLoading, setPwdLoading] = useState(false);
 
-  const updateMutation = useMutation({
-    mutationFn: (data: any) => api.patch("/users/me", data).then((r) => r.data),
-    onSuccess: (data) => {
-      setUser(data);
-      qc.invalidateQueries({ queryKey: ["me"] });
-      setProfileMsg("Profil zaktualizowany");
-    },
-  });
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await usersApi.update({ full_name: name, default_currency: currency });
+      setUser(updated);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  const changePwdMutation = useMutation({
-    mutationFn: (data: any) => api.post("/auth/change-password", data),
-    onSuccess: () => {
-      setPwdMsg("Hasło zostało zmienione");
+  const handleChangePwd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPwdError("");
+    setPwdLoading(true);
+    try {
+      await authApi.changePassword(oldPwd, newPwd);
       setOldPwd("");
       setNewPwd("");
-    },
-    onError: (err: any) => {
-      setPwdMsg(err.response?.data?.detail || "Błąd zmiany hasła");
-    },
-  });
+    } catch {
+      setPwdError("Nieprawidłowe hasło lub błąd serwera.");
+    } finally {
+      setPwdLoading(false);
+    }
+  };
 
   return (
-    <div className="p-6 space-y-6 max-w-2xl">
+    <div className="p-6 max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold text-gray-900">Profil użytkownika</h1>
 
-      {/* Profile section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <User className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold text-gray-900">Dane osobowe</h2>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-            <input
-              value={user?.email || ""}
-              disabled
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Imię i nazwisko</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Domyślna waluta</label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              {["PLN", "EUR", "USD", "GBP", "JPY"].map((c) => (
-                <option key={c}>{c}</option>
-              ))}
+      <Card>
+        <CardHeader><CardTitle>Dane profilu</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <Input label="Imię i nazwisko" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input label="Email" value={user?.email ?? ""} disabled />
+          <div className="space-y-1">
+            <label className="block text-sm font-medium text-gray-700">Domyślna waluta</label>
+            <select className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+              {["PLN", "EUR", "USD", "GBP", "CHF", "CZK"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          {profileMsg && (
-            <p className="text-sm text-green-600">{profileMsg}</p>
-          )}
-          <button
-            onClick={() => updateMutation.mutate({ full_name: name, default_currency: currency })}
-            disabled={updateMutation.isPending}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            {updateMutation.isPending ? "Zapisywanie..." : "Zapisz zmiany"}
-          </button>
-        </div>
-      </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleSave} loading={saving}>Zapisz</Button>
+            {saved && <span className="text-sm text-emerald-600">Zapisano!</span>}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Password change */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-        <div className="flex items-center gap-3 mb-4">
-          <Lock className="h-5 w-5 text-primary" />
-          <h2 className="font-semibold text-gray-900">Zmiana hasła</h2>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Aktualne hasło</label>
-            <input
-              type="password"
-              value={oldPwd}
-              onChange={(e) => setOldPwd(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nowe hasło</label>
-            <input
-              type="password"
-              value={newPwd}
-              onChange={(e) => setNewPwd(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <p className="text-xs text-gray-400 mt-1">Minimum 8 znaków</p>
-          </div>
-          {pwdMsg && (
-            <p className={`text-sm ${pwdMsg.includes("Błąd") ? "text-red-600" : "text-green-600"}`}>
-              {pwdMsg}
-            </p>
-          )}
-          <button
-            onClick={() =>
-              changePwdMutation.mutate({
-                current_password: oldPwd,
-                new_password: newPwd,
-              })
-            }
-            disabled={changePwdMutation.isPending || !oldPwd || newPwd.length < 8}
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-          >
-            <Lock className="h-4 w-4" />
-            {changePwdMutation.isPending ? "Zmienianie..." : "Zmień hasło"}
-          </button>
-        </div>
-      </div>
+      <Card>
+        <CardHeader><CardTitle>Zmiana hasła</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={handleChangePwd} className="space-y-4">
+            <Input label="Obecne hasło" type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} required />
+            <Input label="Nowe hasło" type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={8} />
+            {pwdError && <p className="text-sm text-red-600">{pwdError}</p>}
+            <Button type="submit" variant="secondary" loading={pwdLoading}>Zmień hasło</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="pt-4">
+          <Button variant="danger" onClick={logout}>Wyloguj się</Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }

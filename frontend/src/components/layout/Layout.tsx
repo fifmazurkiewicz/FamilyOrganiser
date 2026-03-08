@@ -30,7 +30,7 @@ export default function Layout() {
   // Fetch current user profile
   const { data: userData } = useQuery({
     queryKey: ["me"],
-    queryFn: () => api.get("/users/me").then((r) => r.data),
+    queryFn: () => api.get("/v1/users/me").then((r) => r.data),
   });
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function Layout() {
   // Fetch groups
   const { data: groupsData } = useQuery({
     queryKey: ["groups"],
-    queryFn: () => api.get("/groups/").then((r) => r.data),
+    queryFn: () => api.get("/v1/groups/").then((r) => r.data),
   });
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function Layout() {
   // Fetch unread notification count
   const { data: notifData } = useQuery({
     queryKey: ["notif-count"],
-    queryFn: () => api.get("/notifications/unread-count").then((r) => r.data),
+    queryFn: () => api.get("/v1/notifications/count").then((r) => r.data),
     refetchInterval: 30000,
   });
 
