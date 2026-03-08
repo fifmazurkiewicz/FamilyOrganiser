@@ -9,6 +9,7 @@ from app.db.base import engine, Base
 from app.services.seed import seed_categories
 from app.db.base import AsyncSessionLocal
 from app.api.v1.router import router as api_v1_router
+from app.middleware.logging_middleware import RequestLoggingMiddleware
 
 scheduler = AsyncIOScheduler()
 
@@ -60,6 +61,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(RequestLoggingMiddleware)
 
 # Routers — all endpoints under /api/v1/
 app.include_router(api_v1_router, prefix="/api")
