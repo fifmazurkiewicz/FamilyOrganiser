@@ -8,11 +8,8 @@ from app.core.config import settings
 from app.db.base import engine, Base
 from app.services.seed import seed_categories
 from app.db.base import AsyncSessionLocal
-from app.api.endpoints import (
-    auth, users, family, accounts, transactions,
-    budgets, savings, investments, income,
-    notifications, reports, exchange_rates, transfers,
-)
+from app.api.v1.router import router as api_v1_router
+from app.middleware.logging_middleware import RequestLoggingMiddleware
 
 scheduler = AsyncIOScheduler()
 
@@ -65,20 +62,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
-app.include_router(family.router, prefix="/api")
-app.include_router(accounts.router, prefix="/api")
-app.include_router(transactions.router, prefix="/api")
-app.include_router(budgets.router, prefix="/api")
-app.include_router(savings.router, prefix="/api")
-app.include_router(investments.router, prefix="/api")
-app.include_router(income.router, prefix="/api")
-app.include_router(notifications.router, prefix="/api")
-app.include_router(reports.router, prefix="/api")
-app.include_router(exchange_rates.router, prefix="/api")
-app.include_router(transfers.router, prefix="/api")
+app.add_middleware(RequestLoggingMiddleware)
+
+# Routers — all endpoints under /api/v1/
+app.include_router(api_v1_router, prefix="/api")
 
 
 @app.get("/api/health")
