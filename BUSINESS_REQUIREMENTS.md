@@ -38,7 +38,21 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 
 - Max **20 członków** w jednej grupie rodzinnej
 - Jedna osoba może należeć do **wielu grup rodzinnych** jednocześnie (np. własna rodzina + rodzina rodziców)
-- Przełączanie między grupami w interfejsie (np. selektor grupy w nagłówku)
+
+#### UI przełączania grup — Opcja C (selektor + ekran grup)
+
+**Selektor w nagłówku** (zawsze widoczny, szybkie przełączenie):
+- Lewa część nagłówka: `[👨‍👩‍👧 Nazwa grupy ▾]` — kliknięcie rozwija dropdown
+- Dropdown zawiera: lista grup użytkownika (z liczbą osób) + „+ Utwórz nową grupę"
+- Aktywna grupa zaznaczona checkboxem; cały ekran przełącza kontekst na wybraną grupę
+- Jeśli użytkownik ma tylko 1 grupę — selektor wyświetla nazwę bez strzałki (nie jest klikalny)
+
+**Ekran „Moje grupy"** (pełny widok, dostępny z menu bocznego):
+- Wyświetlany automatycznie po zalogowaniu gdy użytkownik należy do >1 grupy
+- Kafelki grup: nazwa, liczba członków, łączne saldo (jeśli udostępnione), liczba oczekujących wniosków
+- Ostatnio używana grupa wyróżniona (np. badge „ostatnio")
+- Przycisk „+ Nowa grupa" w prawym górnym rogu
+- Kliknięcie kafelka = wejście do grupy (odpowiednik wyboru w selektorze)
 
 ### 2.4 Przewidywana liczba użytkowników
 
