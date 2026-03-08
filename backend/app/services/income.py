@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,7 +21,7 @@ class IncomeService:
 
     # --- Templates ---
 
-    async def list_templates(self, user_id: uuid.UUID) -> list[IncomeTemplateResponse]:
+    async def list_templates(self, user_id: uuid.UUID) -> List[IncomeTemplateResponse]:
         templates = await self.template_repo.list_for_user(user_id)
         return [IncomeTemplateResponse.model_validate(t) for t in templates]
 
@@ -39,7 +40,7 @@ class IncomeService:
 
     # --- Incomes ---
 
-    async def list(self, user_id: uuid.UUID, year: int | None = None, month: int | None = None) -> list[IncomeResponse]:
+    async def list(self, user_id: uuid.UUID, year: int | None = None, month: int | None = None) -> List[IncomeResponse]:
         incomes = await self.repo.list_for_user(user_id, year=year, month=month)
         return [IncomeResponse.model_validate(i) for i in incomes]
 

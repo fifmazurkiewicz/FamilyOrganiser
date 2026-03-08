@@ -1,7 +1,7 @@
 """Reporting and analytics service."""
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import Any, List, Optional
 from uuid import UUID
 
 from sqlalchemy import and_, extract, func, select
@@ -11,13 +11,15 @@ from app.models.account import Account
 from app.models.income import Income
 from app.models.savings import SavingsGoal
 from app.models.transaction import Transaction, TransactionCategory, TransactionType
+from app.services.savings import SavingsService
+from app.services.transaction import TransactionService
 
 
 class ReportService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def dashboard(self, user_id: UUID) -> dict:
+    async def dashboard(self, user_id: UUID) -> dict[str, Any]:
         today = date.today()
 
         total_balance = await self._scalar(
@@ -33,35 +35,101 @@ class ReportService:
                 extract("month", Transaction.transaction_date) == today.month,
             )
         )
-        month_income = await self._scalar(
+        month_income_table = await self._scalar(
             select(func.sum(Income.amount)).where(
                 Income.user_id == user_id,
                 Income.is_skipped == False,
                 extract("year", Income.income_date) == today.year,
                 extract("month", Income.income_date) == today.month,
             )
-        )
+        ) or Decimal("0")
+        month_income_transactions = await self._scalar(
+            select(func.sum(Transaction.amount)).where(
+                Transaction.user_id == user_id,
+                Transaction.transaction_type == TransactionType.INCOME,
+                extract("year", Transaction.transaction_date) == today.year,
+                extract("month", Transaction.transaction_date) == today.month,
+            )
+        ) or Decimal("0")
+        month_income = month_income_table + month_income_transactions
         total_savings = await self._scalar(
             select(func.sum(SavingsGoal.current_amount)).where(
                 SavingsGoal.user_id == user_id, SavingsGoal.is_active == True
             )
         )
 
-        expenses = total_balance if total_balance is not None else Decimal("0")
-        income = month_income if month_income is not None else Decimal("0")
-        exp = month_expenses if month_expenses is not None else Decimal("0")
+        income_val = float(month_income or Decimal("0"))
+        exp_val = float(month_expenses or Decimal("0"))
+        net_worth_val = float(total_balance or Decimal("0"))
+        savings_rate = (income_val - exp_val) / income_val * 100.0 if income_val > 0 else 0.0
+
+        top_expenses = await self.expenses_by_category(user_id, today.year, today.month)
+        top_expenses_list = [
+            {"category": e["category"], "amount": float(e["amount"])}
+            for e in top_expenses
+        ]
+
+        goals = await SavingsService(self._session).list_goals(user_id)
+        active_goals = [
+            {
+                "id": str(g.id),
+                "user_id": str(g.user_id),
+                "name": g.name,
+                "description": g.description,
+                "icon": g.icon,
+                "color": g.color,
+                "target_amount": float(g.target_amount),
+                "current_amount": float(g.current_amount),
+                "currency": g.currency,
+                "goal_type": g.goal_type.value,
+                "visibility": g.visibility.value,
+                "target_date": str(g.target_date) if g.target_date else None,
+                "monthly_contribution": float(g.monthly_contribution) if g.monthly_contribution else None,
+                "is_completed": g.is_completed,
+                "is_active": g.is_active,
+                "priority": g.priority,
+                "created_at": g.created_at.isoformat() if g.created_at else None,
+            }
+            for g in goals
+        ]
+
+        transactions = await TransactionService(self._session).list(
+            user_id, limit=10
+        )
+        recent_transactions = [
+            {
+                "id": str(t.id),
+                "user_id": str(t.user_id),
+                "account_id": str(t.account_id),
+                "category_id": str(t.category_id) if t.category_id else None,
+                "amount": float(t.amount_pln or t.amount),
+                "amount_pln": float(t.amount_pln or t.amount),
+                "currency": t.currency,
+                "description": t.description,
+                "merchant": None,
+                "transaction_date": str(t.transaction_date),
+                "transaction_type": t.transaction_type.value,
+                "tags": [],
+                "created_at": t.created_at.isoformat() if t.created_at else None,
+            }
+            for t in transactions
+        ]
 
         return {
-            "total_balance": str(total_balance or Decimal("0")),
-            "month_expenses": str(exp),
-            "month_income": str(income),
-            "total_savings": str(total_savings or Decimal("0")),
-            "cashflow": str(income - exp),
+            "total_assets": net_worth_val,
+            "total_liabilities": 0.0,
+            "net_worth": net_worth_val,
+            "monthly_income": income_val,
+            "monthly_expenses": exp_val,
+            "savings_rate": round(savings_rate, 1),
+            "top_expenses": top_expenses_list,
+            "active_goals": active_goals,
+            "recent_transactions": recent_transactions,
         }
 
     async def expenses_by_category(
         self, user_id: UUID, year: int, month: Optional[int] = None
-    ) -> list[dict]:
+    ) -> List[dict]:
         conditions = [
             Transaction.user_id == user_id,
             Transaction.transaction_type == TransactionType.EXPENSE,
@@ -89,7 +157,7 @@ class ReportService:
             for row in result.all()
         ]
 
-    async def monthly_trend(self, user_id: UUID, months: int = 12) -> list[dict]:
+    async def monthly_trend(self, user_id: UUID, months: int = 12) -> List[dict]:
         today = date.today()
         result = []
 
@@ -109,7 +177,7 @@ class ReportService:
                 )
             ) or Decimal("0")
 
-            income = await self._scalar(
+            income_from_table = await self._scalar(
                 select(func.sum(Income.amount)).where(
                     Income.user_id == user_id,
                     Income.is_skipped == False,
@@ -118,14 +186,24 @@ class ReportService:
                 )
             ) or Decimal("0")
 
+            income_from_transactions = await self._scalar(
+                select(func.sum(Transaction.amount)).where(
+                    Transaction.user_id == user_id,
+                    Transaction.transaction_type == TransactionType.INCOME,
+                    extract("year", Transaction.transaction_date) == year,
+                    extract("month", Transaction.transaction_date) == month_num,
+                )
+            ) or Decimal("0")
+
+            income = income_from_table + income_from_transactions
+
+            cashflow = income - expenses
             result.append(
                 {
-                    "year": year,
-                    "month": month_num,
-                    "label": f"{year}-{month_num:02d}",
-                    "expenses": str(expenses),
-                    "income": str(income),
-                    "cashflow": str(income - expenses),
+                    "month": f"{year}-{month_num:02d}",
+                    "income": float(income),
+                    "expenses": float(expenses),
+                    "savings": float(cashflow),
                 }
             )
         return result

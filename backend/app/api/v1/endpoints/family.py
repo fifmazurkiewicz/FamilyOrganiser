@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_app_admin
 from app.db.base import get_db
 from app.models.user import User
 from app.schemas.family import (
@@ -151,6 +151,29 @@ async def revoke_invitation(
 ):
     svc = FamilyService(db)
     await svc.revoke_invitation(current_user, group_id, link_id)
+
+
+@router.get("/admin/all", response_model=list[FamilyGroupResponse])
+async def admin_list_all_groups(
+    admin: User = Depends(get_current_app_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    svc = FamilyService(db)
+    groups_with_count = await svc.admin_list_all_groups()
+    return [
+        FamilyGroupResponse(id=g.id, name=g.name, created_at=g.created_at, member_count=count)
+        for g, count in groups_with_count
+    ]
+
+
+@router.delete("/admin/{group_id}", status_code=204)
+async def admin_delete_group(
+    group_id: uuid.UUID,
+    admin: User = Depends(get_current_app_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    svc = FamilyService(db)
+    await svc.admin_delete_group(group_id)
 
 
 @router.post("/{group_id}/admin/reset-password")

@@ -73,15 +73,13 @@ async def send_recurring_reminders():
         recurring = result.scalars().all()
 
         for rec in recurring:
-            # Compute next due date
+            # Compute next due date (monthly)
             try:
                 next_due = today.replace(day=rec.day_of_month)
             except ValueError:
-                # Invalid day for current month
                 continue
 
             if next_due < today:
-                # Try next month
                 if today.month == 12:
                     next_due = next_due.replace(year=today.year + 1, month=1)
                 else:

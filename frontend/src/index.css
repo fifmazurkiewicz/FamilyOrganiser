@@ -24,6 +24,25 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    /* Kolory semantyczne */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 160 60% 95%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 43 96% 89%;
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 100%;
+    --info-muted: 199 90% 95%;
+    /* Kolory wykresów */
+    --chart-1: 160 84% 39%;
+    --chart-2: 347 77% 50%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 221 83% 53%;
+    --chart-5: 262 83% 58%;
+    --chart-6: 330 81% 60%;
+    --chart-7: 187 85% 43%;
+    --chart-8: 84 81% 44%;
   }
 
   .dark {
@@ -46,6 +65,23 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 48%;
+    --success: 160 84% 45%;
+    --success-foreground: 0 0% 100%;
+    --success-muted: 160 50% 20%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+    --warning-muted: 38 50% 20%;
+    --info: 199 89% 55%;
+    --info-foreground: 0 0% 100%;
+    --info-muted: 199 50% 20%;
+    --chart-1: 160 84% 45%;
+    --chart-2: 347 77% 55%;
+    --chart-3: 38 92% 55%;
+    --chart-4: 221 83% 60%;
+    --chart-5: 262 83% 65%;
+    --chart-6: 330 81% 65%;
+    --chart-7: 187 85% 50%;
+    --chart-8: 84 81% 50%;
   }
 }
 

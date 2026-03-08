@@ -6,7 +6,7 @@ from apscheduler.triggers.cron import CronTrigger
 
 from app.core.config import settings
 from app.db.base import engine, Base
-from app.services.seed import seed_categories
+from app.services.seed import seed_admin_user, seed_categories
 from app.db.base import AsyncSessionLocal
 from app.api.v1.router import router as api_v1_router
 from app.middleware.logging_middleware import RequestLoggingMiddleware
@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     # Seed default data
     async with AsyncSessionLocal() as db:
         await seed_categories(db)
+        await seed_admin_user(db)
 
     # Schedule tasks
     from app.tasks.exchange_rate_fetcher import fetch_and_store_exchange_rates, send_recurring_reminders

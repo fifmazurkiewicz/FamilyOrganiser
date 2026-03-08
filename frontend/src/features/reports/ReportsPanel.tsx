@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { reportsApi } from "@/lib/api/reports";
 import { formatCurrency } from "@/utils/currency";
+import { CHART_COLORS } from "@/utils/colors";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell,
-  PieChart, Pie, Legend,
+  PieChart, Pie,
 } from "recharts";
-
-const COLORS = ["#3b82f6","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899","#06b6d4","#84cc16"];
 
 export function ReportsPanel() {
   const now = new Date();
@@ -59,7 +58,7 @@ export function ReportsPanel() {
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie data={categories} dataKey="amount" nameKey="category" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {categories.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {categories.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 </PieChart>
@@ -79,8 +78,8 @@ export function ReportsPanel() {
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                  <Bar dataKey="income" name="Przychody" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" name="Wydatki" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="income" name="Przychody" fill={CHART_COLORS[0]} radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name="Wydatki" fill={CHART_COLORS[1]} radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}

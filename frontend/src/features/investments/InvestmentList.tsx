@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp, Pencil } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { investmentsApi } from "@/lib/api/investments";
 import { formatCurrency } from "@/utils/currency";
-import type { InvestmentType } from "@/types";
+import type { Investment, InvestmentType } from "@/types";
 
 const typeLabels: Record<InvestmentType, string> = {
   stock: "Akcja",
@@ -32,12 +32,18 @@ export function InvestmentList() {
     mutationFn: investmentsApi.create,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["investments"] }),
   });
+  const updateInv = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      investmentsApi.update(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["investments"] }),
+  });
   const deleteInv = useMutation({
     mutationFn: investmentsApi.delete,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["investments"] }),
   });
 
   const [open, setOpen] = useState(false);
+  const [editInv, setEditInv] = useState<Investment | null>(null);
   const [form, setForm] = useState({
     name: "",
     investment_type: "stock" as InvestmentType,
@@ -110,7 +116,10 @@ export function InvestmentList() {
                     {inv.quantity} szt. × {formatCurrency(inv.current_price, inv.currency)}
                   </p>
                 )}
-                <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setEditInv(inv)}>
+                    <Pencil className="h-4 w-4" /> Edytuj
+                  </Button>
                   <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => deleteInv.mutate(inv.id)}>
                     Usuń
                   </Button>
@@ -120,6 +129,41 @@ export function InvestmentList() {
           ))}
         </div>
       )}
+
+      <Modal open={!!editInv} onClose={() => setEditInv(null)} title="Edytuj inwestycję">
+        {editInv && (
+          <div className="space-y-4">
+            <Input label="Nazwa" value={editInv.name} onChange={(e) => setEditInv({ ...editInv, name: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Liczba sztuk" type="number" value={editInv.quantity ?? ""} onChange={(e) => setEditInv({ ...editInv, quantity: e.target.value ? parseFloat(e.target.value) : undefined })} />
+              <Input label="Cena bieżąca" type="number" value={editInv.current_price ?? ""} onChange={(e) => setEditInv({ ...editInv, current_price: e.target.value ? parseFloat(e.target.value) : undefined })} />
+            </div>
+            <Input label="Notatki (opcjonalnie)" value={editInv.notes ?? ""} onChange={(e) => setEditInv({ ...editInv, notes: e.target.value || undefined })} />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditInv(null)}>Anuluj</Button>
+              <Button
+                onClick={() => {
+                  updateInv.mutate(
+                    {
+                      id: editInv.id,
+                      data: {
+                        name: editInv.name,
+                        quantity: editInv.quantity,
+                        current_price: editInv.current_price,
+                        notes: editInv.notes,
+                      },
+                    },
+                    { onSuccess: () => setEditInv(null) }
+                  );
+                }}
+                loading={updateInv.isPending}
+              >
+                Zapisz
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal open={open} onClose={() => setOpen(false)} title="Nowa inwestycja">
         <div className="space-y-4">

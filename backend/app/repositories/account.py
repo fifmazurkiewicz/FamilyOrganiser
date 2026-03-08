@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from sqlalchemy import select
@@ -10,7 +11,7 @@ from app.repositories.base import BaseRepository
 class AccountRepository(BaseRepository[Account]):
     model = Account
 
-    async def list_by_owner(self, owner_id: UUID) -> list[Account]:
+    async def list_by_owner(self, owner_id: UUID) -> List[Account]:
         result = await self._session.execute(
             select(Account).where(
                 Account.owner_id == owner_id,
@@ -30,7 +31,7 @@ class AccountRepository(BaseRepository[Account]):
         )
         return result.scalar_one_or_none()
 
-    async def list_joint_accounts(self, user_id: UUID) -> list[JointAccountOwner]:
+    async def list_joint_accounts(self, user_id: UUID) -> List[JointAccountOwner]:
         result = await self._session.execute(
             select(JointAccountOwner).where(JointAccountOwner.user_id == user_id)
         )

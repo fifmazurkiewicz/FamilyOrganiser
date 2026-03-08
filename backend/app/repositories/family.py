@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -25,13 +26,13 @@ class FamilyMembershipRepository(BaseRepository[FamilyMembership]):
         )
         return result.scalar_one_or_none()
 
-    async def list_by_user(self, user_id: UUID) -> list[FamilyMembership]:
+    async def list_by_user(self, user_id: UUID) -> List[FamilyMembership]:
         result = await self._session.execute(
             select(FamilyMembership).where(FamilyMembership.user_id == user_id)
         )
         return list(result.scalars().all())
 
-    async def list_by_group(self, group_id: UUID) -> list[FamilyMembership]:
+    async def list_by_group(self, group_id: UUID) -> List[FamilyMembership]:
         result = await self._session.execute(
             select(FamilyMembership).where(FamilyMembership.family_group_id == group_id)
         )
@@ -53,7 +54,7 @@ class InvitationLinkRepository(BaseRepository[InvitationLink]):
         )
         return result.scalar_one_or_none()
 
-    async def list_by_group(self, group_id: UUID) -> list[InvitationLink]:
+    async def list_by_group(self, group_id: UUID) -> List[InvitationLink]:
         result = await self._session.execute(
             select(InvitationLink).where(
                 InvitationLink.family_group_id == group_id,

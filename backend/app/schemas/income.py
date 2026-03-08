@@ -42,7 +42,11 @@ class IncomeCreate(BaseModel):
 
 
 class IncomeUpdate(BaseModel):
+    account_id: Optional[uuid.UUID] = None
+    name: Optional[str] = None
     amount: Optional[Decimal] = None
+    category: Optional[IncomeCategory] = None
+    income_date: Optional[date] = None
     description: Optional[str] = None
     is_skipped: Optional[bool] = None
 

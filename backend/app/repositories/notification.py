@@ -1,3 +1,4 @@
+from typing import List
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -12,7 +13,7 @@ class NotificationRepository(BaseRepository[Notification]):
 
     async def list_for_user(
         self, user_id: UUID, *, unread_only: bool = False, limit: int = 100
-    ) -> list[Notification]:
+    ) -> List[Notification]:
         conditions = [Notification.user_id == user_id]
         if unread_only:
             conditions.append(Notification.is_read == False)
@@ -34,5 +35,5 @@ class NotificationRepository(BaseRepository[Notification]):
         )
         return result.scalar() or 0
 
-    async def list_unread_for_user(self, user_id: UUID) -> list[Notification]:
+    async def list_unread_for_user(self, user_id: UUID) -> List[Notification]:
         return await self.list_for_user(user_id, unread_only=True)

@@ -11,7 +11,7 @@ interface FamilyGroup {
 interface GroupState {
   activeGroup: FamilyGroup | null;
   groups: FamilyGroup[];
-  setActiveGroup: (group: FamilyGroup) => void;
+  setActiveGroup: (group: FamilyGroup | null) => void;
   setGroups: (groups: FamilyGroup[]) => void;
 }
 

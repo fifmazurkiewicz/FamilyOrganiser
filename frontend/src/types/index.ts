@@ -10,6 +10,7 @@ export interface User {
   avatar_url?: string;
   is_app_admin: boolean;
   is_locked: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -48,13 +49,13 @@ export interface Account {
 }
 
 export type AccountType =
-  | "checking"
-  | "savings"
-  | "credit_card"
-  | "investment"
+  | "bank_individual"
+  | "bank_joint"
+  | "prepaid_ewallet"
   | "cash"
-  | "mortgage"
-  | "other";
+  | "credit_card"
+  | "savings"
+  | "crypto_exchange";
 
 export interface Transaction {
   id: string;

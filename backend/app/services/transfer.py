@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from typing import List
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +15,8 @@ from app.repositories.base import BaseRepository
 class TransferRepository(BaseRepository[Transfer]):
     model = Transfer
 
-    async def list_for_user(self, user_id: uuid.UUID) -> list[Transfer]:
-        result = await self.session.execute(
+    async def list_for_user(self, user_id: uuid.UUID) -> List[Transfer]:
+        result = await self._session.execute(
             select(Transfer)
             .where(Transfer.user_id == user_id)
             .order_by(Transfer.transfer_date.desc(), Transfer.created_at.desc())
@@ -28,7 +29,7 @@ class TransferService:
         self.db = db
         self.repo = TransferRepository(db)
 
-    async def list(self, user_id: uuid.UUID) -> list[Transfer]:
+    async def list(self, user_id: uuid.UUID) -> List[Transfer]:
         return await self.repo.list_for_user(user_id)
 
     async def create(self, user_id: uuid.UUID, data: dict) -> Transfer:
@@ -89,12 +90,12 @@ class TransferService:
     async def _debit_account(self, account_id: uuid.UUID, amount) -> None:
         result = await self.db.execute(select(Account).where(Account.id == account_id))
         acc = result.scalar_one()
-        acc.balance -= amount
+        acc.current_balance -= amount
 
     async def _credit_account(self, account_id: uuid.UUID, amount) -> None:
         result = await self.db.execute(select(Account).where(Account.id == account_id))
         acc = result.scalar_one()
-        acc.balance += amount
+        acc.current_balance += amount
 
     async def _debit_goal(self, goal_id: uuid.UUID, amount) -> None:
         result = await self.db.execute(select(SavingsGoal).where(SavingsGoal.id == goal_id))

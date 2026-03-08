@@ -1,6 +1,7 @@
 """Family group management service."""
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import List, Tuple
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,7 +49,7 @@ class FamilyService:
         await self._session.refresh(group)
         return group
 
-    async def list_user_groups(self, user_id: UUID) -> list[tuple[FamilyGroup, int]]:
+    async def list_user_groups(self, user_id: UUID) -> List[Tuple[FamilyGroup, int]]:
         memberships = await self._memberships.list_by_user(user_id)
         result = []
         for m in memberships:
@@ -57,6 +58,24 @@ class FamilyService:
                 count = await self._memberships.member_count(m.family_group_id)
                 result.append((group, count))
         return result
+
+    async def admin_list_all_groups(self) -> List[Tuple[FamilyGroup, int]]:
+        from sqlalchemy import select
+        result = await self._session.execute(
+            select(FamilyGroup).order_by(FamilyGroup.created_at.desc())
+        )
+        groups = result.scalars().all()
+        return [
+            (g, await self._memberships.member_count(g.id))
+            for g in groups
+        ]
+
+    async def admin_delete_group(self, group_id: UUID) -> None:
+        group = await self._groups.get(group_id)
+        if not group:
+            raise NotFoundError("Group not found")
+        await self._session.delete(group)
+        await self._session.commit()
 
     # --------------------------------------------------------------- members
 
@@ -74,7 +93,7 @@ class FamilyService:
             raise ForbiddenError("Family admin role required")
         return membership
 
-    async def list_members(self, group_id: UUID) -> list[FamilyMembership]:
+    async def list_members(self, group_id: UUID) -> List[FamilyMembership]:
         return await self._memberships.list_by_group(group_id)
 
     async def remove_member(

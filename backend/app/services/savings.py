@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 from datetime import date
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +20,7 @@ class SavingsService:
         self.goal_repo = SavingsGoalRepository(db)
         self.contrib_repo = SavingsContributionRepository(db)
 
-    async def list_goals(self, user_id: uuid.UUID) -> list[SavingsGoalResponse]:
+    async def list_goals(self, user_id: uuid.UUID) -> List[SavingsGoalResponse]:
         goals = await self.goal_repo.list_for_user(user_id)
         return [self._to_response(g) for g in goals]
 
@@ -96,7 +97,7 @@ class SavingsService:
         await self.goal_repo.commit()
         return ContributionResponse.model_validate(contrib)
 
-    async def list_contributions(self, user_id: uuid.UUID, goal_id: uuid.UUID) -> list[ContributionResponse]:
+    async def list_contributions(self, user_id: uuid.UUID, goal_id: uuid.UUID) -> List[ContributionResponse]:
         goal = await self.goal_repo.get_or_raise(goal_id)
         if goal.user_id != user_id:
             raise ForbiddenError("Access denied")

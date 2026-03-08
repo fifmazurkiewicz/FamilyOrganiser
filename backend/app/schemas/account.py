@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from typing import Optional, List
 from datetime import datetime, date
 from decimal import Decimal
@@ -56,6 +56,12 @@ class AccountResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @computed_field
+    @property
+    def balance(self) -> Decimal:
+        """Alias dla frontendu oczekującego pola 'balance'."""
+        return self.current_balance
 
 
 class BalanceCorrectionRequest(BaseModel):

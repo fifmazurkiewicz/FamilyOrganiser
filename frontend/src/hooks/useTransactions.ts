@@ -27,6 +27,21 @@ export function useCreateTransaction() {
       qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
       qc.invalidateQueries({ queryKey: ["accounts"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
+    },
+  });
+}
+
+export function useUpdateTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      transactionsApi.update(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
+      qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
     },
   });
 }
@@ -38,6 +53,8 @@ export function useDeleteTransaction() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
       qc.invalidateQueries({ queryKey: ["accounts"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
     },
   });
 }

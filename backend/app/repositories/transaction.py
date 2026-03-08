@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -22,7 +22,7 @@ class TransactionRepository(BaseRepository[Transaction]):
         end_date: Optional[date] = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[Transaction]:
+    ) -> List[Transaction]:
         conditions = [Transaction.user_id == user_id]
         if account_id:
             conditions.append(Transaction.account_id == account_id)
@@ -46,7 +46,7 @@ class TransactionRepository(BaseRepository[Transaction]):
 class CategoryRepository(BaseRepository[TransactionCategory]):
     model = TransactionCategory
 
-    async def list_for_user(self, user_id: UUID) -> list[TransactionCategory]:
+    async def list_for_user(self, user_id: UUID) -> List[TransactionCategory]:
         result = await self._session.execute(
             select(TransactionCategory).where(
                 (TransactionCategory.user_id == user_id)
@@ -59,7 +59,7 @@ class CategoryRepository(BaseRepository[TransactionCategory]):
 class TagRepository(BaseRepository[TransactionTag]):
     model = TransactionTag
 
-    async def list_for_user(self, user_id: UUID) -> list[TransactionTag]:
+    async def list_for_user(self, user_id: UUID) -> List[TransactionTag]:
         result = await self._session.execute(
             select(TransactionTag).where(TransactionTag.user_id == user_id)
         )
@@ -69,7 +69,7 @@ class TagRepository(BaseRepository[TransactionTag]):
 class RecurringTransactionRepository(BaseRepository[RecurringTransaction]):
     model = RecurringTransaction
 
-    async def list_active_for_user(self, user_id: UUID) -> list[RecurringTransaction]:
+    async def list_active_for_user(self, user_id: UUID) -> List[RecurringTransaction]:
         result = await self._session.execute(
             select(RecurringTransaction).where(
                 RecurringTransaction.user_id == user_id,
@@ -78,7 +78,7 @@ class RecurringTransactionRepository(BaseRepository[RecurringTransaction]):
         )
         return list(result.scalars().all())
 
-    async def list_all_active(self) -> list[RecurringTransaction]:
+    async def list_all_active(self) -> List[RecurringTransaction]:
         result = await self._session.execute(
             select(RecurringTransaction).where(RecurringTransaction.is_active == True)
         )

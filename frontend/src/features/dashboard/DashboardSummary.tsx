@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, Wallet, PiggyBank } from "lucide-react";
+import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { useDashboard, useMonthlyTrend } from "@/hooks/useDashboard";
@@ -37,13 +38,20 @@ export function DashboardSummary() {
   if (isLoading) return <Spinner />;
   if (!dash) return null;
 
+  const netWorth = dash.net_worth ?? dash.total_balance ?? 0;
+  const monthlyIncome = dash.monthly_income ?? dash.month_income ?? 0;
+  const monthlyExpenses = dash.monthly_expenses ?? dash.month_expenses ?? 0;
+  const savingsRate = (dash.savings_rate ?? 0);
+  const topExpenses = dash.top_expenses ?? [];
+  const recentTransactions = dash.recent_transactions ?? [];
+
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Majątek netto" value={formatCurrency(dash.net_worth)} icon={Wallet} color="bg-primary" />
-        <StatCard title="Przychody (mies.)" value={formatCurrency(dash.monthly_income)} icon={TrendingUp} color="bg-emerald-500" />
-        <StatCard title="Wydatki (mies.)" value={formatCurrency(dash.monthly_expenses)} icon={TrendingDown} color="bg-rose-500" />
-        <StatCard title="Stopa oszczędności" value={`${dash.savings_rate.toFixed(1)}%`} icon={PiggyBank} color="bg-amber-500" />
+        <StatCard title="Majątek netto" value={formatCurrency(netWorth)} icon={Wallet} color="bg-primary" />
+        <StatCard title="Przychody (mies.)" value={formatCurrency(monthlyIncome)} icon={TrendingUp} color="bg-success" />
+        <StatCard title="Wydatki (mies.)" value={formatCurrency(monthlyExpenses)} icon={TrendingDown} color="bg-destructive" />
+        <StatCard title="Stopa oszczędności" value={`${Number(savingsRate).toFixed(1)}%`} icon={PiggyBank} color="bg-warning" />
       </div>
 
       {trend && trend.length > 0 && (
@@ -56,20 +64,20 @@ export function DashboardSummary() {
               <AreaChart data={trend}>
                 <defs>
                   <linearGradient id="income" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="expenses" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="month" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                <Area type="monotone" dataKey="income" stroke="#10b981" fill="url(#income)" name="Przychody" />
-                <Area type="monotone" dataKey="expenses" stroke="#f43f5e" fill="url(#expenses)" name="Wydatki" />
+                <Area type="monotone" dataKey="income" stroke="hsl(var(--chart-1))" fill="url(#income)" name="Przychody" />
+                <Area type="monotone" dataKey="expenses" stroke="hsl(var(--chart-2))" fill="url(#expenses)" name="Wydatki" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -82,11 +90,11 @@ export function DashboardSummary() {
             <CardTitle>Top wydatki wg kategorii</CardTitle>
           </CardHeader>
           <CardContent>
-            {dash.top_expenses.length === 0 ? (
+            {topExpenses.length === 0 ? (
               <p className="text-sm text-gray-500">Brak danych</p>
             ) : (
               <ul className="space-y-2">
-                {dash.top_expenses.map((e) => (
+                {topExpenses.map((e) => (
                   <li key={e.category} className="flex items-center justify-between text-sm">
                     <span className="text-gray-700">{e.category}</span>
                     <span className="font-medium">{formatCurrency(e.amount)}</span>
@@ -102,16 +110,19 @@ export function DashboardSummary() {
             <CardTitle>Ostatnie transakcje</CardTitle>
           </CardHeader>
           <CardContent>
-            {dash.recent_transactions.length === 0 ? (
+            {recentTransactions.length === 0 ? (
               <p className="text-sm text-gray-500">Brak transakcji</p>
             ) : (
               <ul className="divide-y divide-gray-50">
-                {dash.recent_transactions.slice(0, 5).map((t) => (
-                  <li key={t.id} className="flex items-center justify-between py-2 text-sm">
-                    <span className="text-gray-700 truncate max-w-[60%]">
-                      {t.description || t.merchant || "Transakcja"}
-                    </span>
-                    <span className={t.transaction_type === "expense" ? "text-red-600 font-medium" : "text-emerald-600 font-medium"}>
+                {recentTransactions.slice(0, 5).map((t) => (
+                  <li key={t.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-gray-700 truncate">{t.description || t.merchant || "Transakcja"}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {t.transaction_date ? format(new Date(t.transaction_date), "dd.MM.yyyy") : ""}
+                      </p>
+                    </div>
+                    <span className={`shrink-0 font-medium ${t.transaction_type === "expense" ? "text-destructive" : "text-success"}`}>
                       {t.transaction_type === "expense" ? "-" : "+"}{formatCurrency(t.amount)}
                     </span>
                   </li>

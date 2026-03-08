@@ -96,3 +96,20 @@ async def unlock_user(
     user.security_question_attempts = 0
     await db.commit()
     return {"message": "User unlocked"}
+
+
+@router.delete("/{user_id}", status_code=204, tags=["Admin"])
+async def admin_delete_user(
+    user_id: uuid.UUID,
+    admin: User = Depends(get_current_app_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.core.exceptions import BusinessLogicError, NotFoundError
+
+    if user_id == admin.id:
+        raise BusinessLogicError("Cannot delete your own account")
+    user = await db.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found")
+    user.is_active = False
+    await db.commit()

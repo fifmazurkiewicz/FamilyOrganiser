@@ -1,6 +1,7 @@
 """Account management service."""
 from datetime import date
 from decimal import Decimal
+from typing import List
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -32,12 +33,12 @@ class AccountService:
             raise ForbiddenError("Only the account owner can perform this action")
         return account
 
-    async def list_all(self, user_id: UUID) -> list[Account]:
+    async def list_all(self, user_id: UUID) -> List[Account]:
         owned = await self._accounts.list_by_owner(user_id)
         owned_ids = {a.id for a in owned}
 
         joint_ownerships = await self._accounts.list_joint_accounts(user_id)
-        extra: list[Account] = []
+        extra: List[Account] = []
         for jo in joint_ownerships:
             if jo.account_id not in owned_ids:
                 acc = await self._accounts.get(jo.account_id)

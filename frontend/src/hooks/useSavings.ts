@@ -15,6 +15,15 @@ export function useCreateGoal() {
   });
 }
 
+export function useUpdateGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      savingsApi.updateGoal(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: SAVINGS_KEY }),
+  });
+}
+
 export function useDeleteGoal() {
   const qc = useQueryClient();
   return useMutation({

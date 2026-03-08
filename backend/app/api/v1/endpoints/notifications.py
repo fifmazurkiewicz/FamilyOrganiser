@@ -34,7 +34,7 @@ async def mark_read(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await NotificationService(db).mark_read(current_user.id, notification_id)
+    await NotificationService(db).mark_read(notification_id, current_user.id)
 
 
 @router.post("/read-all", status_code=204)

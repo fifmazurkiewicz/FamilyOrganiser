@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 from datetime import date
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,7 +33,7 @@ class InvestmentService:
         self.repo = InvestmentRepository(db)
         self.bond_repo = PolishBondRepository(db)
 
-    async def list(self, user_id: uuid.UUID) -> list[InvestmentResponse]:
+    async def list(self, user_id: uuid.UUID) -> List[InvestmentResponse]:
         investments = await self.repo.list_for_user(user_id)
         return [self._to_response(inv) for inv in investments]
 
@@ -66,7 +67,7 @@ class InvestmentService:
 
     # --- Polish Bonds ---
 
-    async def list_bonds(self, user_id: uuid.UUID) -> list[PolishBondResponse]:
+    async def list_bonds(self, user_id: uuid.UUID) -> List[PolishBondResponse]:
         bonds = await self.bond_repo.list_for_user(user_id)
         return [self._bond_to_response(b) for b in bonds]
 

@@ -3,7 +3,7 @@ from typing import Optional, List
 from datetime import datetime, date
 from decimal import Decimal
 import uuid
-from app.models.transaction import TransactionType, TransactionScope
+from app.models.transaction import TransactionType, TransactionScope, RecurringFrequency
 
 
 class TransactionCategoryCreate(BaseModel):
@@ -85,7 +85,8 @@ class RecurringTransactionCreate(BaseModel):
     amount: Decimal
     currency: str = "PLN"
     transaction_type: TransactionType
-    day_of_month: int
+    frequency: RecurringFrequency = RecurringFrequency.MONTHLY
+    day_of_month: int = 1
     reminder_days_before: int = 3
     total_occurrences: Optional[int] = None
     start_date: date
@@ -99,6 +100,7 @@ class RecurringTransactionResponse(BaseModel):
     amount: Decimal
     currency: str
     transaction_type: TransactionType
+    frequency: RecurringFrequency
     day_of_month: int
     reminder_days_before: int
     is_active: bool

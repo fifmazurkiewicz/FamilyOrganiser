@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, PiggyBank } from "lucide-react";
+import { Plus, PiggyBank, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -8,13 +8,14 @@ import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { useSavingsGoals, useCreateGoal, useDeleteGoal, useAddContribution } from "@/hooks/useSavings";
+import { useSavingsGoals, useCreateGoal, useUpdateGoal, useDeleteGoal, useAddContribution } from "@/hooks/useSavings";
 import { formatCurrency } from "@/utils/currency";
 import type { SavingsGoal } from "@/types";
 
-function GoalCard({ goal, onContribute, onDelete }: {
+function GoalCard({ goal, onContribute, onEdit, onDelete }: {
   goal: SavingsGoal;
   onContribute: (id: string) => void;
+  onEdit: (goal: SavingsGoal) => void;
   onDelete: (id: string) => void;
 }) {
   return (
@@ -54,6 +55,9 @@ function GoalCard({ goal, onContribute, onDelete }: {
         <div className="mt-3 flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => onContribute(goal.id)}>
             Wpłać
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onEdit(goal)}>
+            <Pencil className="h-4 w-4" /> Edytuj
           </Button>
           <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50" onClick={() => onDelete(goal.id)}>
             Usuń
@@ -106,8 +110,10 @@ function ContributeModal({ goalId, onClose }: { goalId: string; onClose: () => v
 export function SavingsGoalList() {
   const { data: goals, isLoading } = useSavingsGoals();
   const createGoal = useCreateGoal();
+  const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editGoal, setEditGoal] = useState<SavingsGoal | null>(null);
   const [contributeGoalId, setContributeGoalId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", target_amount: "", currency: "PLN", target_date: "", icon: "" });
 
@@ -138,10 +144,47 @@ export function SavingsGoalList() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {goals.map((g) => (
-            <GoalCard key={g.id} goal={g} onContribute={setContributeGoalId} onDelete={(id) => deleteGoal.mutate(id)} />
+            <GoalCard key={g.id} goal={g} onContribute={setContributeGoalId} onEdit={setEditGoal} onDelete={(id) => deleteGoal.mutate(id)} />
           ))}
         </div>
       )}
+
+      <Modal open={!!editGoal} onClose={() => setEditGoal(null)} title="Edytuj cel oszczędnościowy">
+        {editGoal && (
+          <div className="space-y-4">
+            <Input label="Nazwa celu" value={editGoal.name} onChange={(e) => setEditGoal({ ...editGoal, name: e.target.value })} />
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Kwota docelowa" type="number" step="100" value={String(editGoal.target_amount)} onChange={(e) => setEditGoal({ ...editGoal, target_amount: parseFloat(e.target.value) || 0 })} />
+              <Input label="Waluta" value={editGoal.currency} onChange={(e) => setEditGoal({ ...editGoal, currency: e.target.value.toUpperCase() })} maxLength={3} />
+            </div>
+            <Input label="Data docelowa (opcjonalnie)" type="date" value={editGoal.target_date ? new Date(editGoal.target_date).toISOString().split("T")[0] : ""} onChange={(e) => setEditGoal({ ...editGoal, target_date: e.target.value || undefined })} />
+            <Input label="Emoji ikona (opcjonalnie)" value={editGoal.icon ?? ""} onChange={(e) => setEditGoal({ ...editGoal, icon: e.target.value || undefined })} placeholder="np. 🏖️" />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setEditGoal(null)}>Anuluj</Button>
+              <Button
+                onClick={() => {
+                  updateGoal.mutate(
+                    {
+                      id: editGoal.id,
+                      data: {
+                        name: editGoal.name,
+                        target_amount: editGoal.target_amount,
+                        currency: editGoal.currency,
+                        ...(editGoal.target_date && { target_date: editGoal.target_date }),
+                        ...(editGoal.icon && { icon: editGoal.icon }),
+                      },
+                    },
+                    { onSuccess: () => setEditGoal(null) }
+                  );
+                }}
+                loading={updateGoal.isPending}
+              >
+                Zapisz
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nowy cel oszczędnościowy">
         <div className="space-y-4">

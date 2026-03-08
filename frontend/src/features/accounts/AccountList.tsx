@@ -9,16 +9,24 @@ import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAccounts, useCreateAccount, useDeactivateAccount } from "@/hooks/useAccounts";
 import { formatCurrency } from "@/utils/currency";
-import type { AccountType } from "@/types";
+// Typy kont zgodne z backendem (app.models.account.AccountType)
+type BackendAccountType =
+  | "bank_individual"
+  | "bank_joint"
+  | "prepaid_ewallet"
+  | "cash"
+  | "credit_card"
+  | "savings"
+  | "crypto_exchange";
 
-const accountTypeLabels: Record<AccountType, string> = {
-  checking: "Konto bieżące",
-  savings: "Konto oszczędnościowe",
-  credit_card: "Karta kredytowa",
-  investment: "Konto inwestycyjne",
+const accountTypeLabels: Record<BackendAccountType, string> = {
+  bank_individual: "Konto bieżące",
+  bank_joint: "Konto wspólne",
+  prepaid_ewallet: "Portfel przedpłacony",
   cash: "Gotówka",
-  mortgage: "Kredyt hipoteczny",
-  other: "Inne",
+  credit_card: "Karta kredytowa",
+  savings: "Konto oszczędnościowe",
+  crypto_exchange: "Giełda kryptowalut",
 };
 
 function AccountCard({ account, onDeactivate }: { account: import("@/types").Account; onDeactivate: (id: string) => void }) {
@@ -29,7 +37,7 @@ function AccountCard({ account, onDeactivate }: { account: import("@/types").Acc
         <div className="flex items-start justify-between">
           <div>
             <CardTitle>{account.name}</CardTitle>
-            <p className="text-xs text-gray-500 mt-0.5">{accountTypeLabels[account.account_type]}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{accountTypeLabels[account.account_type as BackendAccountType] ?? account.account_type}</p>
           </div>
           {account.bank_name && (
             <Badge variant="default">{account.bank_name}</Badge>
@@ -65,18 +73,17 @@ export function AccountList() {
   const createAccount = useCreateAccount();
   const deactivateAccount = useDeactivateAccount();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", account_type: "checking" as AccountType, currency: "PLN", balance: "0", bank_name: "" });
+  const [form, setForm] = useState({ name: "", account_type: "bank_individual" as BackendAccountType, currency: "PLN", balance: "0" });
 
   const handleCreate = async () => {
     await createAccount.mutateAsync({
       name: form.name,
       account_type: form.account_type,
       currency: form.currency,
-      balance: parseFloat(form.balance) || 0,
-      bank_name: form.bank_name || undefined,
+      initial_balance: parseFloat(form.balance) || 0,
     });
     setOpen(false);
-    setForm({ name: "", account_type: "checking", currency: "PLN", balance: "0", bank_name: "" });
+    setForm({ name: "", account_type: "bank_individual", currency: "PLN", balance: "0" });
   };
 
   if (isLoading) return <Spinner />;
@@ -110,7 +117,7 @@ export function AccountList() {
             <select
               className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
               value={form.account_type}
-              onChange={(e) => setForm({ ...form, account_type: e.target.value as AccountType })}
+              onChange={(e) => setForm({ ...form, account_type: e.target.value as BackendAccountType })}
             >
               {Object.entries(accountTypeLabels).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
@@ -121,7 +128,6 @@ export function AccountList() {
             <Input label="Waluta" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })} maxLength={3} />
             <Input label="Saldo początkowe" type="number" value={form.balance} onChange={(e) => setForm({ ...form, balance: e.target.value })} />
           </div>
-          <Input label="Bank (opcjonalnie)" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} placeholder="np. PKO BP" />
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={() => setOpen(false)}>Anuluj</Button>
             <Button onClick={handleCreate} loading={createAccount.isPending} disabled={!form.name}>

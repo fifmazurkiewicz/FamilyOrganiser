@@ -121,6 +121,12 @@ class Transaction(Base):
     user: Mapped["User"] = relationship("User")
 
 
+class RecurringFrequency(str, PyEnum):
+    WEEKLY = "weekly"
+    BIWEEKLY = "biweekly"
+    MONTHLY = "monthly"
+
+
 class RecurringTransaction(Base):
     __tablename__ = "recurring_transactions"
 
@@ -139,7 +145,10 @@ class RecurringTransaction(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), default="PLN")
     transaction_type: Mapped[TransactionType] = mapped_column(Enum(TransactionType))
-    day_of_month: Mapped[int] = mapped_column(Integer, nullable=False)  # 1–31
+    frequency: Mapped[RecurringFrequency] = mapped_column(
+        Enum(RecurringFrequency), default=RecurringFrequency.MONTHLY
+    )
+    day_of_month: Mapped[int] = mapped_column(Integer, nullable=False)  # 1–31 (dla monthly)
     reminder_days_before: Mapped[int] = mapped_column(Integer, default=3)
     total_occurrences: Mapped[int | None] = mapped_column(Integer, nullable=True)
     current_occurrence: Mapped[int] = mapped_column(Integer, default=0)

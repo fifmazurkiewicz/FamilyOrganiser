@@ -1,7 +1,7 @@
 """Transaction management service."""
 from datetime import date
 from decimal import Decimal
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +59,7 @@ class TransactionService:
         currency: str,
         transaction_date: date,
         description: Optional[str],
-        tag_ids: list[UUID],
+        tag_ids: List[UUID],
         recurring_id: Optional[UUID],
     ) -> Transaction:
         account = await self._verify_account_access(account_id, user_id)
@@ -118,7 +118,7 @@ class TransactionService:
         end_date: Optional[date] = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[Transaction]:
+    ) -> List[Transaction]:
         return await self._tx.list_for_user(
             user_id,
             account_id=account_id,
@@ -190,7 +190,7 @@ class TransactionService:
 
     # ----------------------------------------------------------- categories
 
-    async def list_categories(self, user_id: UUID) -> list[TransactionCategory]:
+    async def list_categories(self, user_id: UUID) -> List[TransactionCategory]:
         return await self._categories.list_for_user(user_id)
 
     async def create_category(
@@ -215,7 +215,7 @@ class TransactionService:
 
     # --------------------------------------------------------------- tags
 
-    async def list_tags(self, user_id: UUID) -> list[TransactionTag]:
+    async def list_tags(self, user_id: UUID) -> List[TransactionTag]:
         return await self._tags.list_for_user(user_id)
 
     async def create_tag(self, user_id: UUID, name: str) -> TransactionTag:
@@ -234,5 +234,12 @@ class TransactionService:
         await self._session.refresh(recurring)
         return recurring
 
-    async def list_recurring(self, user_id: UUID) -> list[RecurringTransaction]:
+    async def list_recurring(self, user_id: UUID) -> List[RecurringTransaction]:
         return await self._recurring.list_active_for_user(user_id)
+
+    async def deactivate_recurring(self, recurring_id: UUID, user_id: UUID) -> None:
+        rec = await self._recurring.get_or_raise(recurring_id)
+        if rec.user_id != user_id:
+            raise ForbiddenError("Access denied")
+        rec.is_active = False
+        await self._session.commit()

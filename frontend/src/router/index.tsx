@@ -14,10 +14,17 @@ import ReportsPage from "@/pages/ReportsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotificationsPage from "@/pages/NotificationsPage";
+import AdminPage from "@/pages/AdminPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const isAdmin = useAuthStore((s) => s.user?.is_app_admin);
+  if (!isAdmin) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -46,6 +53,7 @@ export function AppRouter() {
           <Route path="groups" element={<GroupsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

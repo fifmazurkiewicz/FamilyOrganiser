@@ -1,7 +1,7 @@
 from app.models.user import User, SecurityQuestion
 from app.models.family import FamilyGroup, FamilyMembership, InvitationLink
 from app.models.account import Account, AccountType, JointAccountOwner
-from app.models.transaction import Transaction, TransactionCategory, TransactionTag, RecurringTransaction
+from app.models.transaction import Transaction, TransactionCategory, TransactionTag, RecurringTransaction, RecurringFrequency
 from app.models.budget import Budget, BudgetCategory
 from app.models.savings import SavingsGoal, SavingsContribution, SavingsGoalMember
 from app.models.investment import Investment, InvestmentType, PolishBond
@@ -16,7 +16,7 @@ __all__ = [
     "User", "SecurityQuestion",
     "FamilyGroup", "FamilyMembership", "InvitationLink",
     "Account", "AccountType", "JointAccountOwner",
-    "Transaction", "TransactionCategory", "TransactionTag", "RecurringTransaction",
+    "Transaction", "TransactionCategory", "TransactionTag", "RecurringTransaction", "RecurringFrequency",
     "Budget", "BudgetCategory",
     "SavingsGoal", "SavingsContribution", "SavingsGoalMember",
     "Investment", "InvestmentType", "PolishBond",

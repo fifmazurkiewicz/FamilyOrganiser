@@ -1,5 +1,6 @@
 """Notification service."""
 from datetime import datetime, timezone
+from typing import List
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,7 +15,7 @@ class NotificationService:
         self._session = session
         self._repo = NotificationRepository(session)
 
-    async def list(self, user_id: UUID, *, unread_only: bool = False) -> list[Notification]:
+    async def list(self, user_id: UUID, *, unread_only: bool = False) -> List[Notification]:
         return await self._repo.list_for_user(user_id, unread_only=unread_only)
 
     async def unread_count(self, user_id: UUID) -> int:

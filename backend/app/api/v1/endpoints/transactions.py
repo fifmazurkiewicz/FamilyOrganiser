@@ -147,3 +147,13 @@ async def list_recurring(
 ):
     svc = TransactionService(db)
     return await svc.list_recurring(current_user.id)
+
+
+@router.delete("/recurring/{recurring_id}", status_code=204)
+async def deactivate_recurring(
+    recurring_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    svc = TransactionService(db)
+    await svc.deactivate_recurring(recurring_id, current_user.id)

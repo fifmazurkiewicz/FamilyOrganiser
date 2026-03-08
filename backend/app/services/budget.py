@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 from datetime import date
+from typing import List
 
 from sqlalchemy import select, func, extract
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,7 +19,7 @@ class BudgetService:
         self.repo = BudgetRepository(db)
         self.cat_repo = BudgetCategoryRepository(db)
 
-    async def list(self, user_id: uuid.UUID) -> list[BudgetResponse]:
+    async def list(self, user_id: uuid.UUID) -> List[BudgetResponse]:
         budgets = await self.repo.list_for_user(user_id)
         result = []
         for b in budgets:
@@ -87,7 +88,7 @@ class BudgetService:
         await self.repo.delete(budget)
         await self.repo.commit()
 
-    async def _enrich_categories(self, budget: Budget, user_id: uuid.UUID) -> list[BudgetCategoryResponse]:
+    async def _enrich_categories(self, budget: Budget, user_id: uuid.UUID) -> List[BudgetCategoryResponse]:
         cats = await self.cat_repo.list_for_budget(budget.id)
         result = []
         for bc in cats:

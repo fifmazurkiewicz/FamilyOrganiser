@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import {
   LayoutDashboard, CreditCard, Receipt, PiggyBank, TrendingUp,
-  DollarSign, BarChart2, Users, Bell, User, LogOut, ChevronDown
+  DollarSign, BarChart2, Users, Bell, User, LogOut, ChevronDown, Shield
 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useEffect } from "react";
@@ -46,7 +46,9 @@ export default function Layout() {
   useEffect(() => {
     if (groupsData) {
       setGroups(groupsData);
-      if (!activeGroup && groupsData.length > 0) {
+      if (groupsData.length === 0) {
+        setActiveGroup(null);
+      } else if (!activeGroup || !groupsData.some((g) => g.id === activeGroup.id)) {
         setActiveGroup(groupsData[0]);
       }
     }
@@ -166,6 +168,20 @@ export default function Layout() {
             <User className="h-4 w-4" />
             {user?.full_name || "Profil"}
           </NavLink>
+          {user?.is_app_admin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                  isActive ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100"
+                )
+              }
+            >
+              <Shield className="h-4 w-4" />
+              Panel admina
+            </NavLink>
+          )}
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 w-full"
