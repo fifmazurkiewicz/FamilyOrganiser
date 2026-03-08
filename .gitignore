@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Docker
+docker/certs/
+
+# Environment files (keep .env.example)
+.env.local
+.env.*.local
