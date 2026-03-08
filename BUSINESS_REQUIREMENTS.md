@@ -82,7 +82,7 @@ Każdy użytkownik może niezależnie przełączać widoczność swoich danych d
 - [ ] **Przekazanie roli admina** — admin może przekazać rolę dowolnemu członkowi grupy; stary admin staje się zwykłym członkiem
 - [ ] **Usunięcie konta przez admina** — admin **musi najpierw przekazać rolę** innemu członkowi; dopiero potem może usunąć własne konto
 - [ ] **Usunięcie konta (nie-admin)** — dostępne bezpośrednio; dane osobiste usuwane natychmiast (brak okresu karencji)
-- [ ] Opcjonalne: 2FA (TOTP / Google Authenticator)
+- ~~2FA (TOTP / Google Authenticator)~~ — **odłożone, poza zakresem MVP**
 
 #### Resetowanie hasła
 - [ ] **Pytanie zabezpieczające** — użytkownik ustawia pytanie + odpowiedź podczas rejestracji; poprawna odpowiedź umożliwia ustawienie nowego hasła (bez żadnego e-maila)
@@ -400,8 +400,16 @@ W czasie trwania wniosku zasób jest **zablokowany** (nie można go edytować).
 ### F-10 Wielowalutowość
 
 - [ ] Domyślna waluta PLN
-- [ ] Obsługa wielu walut per transakcja (EUR, USD, GBP)
-- [ ] Przeliczenie na walutę bazową po kursie NBP / ECB (v2)
+- [ ] Obsługa wielu walut per transakcja: **EUR, USD, GBP, JPY** (i inne — użytkownik może wpisać ręcznie)
+- [ ] Przeliczenie na walutę bazową (PLN) po aktualnym kursie
+
+#### Kursy walut — pobieranie automatyczne
+- [ ] **Źródło danych:** [exchangerate-api.com](https://www.exchangerate-api.com/) (darmowy plan: 1 500 req/mies.) lub NBP API (`api.nbp.pl/api/exchangerates`) — priorytet: NBP jako oficjalne źródło dla PLN
+- [ ] **Harmonogram:** job pobierający kursy **raz dziennie** (np. o 08:00, po publikacji tabeli NBP)
+- [ ] **Waluty:** EUR, USD, GBP, JPY — rozszerzalne w konfiguracji bez zmiany kodu
+- [ ] Kursy przechowywane lokalnie w bazie (tabela `exchange_rates` z datą i źródłem)
+- [ ] Jeśli pobieranie się nie powiedzie — używany ostatni znany kurs z adnotacją „kurs z [data]"
+- [ ] W UI przy każdej kwocie w walucie obcej: tooltip z kursem i datą jego aktualizacji (np. „1 EUR = 4,28 PLN · kurs z 08.03.2026")
 
 ---
 
@@ -552,7 +560,7 @@ Docker Compose (development + produkcja):
 | P1 | Inwestycje (ręczny portfel) |
 | P1 | Planowanie wydatków (kalendarz, prognozy) |
 | P2 | Raporty PDF |
-| P2 | Wielowalutowość + kursy NBP |
+| P1 | Wielowalutowość — kursy EUR/USD/GBP/JPY pobierane raz dziennie z NBP API |
 
 ### Faza 3 (Zaawansowana, ~4–6 tygodni)
 
