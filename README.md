@@ -39,6 +39,8 @@ pip install poetry
 
 # Zainstaluj zależności
 poetry install
+# ...lub bez Poetry, przez pip:
+# pip install -r requirements.txt
 
 # Skopiuj .env do katalogu backend (lub ustaw zmienne środowiskowe)
 cp ../.env.example .env
@@ -190,3 +192,23 @@ Plik `.env.example` zawiera wszystkie wymagane zmienne. Skopiuj go do `.env` i d
 **Backend:** FastAPI, SQLAlchemy 2.0 (async), PostgreSQL, Redis, Alembic, APScheduler, Pydantic v2, Poetry
 
 **Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Radix UI, React Query, Zustand, React Router, Recharts
+
+## Zasady utrzymania kodu
+
+Projekt jest utrzymywany hobbystycznie — prostota ma pierwszeństwo (szczegóły: `BUSINESS_REQUIREMENTS.md`, sekcja 4.5):
+
+- Komponenty frontendu **nie wykonują bezpośrednich wywołań HTTP** — zawsze przez typowane serwisy z `src/lib/api/` (jeden moduł na domenę: `auth`, `accounts`, `transactions`, …)
+- Po operacjach zmieniających stan finansów (transakcje, przychody) widoki odświeża wspólny pomocnik `src/hooks/invalidate.ts` — nie kopiuj bloków `invalidateQueries`
+- Listy w backendzie pobieraj jednym zapytaniem z JOIN-em (bez pętli zapytań per rekord) — wzorce w `app/repositories/family.py`
+- Nieużywany kod usuwaj od razu
+
+## Historia refaktoryzacji
+
+**2026-07-13**
+
+- **Przywrócono warstwę API frontendu** — katalog `frontend/src/lib/api/` (11 modułów serwisów) nigdy nie trafił do repozytorium, bo pasował do reguły `lib/` w `.gitignore` (szablon Pythona). Bez niego frontend się nie kompilował. Reguła została ograniczona wyjątkiem `!frontend/src/lib/`.
+- **Ujednolicono odświeżanie danych** — powtarzany w wielu miejscach blok unieważniania zapytań React Query zastąpiono pomocnikiem `invalidateFinanceViews`.
+- **`Layout.tsx` korzysta z serwisów API** zamiast surowych wywołań axios (typowanie zamiast `any`).
+- **Usunięto zapytania N+1** w module grup rodzinnych (lista grup z liczbą członków oraz lista członków z danymi użytkowników — po jednym zapytaniu SQL).
+- **Uzupełniono `backend/requirements.txt`** o `pydantic[email]` (bez tego instalacja przez pip nie uruchamiała aplikacji; instalacja przez Poetry nie była dotknięta).
+- Usunięto martwy kod (nieużywane metody repozytoriów, przestarzałe fallbacki pól dashboardu) i dodano brakujący `src/vite-env.d.ts`.

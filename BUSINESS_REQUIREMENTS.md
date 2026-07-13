@@ -1,8 +1,15 @@
 # FamilyOrganiser — Wymagania Biznesowe
 
-**Wersja:** 1.0
-**Data:** 2026-03-07
+**Wersja:** 1.1
+**Data:** 2026-07-13
 **Właściciel produktu:** fifmazurkiewicz
+
+**Historia zmian:**
+
+| Wersja | Data | Zakres |
+|--------|------|--------|
+| 1.1 | 2026-07-13 | Refaktoryzacja techniczna: przywrócono brakującą warstwę API frontendu (`src/lib/api/` była wykluczana przez `.gitignore`), ujednolicono odświeżanie danych po operacjach, usunięto zapytania N+1 w module grup rodzinnych, uzupełniono `requirements.txt`. Dodano wymaganie 4.5 „Prostota utrzymania". |
+| 1.0 | 2026-03-07 | Pierwsza wersja dokumentu |
 
 ---
 
@@ -441,6 +448,16 @@ W czasie trwania wniosku zasób jest **zablokowany** (nie można go edytować).
 
 - Architektura monolityczna na start (może być rozbita na mikroserwisy w przyszłości)
 - Konteneryzacja przez Docker (łatwy deployment i backup)
+
+### 4.5 Prostota utrzymania (zasada nadrzędna)
+
+Aplikacja jest utrzymywana hobbystycznie przez jedną osobę — prostota ma pierwszeństwo przed elastycznością:
+
+- **Jedna droga do API** — frontend komunikuje się z backendem wyłącznie przez typowane serwisy w `frontend/src/lib/api/` (bez rozproszonych, „gołych" wywołań HTTP w komponentach)
+- **Wspólna logika odświeżania danych** — operacje pieniężne odświeżają widoki (konta, dashboard, trendy) jednym pomocnikiem `invalidateFinanceViews`, a nie kopiowanym blokiem kodu
+- **Brak martwego kodu** — nieużywane metody i importy są usuwane od razu
+- **Zapytania bez pętli N+1** — listy (grupy, członkowie) pobierane jednym zapytaniem SQL z JOIN-em
+- **Klikalność ponad konfigurowalność** — każda funkcja musi być dostępna z UI w maksymalnie 2–3 kliknięciach; funkcje wymagające ręcznej konfiguracji poza UI nie wchodzą do zakresu
 
 ---
 

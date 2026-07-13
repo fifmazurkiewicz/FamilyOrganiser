@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { incomeApi } from "@/lib/api/income";
 import { accountsApi } from "@/lib/api/accounts";
+import { invalidateFinanceViews } from "@/hooks/invalidate";
 import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
 import type { Income, IncomeCategory, IncomeTemplate } from "@/types";
@@ -39,28 +40,16 @@ export function IncomeList() {
   const { data: accounts } = useQuery({ queryKey: ["accounts"], queryFn: accountsApi.list });
   const createIncome = useMutation({
     mutationFn: incomeApi.create,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["incomes"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
-    },
+    onSuccess: () => invalidateFinanceViews(qc, ["incomes"]),
   });
   const updateIncome = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       incomeApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["incomes"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
-    },
+    onSuccess: () => invalidateFinanceViews(qc, ["incomes"]),
   });
   const deleteIncome = useMutation({
     mutationFn: incomeApi.delete,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["incomes"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      qc.invalidateQueries({ queryKey: ["monthly-trend"] });
-    },
+    onSuccess: () => invalidateFinanceViews(qc, ["incomes"]),
   });
 
   const { data: templates } = useQuery({

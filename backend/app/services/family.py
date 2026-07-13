@@ -50,25 +50,10 @@ class FamilyService:
         return group
 
     async def list_user_groups(self, user_id: UUID) -> List[Tuple[FamilyGroup, int]]:
-        memberships = await self._memberships.list_by_user(user_id)
-        result = []
-        for m in memberships:
-            group = await self._groups.get(m.family_group_id)
-            if group:
-                count = await self._memberships.member_count(m.family_group_id)
-                result.append((group, count))
-        return result
+        return await self._groups.list_with_member_counts(user_id)
 
     async def admin_list_all_groups(self) -> List[Tuple[FamilyGroup, int]]:
-        from sqlalchemy import select
-        result = await self._session.execute(
-            select(FamilyGroup).order_by(FamilyGroup.created_at.desc())
-        )
-        groups = result.scalars().all()
-        return [
-            (g, await self._memberships.member_count(g.id))
-            for g in groups
-        ]
+        return await self._groups.list_with_member_counts()
 
     async def admin_delete_group(self, group_id: UUID) -> None:
         group = await self._groups.get(group_id)
@@ -93,8 +78,10 @@ class FamilyService:
             raise ForbiddenError("Family admin role required")
         return membership
 
-    async def list_members(self, group_id: UUID) -> List[FamilyMembership]:
-        return await self._memberships.list_by_group(group_id)
+    async def list_members_with_users(
+        self, group_id: UUID
+    ) -> List[Tuple[FamilyMembership, User]]:
+        return await self._memberships.list_by_group_with_users(group_id)
 
     async def remove_member(
         self, actor: User, group_id: UUID, target_user_id: UUID

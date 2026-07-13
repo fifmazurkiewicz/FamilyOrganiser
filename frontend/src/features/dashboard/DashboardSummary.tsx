@@ -38,10 +38,10 @@ export function DashboardSummary() {
   if (isLoading) return <Spinner />;
   if (!dash) return null;
 
-  const netWorth = dash.net_worth ?? dash.total_balance ?? 0;
-  const monthlyIncome = dash.monthly_income ?? dash.month_income ?? 0;
-  const monthlyExpenses = dash.monthly_expenses ?? dash.month_expenses ?? 0;
-  const savingsRate = (dash.savings_rate ?? 0);
+  const netWorth = dash.net_worth ?? 0;
+  const monthlyIncome = dash.monthly_income ?? 0;
+  const monthlyExpenses = dash.monthly_expenses ?? 0;
+  const savingsRate = dash.savings_rate ?? 0;
   const topExpenses = dash.top_expenses ?? [];
   const recentTransactions = dash.recent_transactions ?? [];
 

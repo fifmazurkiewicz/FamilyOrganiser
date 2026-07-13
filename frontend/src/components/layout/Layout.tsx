@@ -2,7 +2,9 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { useGroupStore } from "@/stores/groupStore";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/api/client";
+import { usersApi } from "@/lib/api/users";
+import { familyApi } from "@/lib/api/family";
+import { useNotificationCount } from "@/hooks/useNotifications";
 import {
   LayoutDashboard, CreditCard, Receipt, PiggyBank, TrendingUp,
   DollarSign, BarChart2, Users, Bell, User, LogOut, ChevronDown, Shield
@@ -30,7 +32,7 @@ export default function Layout() {
   // Fetch current user profile
   const { data: userData } = useQuery({
     queryKey: ["me"],
-    queryFn: () => api.get("/v1/users/me").then((r) => r.data),
+    queryFn: usersApi.me,
   });
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Layout() {
   // Fetch groups
   const { data: groupsData } = useQuery({
     queryKey: ["groups"],
-    queryFn: () => api.get("/v1/groups/").then((r) => r.data),
+    queryFn: familyApi.listGroups,
   });
 
   useEffect(() => {
@@ -55,11 +57,7 @@ export default function Layout() {
   }, [groupsData, activeGroup, setGroups, setActiveGroup]);
 
   // Fetch unread notification count
-  const { data: notifData } = useQuery({
-    queryKey: ["notif-count"],
-    queryFn: () => api.get("/v1/notifications/count").then((r) => r.data),
-    refetchInterval: 30000,
-  });
+  const { data: notifData } = useNotificationCount();
 
   const handleLogout = () => {
     logout();
@@ -150,9 +148,9 @@ export default function Layout() {
           >
             <Bell className="h-4 w-4" />
             Powiadomienia
-            {notifData?.count > 0 && (
+            {(notifData?.count ?? 0) > 0 && (
               <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
-                {notifData.count}
+                {notifData?.count}
               </span>
             )}
           </NavLink>

@@ -51,30 +51,20 @@ async def list_members(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    from sqlalchemy import select
-    from app.models.user import User as UserModel
-
     svc = FamilyService(db)
     await svc.require_membership(current_user.id, group_id)
-    memberships = await svc.list_members(group_id)
-
-    members = []
-    for m in memberships:
-        result = await db.execute(select(UserModel).where(UserModel.id == m.user_id))
-        user = result.scalar_one_or_none()
-        if user:
-            members.append(
-                MemberResponse(
-                    id=m.id,
-                    user_id=m.user_id,
-                    full_name=user.full_name,
-                    email=user.email,
-                    avatar_url=user.avatar_url,
-                    role=m.role,
-                    joined_at=m.joined_at,
-                )
-            )
-    return members
+    return [
+        MemberResponse(
+            id=m.id,
+            user_id=m.user_id,
+            full_name=user.full_name,
+            email=user.email,
+            avatar_url=user.avatar_url,
+            role=m.role,
+            joined_at=m.joined_at,
+        )
+        for m, user in await svc.list_members_with_users(group_id)
+    ]
 
 
 @router.delete("/{group_id}/members/{member_user_id}", status_code=204)

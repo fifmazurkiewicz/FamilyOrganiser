@@ -16,6 +16,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Wyjątek: kod źródłowy frontendu (reguła `lib/` z szablonu Pythona ukrywała warstwę API!)
+!frontend/src/lib/
 parts/
 sdist/
 var/
