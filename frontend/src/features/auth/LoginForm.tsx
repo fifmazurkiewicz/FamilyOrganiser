@@ -5,6 +5,7 @@ import { authApi } from "@/lib/api/auth";
 import { usersApi } from "@/lib/api/users";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export function LoginForm() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +24,7 @@ export function LoginForm() {
       setTokens(tokens.access_token, tokens.refresh_token);
       const user = await usersApi.me();
       setUser(user);
-      navigate("/");
+      navigate("/app");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       setError(msg || "Nieprawidłowy email lub hasło");
@@ -32,26 +34,46 @@ export function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-5">
       <Input
         label="Email"
         type="email"
         value={form.email}
         onChange={(e) => setForm({ ...form, email: e.target.value })}
         autoComplete="email"
+        placeholder="twoj@email.pl"
         required
       />
-      <Input
-        label="Hasło"
-        type="password"
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-        autoComplete="current-password"
-        required
-      />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <Button type="submit" className="w-full" loading={loading}>
-        Zaloguj się
+      <div className="space-y-1">
+        <div className="relative">
+          <Input
+            label="Hasło"
+            type={showPassword ? "text" : "password"}
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            autoComplete="current-password"
+            placeholder="••••••••"
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors"
+            tabIndex={-1}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+      </div>
+
+      {error && (
+        <div className="p-3 rounded-lg bg-destructive-muted border border-destructive/20 text-sm text-destructive animate-in fade-in slide-in-from-top-1 duration-200">
+          {error}
+        </div>
+      )}
+
+      <Button type="submit" className="w-full" size="lg" loading={loading}>
+        <LogIn className="h-4 w-4" /> Zaloguj się
       </Button>
     </form>
   );
