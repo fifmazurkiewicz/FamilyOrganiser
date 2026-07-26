@@ -2,15 +2,19 @@ import uuid
 from datetime import datetime, timezone
 from typing import List
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import NotFoundError, ForbiddenError
 from app.models.shopping import ShoppingList, ShoppingItem
+from app.models.family import FamilyMembership
+from app.models.notification import NotificationType
 from app.repositories.shopping import ShoppingListRepository, ShoppingItemRepository
 from app.schemas.shopping import (
     ShoppingListCreate, ShoppingListUpdate, ShoppingListResponse,
     ShoppingItemCreate, ShoppingItemUpdate, ShoppingItemResponse,
 )
+from app.services.notification import NotificationService
 
 
 class ShoppingService:
@@ -18,6 +22,15 @@ class ShoppingService:
         self.db = db
         self.list_repo = ShoppingListRepository(db)
         self.item_repo = ShoppingItemRepository(db)
+
+    async def _get_family_members(self, family_group_id: uuid.UUID) -> List[uuid.UUID]:
+        """Get all user IDs who are members of the given family group."""
+        result = await self.db.execute(
+            select(FamilyMembership.user_id).where(
+                FamilyMembership.family_group_id == family_group_id
+            )
+        )
+        return [row[0] for row in result.all()]
 
     # ── lists ──────────────────────────────────────────────
 
@@ -35,6 +48,7 @@ class ShoppingService:
         )
         await self.list_repo.add(lst)
         await self.list_repo.commit()
+        lst = await self.list_repo.get_or_raise(lst.id)
         return ShoppingListResponse.model_validate(lst)
 
     async def get_list(self, list_id: uuid.UUID) -> ShoppingListResponse:
@@ -57,8 +71,8 @@ class ShoppingService:
 
     # ── items ──────────────────────────────────────────────
 
-    async def list_items(self, list_id: uuid.UUID) -> List[ShoppingItemResponse]:
-        items = await self.item_repo.list_for_list(list_id)
+    async def list_items(self, list_id: uuid.UUID, include_done: bool = False) -> List[ShoppingItemResponse]:
+        items = await self.item_repo.list_for_list(list_id, include_done=include_done)
         return [ShoppingItemResponse.model_validate(i) for i in items]
 
     async def create_item(
@@ -72,6 +86,21 @@ class ShoppingService:
         )
         await self.item_repo.add(item)
         await self.item_repo.commit()
+
+        # Notify family group members about the new item
+        lst = await self.list_repo.get_or_raise(list_id)
+        member_ids = await self._get_family_members(lst.family_group_id)
+        notif_svc = NotificationService(self.db)
+        for member_id in member_ids:
+            if member_id != user_id:
+                await notif_svc.create(
+                    user_id=member_id,
+                    notification_type=NotificationType.SHOPPING_ITEM_ADDED,
+                    title="Nowy produkt na liście zakupów",
+                    body=f"Dodano \"{data.name}\" (x{data.quantity}) do listy \"{lst.name}\".",
+                    data={"list_id": str(list_id), "item_id": str(item.id)},
+                )
+
         return ShoppingItemResponse.model_validate(item)
 
     async def update_item(
@@ -93,6 +122,19 @@ class ShoppingService:
             item.bought_by = None
             item.bought_at = None
         await self.item_repo.commit()
+
+        # Notify the person who added the item when it's bought
+        if item.is_bought and item.added_by != user_id:
+            notif_svc = NotificationService(self.db)
+            lst = await self.list_repo.get_or_raise(item.list_id)
+            await notif_svc.create(
+                user_id=item.added_by,
+                notification_type=NotificationType.SHOPPING_ITEM_BOUGHT,
+                title="Produkt kupiony!",
+                body=f"\"{item.name}\" z listy \"{lst.name}\" został kupiony.",
+                data={"list_id": str(item.list_id), "item_id": str(item.id)},
+            )
+
         return ShoppingItemResponse.model_validate(item)
 
     async def delete_item(self, item_id: uuid.UUID) -> None:

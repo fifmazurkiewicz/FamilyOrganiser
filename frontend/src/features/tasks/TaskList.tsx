@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, CheckSquare, Trash2, Check, User, Calendar } from "lucide-react";
+import { Plus, CheckSquare, Trash2, Check, User, Calendar, History } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -86,13 +86,29 @@ function TaskListCard({
 function TaskItemsView({
   listId,
   items,
+  showHistory,
 }: {
   listId: string;
   items: TaskItem[];
+  showHistory: boolean;
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [newTitle, setNewTitle] = useState("");
+
+  // Refetch items based on showHistory toggle
+  const { data: historyData } = useQuery<TaskItem[]>({
+    queryKey: ["task-items", listId, showHistory],
+    queryFn: () =>
+      api
+        .get(`/v1/tasks/lists/${listId}/items`, {
+          params: { include_done: showHistory },
+        })
+        .then((r) => r.data),
+    enabled: showHistory,
+  });
+
+  const displayItems = showHistory ? historyData ?? items : items;
 
   const { data: members } = useQuery<FamilyMember[]>({
     queryKey: ["family-members"],
@@ -136,7 +152,7 @@ function TaskItemsView({
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
   });
 
-  const sortedItems = [...items].sort((a, b) => {
+  const sortedItems = [...displayItems].sort((a, b) => {
     if (a.is_done === b.is_done) return 0;
     return a.is_done ? 1 : -1;
   });
@@ -265,6 +281,7 @@ export function TaskList() {
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   const { data: lists, isLoading } = useQuery<TaskList[]>({
     queryKey: ["task-lists"],
@@ -342,15 +359,30 @@ export function TaskList() {
           </div>
           <div>
             {selectedList ? (
-              <Card className="h-full">
-                <CardHeader>
-                  <CardTitle>{selectedList.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <TaskItemsView
-                    listId={selectedList.id}
-                    items={selectedList.items}
-                  />
+                          <Card className="h-full">
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <CardTitle>{selectedList.name}</CardTitle>
+                                <button
+                                  onClick={() => setShowHistory(!showHistory)}
+                                  className={cn(
+                                    "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all",
+                                    showHistory
+                                      ? "bg-primary/10 border-primary/30 text-primary"
+                                      : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                  )}
+                                >
+                                  <History className="h-3.5 w-3.5" />
+                                  Pokaż historię
+                                </button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <TaskItemsView
+                                listId={selectedList.id}
+                                items={selectedList.items}
+                                showHistory={showHistory}
+                              />
                 </CardContent>
               </Card>
             ) : (

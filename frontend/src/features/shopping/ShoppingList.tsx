@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ShoppingCart, Trash2, Check, Undo2 } from "lucide-react";
+import { Plus, ShoppingCart, Trash2, Check, Undo2, History } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -78,13 +78,29 @@ function ShoppingListCard({
 function ShoppingItemsView({
   listId,
   items,
+  showHistory,
 }: {
   listId: string;
   items: ShoppingItem[];
+  showHistory: boolean;
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [newItem, setNewItem] = useState("");
+
+  // Refetch items based on showHistory toggle
+  const { data: historyData } = useQuery<ShoppingItem[]>({
+    queryKey: ["shopping-items", listId, showHistory],
+    queryFn: () =>
+      api
+        .get(`/v1/shopping/lists/${listId}/items`, {
+          params: { include_done: showHistory },
+        })
+        .then((r) => r.data),
+    enabled: showHistory,
+  });
+
+  const displayItems = showHistory ? historyData ?? items : items;
 
   const toggleItem = useMutation({
     mutationFn: ({ itemId, is_bought }: { itemId: string; is_bought: boolean }) =>
@@ -112,7 +128,7 @@ function ShoppingItemsView({
     onError: () => toast("error", "Błąd", "Nie udało się usunąć pozycji."),
   });
 
-  const sortedItems = [...items].sort((a, b) => {
+  const sortedItems = [...displayItems].sort((a, b) => {
     if (a.is_bought === b.is_bought) return 0;
     return a.is_bought ? 1 : -1;
   });
@@ -208,6 +224,7 @@ export function ShoppingList() {
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
 
   const {
     data: lists,
@@ -294,13 +311,28 @@ export function ShoppingList() {
             {selectedList ? (
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle>{selectedList.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ShoppingItemsView
-                    listId={selectedList.id}
-                    items={selectedList.items}
-                  />
+                                  <div className="flex items-center justify-between">
+                                    <CardTitle>{selectedList.name}</CardTitle>
+                                    <button
+                                      onClick={() => setShowHistory(!showHistory)}
+                                      className={cn(
+                                        "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all",
+                                        showHistory
+                                          ? "bg-primary/10 border-primary/30 text-primary"
+                                          : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                      )}
+                                    >
+                                      <History className="h-3.5 w-3.5" />
+                                      Pokaż historię
+                                    </button>
+                                  </div>
+                                </CardHeader>
+                                <CardContent>
+                                  <ShoppingItemsView
+                                    listId={selectedList.id}
+                                    items={selectedList.items}
+                                    showHistory={showHistory}
+                                  />
                 </CardContent>
               </Card>
             ) : (
