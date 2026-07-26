@@ -22,8 +22,12 @@ class TaskService:
         )
         self._session.add(lst)
         await self._session.commit()
-        await self._session.refresh(lst)
-        return lst
+        result = await self._session.execute(
+            select(TaskList)
+            .options(selectinload(TaskList.items))
+            .where(TaskList.id == lst.id)
+        )
+        return result.scalars().first()
 
     async def list_lists(self, family_group_id: uuid.UUID) -> List[TaskList]:
         result = await self._session.execute(

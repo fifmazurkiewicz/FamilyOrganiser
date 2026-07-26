@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
-import { Badge } from "@/components/ui/Badge";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
+import { useGroupStore } from "@/stores/groupStore";
 import { api } from "@/api/client";
 import { cn } from "@/utils/cn";
 
@@ -88,7 +88,6 @@ function ShoppingItemsView({
   const { toast } = useToast();
   const [newItem, setNewItem] = useState("");
 
-  // Refetch items based on showHistory toggle
   const { data: historyData } = useQuery<ShoppingItem[]>({
     queryKey: ["shopping-items", listId, showHistory],
     queryFn: () =>
@@ -102,12 +101,15 @@ function ShoppingItemsView({
 
   const displayItems = showHistory ? historyData ?? items : items;
 
+  const invalidateShopping = () => {
+    qc.invalidateQueries({ queryKey: ["shopping-lists"] });
+    qc.invalidateQueries({ queryKey: ["shopping-items", listId] });
+  };
+
   const toggleItem = useMutation({
-    mutationFn: ({ itemId, is_bought }: { itemId: string; is_bought: boolean }) =>
-      api.patch(`/v1/shopping/lists/${listId}/items/${itemId}`, { is_bought }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shopping-lists"] });
-    },
+    mutationFn: (itemId: string) =>
+      api.post(`/v1/shopping/items/${itemId}/toggle`),
+    onSuccess: () => invalidateShopping(),
     onError: () => toast("error", "Błąd", "Nie udało się zaktualizować pozycji."),
   });
 
@@ -115,16 +117,15 @@ function ShoppingItemsView({
     mutationFn: (name: string) =>
       api.post(`/v1/shopping/lists/${listId}/items`, { name, quantity: 1 }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["shopping-lists"] });
+      invalidateShopping();
       setNewItem("");
     },
     onError: () => toast("error", "Błąd", "Nie udało się dodać pozycji."),
   });
 
   const removeItem = useMutation({
-    mutationFn: (itemId: string) =>
-      api.delete(`/v1/shopping/lists/${listId}/items/${itemId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping-lists"] }),
+    mutationFn: (itemId: string) => api.delete(`/v1/shopping/items/${itemId}`),
+    onSuccess: () => invalidateShopping(),
     onError: () => toast("error", "Błąd", "Nie udało się usunąć pozycji."),
   });
 
@@ -135,7 +136,7 @@ function ShoppingItemsView({
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newItem.trim()) return;
+    if (!newItem.trim() || addItem.isPending) return;
     addItem.mutate(newItem.trim());
   };
 
@@ -161,9 +162,8 @@ function ShoppingItemsView({
           {sortedItems.map((item) => (
             <li key={item.id} className="flex items-center gap-3 py-2.5 group">
               <button
-                onClick={() =>
-                  toggleItem.mutate({ itemId: item.id, is_bought: !item.is_bought })
-                }
+                type="button"
+                onClick={() => toggleItem.mutate(item.id)}
                 className={cn(
                   "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
                   item.is_bought
@@ -191,9 +191,7 @@ function ShoppingItemsView({
                   variant="ghost"
                   size="sm"
                   className="text-gray-400 hover:text-primary opacity-0 group-hover:opacity-100"
-                  onClick={() =>
-                    toggleItem.mutate({ itemId: item.id, is_bought: false })
-                  }
+                  onClick={() => toggleItem.mutate(item.id)}
                   title="Cofnij kupienie"
                 >
                   <Undo2 className="h-3.5 w-3.5" />
@@ -221,6 +219,7 @@ function ShoppingItemsView({
 export function ShoppingList() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { activeGroup } = useGroupStore();
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newListName, setNewListName] = useState("");
@@ -230,17 +229,27 @@ export function ShoppingList() {
     data: lists,
     isLoading,
   } = useQuery<ShoppingList[]>({
-    queryKey: ["shopping-lists"],
-    queryFn: () => api.get("/v1/shopping/lists/").then((r) => r.data),
+    queryKey: ["shopping-lists", activeGroup?.id],
+    queryFn: () =>
+      api
+        .get("/v1/shopping/lists", {
+          params: { family_group_id: activeGroup!.id },
+        })
+        .then((r) => r.data),
+    enabled: !!activeGroup?.id,
   });
 
   const createList = useMutation({
     mutationFn: (name: string) =>
-      api.post("/v1/shopping/lists/", { name }),
+      api.post("/v1/shopping/lists", {
+        name,
+        family_group_id: activeGroup!.id,
+      }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["shopping-lists"] });
       setCreateOpen(false);
       setNewListName("");
+      setSelectedListId(res.data.id);
       toast("success", "Utworzono", `Lista "${res.data.name}" została utworzona.`);
     },
     onError: () => toast("error", "Błąd", "Nie udało się utworzyć listy."),
@@ -256,6 +265,22 @@ export function ShoppingList() {
   });
 
   const selectedList = lists?.find((l) => l.id === selectedListId);
+
+  const handleCreateList = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newListName.trim() || !activeGroup?.id || createList.isPending) return;
+    createList.mutate(newListName.trim());
+  };
+
+  if (!activeGroup) {
+    return (
+      <EmptyState
+        icon={ShoppingCart}
+        title="Wybierz grupę rodzinną"
+        description="Aby korzystać z list zakupów, wybierz aktywną grupę w menu."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -291,7 +316,6 @@ export function ShoppingList() {
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
-          {/* Sidebar list */}
           <div className="space-y-2">
             {lists.map((list) => (
               <ShoppingListCard
@@ -306,33 +330,33 @@ export function ShoppingList() {
             ))}
           </div>
 
-          {/* Items view */}
           <div>
             {selectedList ? (
               <Card className="h-full">
                 <CardHeader>
-                                  <div className="flex items-center justify-between">
-                                    <CardTitle>{selectedList.name}</CardTitle>
-                                    <button
-                                      onClick={() => setShowHistory(!showHistory)}
-                                      className={cn(
-                                        "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all",
-                                        showHistory
-                                          ? "bg-primary/10 border-primary/30 text-primary"
-                                          : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                                      )}
-                                    >
-                                      <History className="h-3.5 w-3.5" />
-                                      Pokaż historię
-                                    </button>
-                                  </div>
-                                </CardHeader>
-                                <CardContent>
-                                  <ShoppingItemsView
-                                    listId={selectedList.id}
-                                    items={selectedList.items}
-                                    showHistory={showHistory}
-                                  />
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{selectedList.name}</CardTitle>
+                    <button
+                      type="button"
+                      onClick={() => setShowHistory(!showHistory)}
+                      className={cn(
+                        "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all",
+                        showHistory
+                          ? "bg-primary/10 border-primary/30 text-primary"
+                          : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      )}
+                    >
+                      <History className="h-3.5 w-3.5" />
+                      Pokaż historię
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ShoppingItemsView
+                    listId={selectedList.id}
+                    items={selectedList.items}
+                    showHistory={showHistory}
+                  />
                 </CardContent>
               </Card>
             ) : (
@@ -344,28 +368,28 @@ export function ShoppingList() {
         </div>
       )}
 
-      {/* Create modal */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Nowa lista zakupów">
-        <div className="space-y-4">
+        <form onSubmit={handleCreateList} className="space-y-4">
           <Input
             label="Nazwa listy"
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
             placeholder="np. Zakupy na weekend"
+            autoFocus
           />
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
               Anuluj
             </Button>
             <Button
-              onClick={() => createList.mutate(newListName)}
+              type="submit"
               loading={createList.isPending}
               disabled={!newListName.trim()}
             >
               Utwórz
             </Button>
           </div>
-        </div>
+        </form>
       </Modal>
     </div>
   );
