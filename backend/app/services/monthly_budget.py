@@ -85,6 +85,32 @@ class MonthlyBudgetService:
         await self._session.refresh(entry)
         return entry
 
+    async def add_entry(self, user_id: uuid.UUID, budget_id: uuid.UUID, data) -> BudgetEntry:
+        entry = BudgetEntry(
+            budget_id=budget_id,
+            entry_type=data.entry_type,
+            name=data.name,
+            amount=data.amount,
+            is_recurring=data.is_recurring,
+            created_by=user_id,
+        )
+        self._session.add(entry)
+        await self._session.commit()
+        await self._session.refresh(entry)
+        return entry
+
+    async def update_entry_partial(self, entry_id: uuid.UUID, data) -> BudgetEntry:
+        entry = await self._session.get(BudgetEntry, entry_id)
+        if not entry:
+            raise NotFoundError(f"BudgetEntry {entry_id} not found")
+        update_dict = data.model_dump(exclude_none=True)
+        for key, value in update_dict.items():
+            if hasattr(entry, key):
+                setattr(entry, key, value)
+        await self._session.commit()
+        await self._session.refresh(entry)
+        return entry
+
     async def delete_entry(self, entry: BudgetEntry) -> None:
         await self._session.delete(entry)
         await self._session.commit()

@@ -17,7 +17,7 @@ async def list_budgets(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await BudgetService(db).list(current_user.id)
+    return await BudgetService(db).list_for_user(current_user.id)
 
 
 @router.post("/", response_model=BudgetResponse, status_code=201)
@@ -26,7 +26,7 @@ async def create_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await BudgetService(db).create(current_user.id, data)
+    return await BudgetService(db).create(data.model_dump(), current_user.id)
 
 
 @router.get("/{budget_id}", response_model=BudgetResponse)
@@ -35,7 +35,7 @@ async def get_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await BudgetService(db).get(current_user.id, budget_id)
+    return await BudgetService(db).get(budget_id, current_user.id)
 
 
 @router.patch("/{budget_id}", response_model=BudgetResponse)
@@ -45,7 +45,9 @@ async def update_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await BudgetService(db).update(current_user.id, budget_id, data)
+    svc = BudgetService(db)
+    budget = await svc.get(budget_id, current_user.id)
+    return await svc.update(budget, data.model_dump(exclude_unset=True))
 
 
 @router.delete("/{budget_id}", status_code=204)
@@ -54,4 +56,6 @@ async def delete_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await BudgetService(db).delete(current_user.id, budget_id)
+    svc = BudgetService(db)
+    budget = await svc.get(budget_id, current_user.id)
+    await svc.delete(budget)

@@ -13,6 +13,13 @@ class BudgetEntryCreate(BaseModel):
     is_recurring: bool = False
 
 
+class BudgetEntryUpdate(BaseModel):
+    entry_type: Optional[BudgetEntryType] = None
+    name: Optional[str] = None
+    amount: Optional[Decimal] = None
+    is_recurring: Optional[bool] = None
+
+
 class BudgetEntryResponse(BaseModel):
     id: uuid.UUID
     budget_id: uuid.UUID

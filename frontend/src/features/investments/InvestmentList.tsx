@@ -90,7 +90,7 @@ export function InvestmentList() {
 
   const { data: investments, isLoading } = useQuery<Investment[]>({
     queryKey: ["investments"],
-    queryFn: () => api.get("/v1/simple-investments/").then((r) => r.data),
+    queryFn: () => api.get("/v1/simple-investments/", { params: { family_group_id: activeGroup?.id } }).then((r) => r.data),
   });
 
   const createInv = useMutation({
