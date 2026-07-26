@@ -5,8 +5,8 @@ import { useGroupStore } from "@/stores/groupStore";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import {
-  LayoutDashboard, CreditCard, Receipt, PiggyBank, TrendingUp,
-  DollarSign, BarChart2, Users, Bell, User, LogOut, ChevronDown,
+  LayoutDashboard, TrendingUp,
+  BarChart2, Users, Bell, User, LogOut, ChevronDown,
   Shield, Menu, X, Home, ChevronRight, ShoppingCart, CheckSquare,
   PieChart
 } from "lucide-react";
@@ -15,15 +15,10 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const navItems = [
   { to: "/app", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/app/accounts", icon: CreditCard, label: "Konta" },
-  { to: "/app/transactions", icon: Receipt, label: "Transakcje" },
   { to: "/app/shopping", icon: ShoppingCart, label: "Lista zakupów" },
   { to: "/app/tasks", icon: CheckSquare, label: "Zadania" },
-  { to: "/app/expenses", icon: Receipt, label: "Wydatki" },
   { to: "/app/budget-monthly", icon: PieChart, label: "Budżet miesięczny" },
-  { to: "/app/savings", icon: PiggyBank, label: "Oszczędności" },
   { to: "/app/investments", icon: TrendingUp, label: "Inwestycje" },
-  { to: "/app/income", icon: DollarSign, label: "Przychody" },
   { to: "/app/reports", icon: BarChart2, label: "Raporty" },
   { to: "/app/groups", icon: Users, label: "Grupy rodzinne" },
 ];

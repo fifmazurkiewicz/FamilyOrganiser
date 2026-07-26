@@ -32,10 +32,11 @@ interface Investment {
   id: string;
   name: string;
   investment_type: string;
-  amount: number;
-  currency: string;
-  rate: number;
-  duration_months: number;
+  principal_amount: number;
+  interest_rate: number;
+  interest_period: string;
+  duration_value: number;
+  duration_unit: string;
   start_date: string;
   end_date: string;
   projected_profit: number;
@@ -241,7 +242,7 @@ export function InvestmentList() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {investments.map((inv) => {
-            const profitPercent = inv.principal_amount ? (inv.projected_profit / inv.principal_amount) * 100 : 0;
+            const profitPercent = (inv.projected_profit / inv.principal_amount) * 100;
             const now = new Date();
             const endDate = new Date(inv.end_date);
             const isActive = endDate >= now;
@@ -272,7 +273,7 @@ export function InvestmentList() {
                   <div>
                     <p className="text-xs text-gray-500">Kwota</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(inv.principal_amount, "PLN")}
+                      {formatCurrency(inv.principal_amount, inv.currency)}
                     </p>
                   </div>
 

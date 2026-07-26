@@ -11,8 +11,6 @@ from app.models.account import Account
 from app.models.income import Income
 from app.models.savings import SavingsGoal
 from app.models.transaction import Transaction, TransactionCategory, TransactionType
-from app.services.savings import SavingsService
-from app.services.transaction import TransactionService
 
 
 class ReportService:
@@ -69,52 +67,6 @@ class ReportService:
             for e in top_expenses
         ]
 
-        goals = await SavingsService(self._session).list_goals(user_id)
-        active_goals = [
-            {
-                "id": str(g.id),
-                "user_id": str(g.user_id),
-                "name": g.name,
-                "description": g.description,
-                "icon": g.icon,
-                "color": g.color,
-                "target_amount": float(g.target_amount),
-                "current_amount": float(g.current_amount),
-                "currency": g.currency,
-                "goal_type": g.goal_type.value,
-                "visibility": g.visibility.value,
-                "target_date": str(g.target_date) if g.target_date else None,
-                "monthly_contribution": float(g.monthly_contribution) if g.monthly_contribution else None,
-                "is_completed": g.is_completed,
-                "is_active": g.is_active,
-                "priority": g.priority,
-                "created_at": g.created_at.isoformat() if g.created_at else None,
-            }
-            for g in goals
-        ]
-
-        transactions = await TransactionService(self._session).list(
-            user_id, limit=10
-        )
-        recent_transactions = [
-            {
-                "id": str(t.id),
-                "user_id": str(t.user_id),
-                "account_id": str(t.account_id),
-                "category_id": str(t.category_id) if t.category_id else None,
-                "amount": float(t.amount_pln or t.amount),
-                "amount_pln": float(t.amount_pln or t.amount),
-                "currency": t.currency,
-                "description": t.description,
-                "merchant": None,
-                "transaction_date": str(t.transaction_date),
-                "transaction_type": t.transaction_type.value,
-                "tags": [],
-                "created_at": t.created_at.isoformat() if t.created_at else None,
-            }
-            for t in transactions
-        ]
-
         return {
             "total_assets": net_worth_val,
             "total_liabilities": 0.0,
@@ -123,8 +75,8 @@ class ReportService:
             "monthly_expenses": exp_val,
             "savings_rate": round(savings_rate, 1),
             "top_expenses": top_expenses_list,
-            "active_goals": active_goals,
-            "recent_transactions": recent_transactions,
+            "active_goals": [],
+            "recent_transactions": [],
         }
 
     async def expenses_by_category(

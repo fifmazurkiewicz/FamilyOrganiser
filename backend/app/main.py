@@ -26,18 +26,12 @@ async def lifespan(app: FastAPI):
         await seed_admin_user(db)
 
     # Schedule tasks
-    from app.tasks.exchange_rate_fetcher import fetch_and_store_exchange_rates, send_recurring_reminders
+    from app.tasks.exchange_rate_fetcher import fetch_and_store_exchange_rates
 
     scheduler.add_job(
         fetch_and_store_exchange_rates,
         CronTrigger(hour=settings.EXCHANGE_RATE_FETCH_HOUR, minute=0),
         id="fetch_exchange_rates",
-        replace_existing=True,
-    )
-    scheduler.add_job(
-        send_recurring_reminders,
-        CronTrigger(hour=7, minute=0),
-        id="send_recurring_reminders",
         replace_existing=True,
     )
     scheduler.start()

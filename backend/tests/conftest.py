@@ -238,15 +238,3 @@ async def budget(db_session: AsyncSession, family_group):
     await db_session.flush()
     await db_session.refresh(b)
     return b
-
-
-@pytest_asyncio.fixture
-async def expense(db_session: AsyncSession, family_group, test_user):
-    from app.models.expense import SimpleExpense
-    from datetime import date
-    exp = SimpleExpense(family_group_id=family_group.id, user_id=test_user.id,
-                        amount=100.00, description="Test expense", expense_date=date.today())
-    db_session.add(exp)
-    await db_session.flush()
-    await db_session.refresh(exp)
-    return exp

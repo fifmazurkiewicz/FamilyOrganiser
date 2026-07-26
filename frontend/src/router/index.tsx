@@ -52,16 +52,16 @@ export function AppRouter() {
           }
         >
           <Route index element={<DashboardPage />} />
-                    <Route path="shopping" element={<ShoppingPage />} />
-                    <Route path="tasks" element={<TasksPage />} />
-                    <Route path="budget" element={<Navigate to="/app/budget-monthly" replace />} />
-                    <Route path="budget-monthly" element={<BudgetMonthlyPage />} />
-                    <Route path="investments" element={<InvestmentsPage />} />
-                    <Route path="reports" element={<ReportsPage />} />
-                    <Route path="groups" element={<GroupsPage />} />
-                    <Route path="notifications" element={<NotificationsPage />} />
-                    <Route path="profile" element={<ProfilePage />} />
-                    <Route path="admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
+          <Route path="shopping" element={<ShoppingPage />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="budget" element={<Navigate to="/app/budget-monthly" replace />} />
+          <Route path="budget-monthly" element={<BudgetMonthlyPage />} />
+          <Route path="investments" element={<InvestmentsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="groups" element={<GroupsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="admin" element={<RequireAdmin><AdminPage /></RequireAdmin>} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
