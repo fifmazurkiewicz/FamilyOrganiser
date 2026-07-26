@@ -138,18 +138,19 @@ export interface SavingsContribution {
 export interface Investment {
   id: string;
   user_id: string;
-  investment_type: InvestmentType;
+  family_group_id: string;
+  investment_type: "deposit" | "bonds" | "stocks" | "other";
   name: string;
-  ticker?: string;
-  quantity?: number;
-  purchase_price?: number;
-  current_price?: number;
-  currency: string;
-  purchase_date?: string;
+  principal_amount: number;
+  interest_rate: number;
+  interest_period: "monthly" | "quarterly" | "yearly";
+  start_date: string;
+  duration_value: number;
+  duration_unit: "months" | "quarters" | "years";
+  end_date?: string;
+  projected_profit?: number;
+  projected_total?: number;
   notes?: string;
-  is_shared: boolean;
-  total_value?: number;
-  roi_percent?: number;
   created_at: string;
 }
 
