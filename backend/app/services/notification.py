@@ -1,12 +1,12 @@
 """Notification service."""
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, NotFoundError
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationType
 from app.repositories.notification import NotificationRepository
 
 
@@ -40,3 +40,15 @@ class NotificationService:
             notif.read_at = now
         await self._session.commit()
         return len(notifications)
+
+    async def create(
+        self,
+        user_id: UUID,
+        notification_type: NotificationType,
+        title: str,
+        body: str,
+        data: Optional[dict] = None,
+    ) -> Notification:
+        notif = await self._repo.add_notification(user_id, notification_type, title, body, data)
+        await self._session.commit()
+        return notif

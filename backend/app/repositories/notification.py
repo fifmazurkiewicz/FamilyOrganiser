@@ -1,10 +1,11 @@
-from typing import List
+"""Notification repository."""
+from typing import List, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.notification import Notification
+from app.models.notification import Notification, NotificationType
 from app.repositories.base import BaseRepository
 
 
@@ -37,3 +38,23 @@ class NotificationRepository(BaseRepository[Notification]):
 
     async def list_unread_for_user(self, user_id: UUID) -> List[Notification]:
         return await self.list_for_user(user_id, unread_only=True)
+
+    async def add_notification(
+        self,
+        user_id: UUID,
+        notification_type: NotificationType,
+        title: str,
+        body: str,
+        data: Optional[dict] = None,
+    ) -> Notification:
+        notif = Notification(
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            body=body,
+            data=data,
+        )
+        self._session.add(notif)
+        await self._session.flush()
+        await self._session.refresh(notif)
+        return notif

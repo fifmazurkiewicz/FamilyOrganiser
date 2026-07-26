@@ -23,10 +23,10 @@ class TaskListRepository(BaseRepository[TaskList]):
 class TaskItemRepository(BaseRepository[TaskItem]):
     model = TaskItem
 
-    async def list_for_list(self, list_id: uuid.UUID) -> List[TaskItem]:
-        result = await self._session.execute(
-            select(TaskItem)
-            .where(TaskItem.list_id == list_id)
-            .order_by(TaskItem.is_done.asc(), TaskItem.due_date.asc().nulls_last(), TaskItem.title.asc())
-        )
+    async def list_for_list(self, list_id: uuid.UUID, include_done: bool = False) -> List[TaskItem]:
+        stmt = select(TaskItem).where(TaskItem.list_id == list_id)
+        if not include_done:
+            stmt = stmt.where(TaskItem.is_done == False)
+        stmt = stmt.order_by(TaskItem.is_done.asc(), TaskItem.due_date.asc().nulls_last(), TaskItem.title.asc())
+        result = await self._session.execute(stmt)
         return list(result.scalars().all())

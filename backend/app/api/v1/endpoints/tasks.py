@@ -67,10 +67,11 @@ async def delete_list(
 @router.get("/lists/{list_id}/items", response_model=list[TaskItemResponse])
 async def list_items(
     list_id: uuid.UUID,
+    include_done: bool = Query(False, description="Pokaż ukończone zadania (historia)"),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).list_items(list_id)
+    return await TaskService(db).list_items(list_id, include_done=include_done)
 
 
 @router.post("/lists/{list_id}/items", response_model=TaskItemResponse, status_code=201)

@@ -22,6 +22,10 @@ class NotificationType(str, PyEnum):
     APPROVAL_RESOLVED = "approval_resolved"
     JOINT_ACCOUNT_TRANSACTION = "joint_account_transaction"
     ADMIN_PASSWORD_RESET = "admin_password_reset"
+    SHOPPING_ITEM_ADDED = "shopping_item_added"
+    SHOPPING_ITEM_BOUGHT = "shopping_item_bought"
+    TASK_COMPLETED = "task_completed"
+    BUDGET_EXCEEDED = "budget_exceeded"
 
 
 class Notification(Base):
