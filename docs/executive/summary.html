@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FamilyOrganiser — Executive Summary</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 13px; line-height: 1.5; color: #1a1a2e; background: #f8f9fb; }
+.header { background: linear-gradient(135deg, #059669, #10b981); color: white; padding: 28px 36px; }
+.header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
+.header .sub { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+.header .meta { display: flex; gap: 24px; margin-top: 12px; font-size: 11px; opacity: 0.75; }
+.container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 24px 0; }
+.card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid #e8ecf1; }
+.card h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; margin-bottom: 6px; }
+.card .big { font-size: 26px; font-weight: 700; color: #059669; }
+.card .big.red { color: #ef4444; }
+.bar { height: 8px; border-radius: 4px; background: #e5e7eb; margin-top: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.5s; }
+.bar-fill.warn { background: linear-gradient(90deg, #f59e0b, #d97706); }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f5; font-size: 12px; }
+th { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #9ca3af; font-weight: 600; }
+td:last-child { text-align: right; font-weight: 600; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-ok { background: #d1fae5; color: #065f46; }
+.badge-warn { background: #fef3c7; color: #92400e; }
+.section-title { font-size: 16px; font-weight: 700; margin: 26px 0 12px; color: #1f2937; }
+.risks li { padding: 8px 0; border-bottom: 1px solid #f0f0f5; list-style: none; }
+.risks li span { margin-right: 8px; }
+.link { color: #059669; text-decoration: none; font-weight: 500; }
+.link:hover { text-decoration: underline; }
+footer { text-align: center; padding: 24px; color: #9ca3af; font-size: 11px; border-top: 1px solid #e8ecf1; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🏠 FamilyOrganiser</h1>
+  <div class="sub">Zarządzanie finansami i organizacją życia rodzinnego</div>
+  <div class="meta">
+    <span>Wersja 2.0</span>
+    <span>Ostatnia aktualizacja: 26 lipca 2026</span>
+  </div>
+</div>
+
+<div class="container">
+  <h2 class="section-title">📊 Stan projektu</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Moduły gotowe</h3>
+      <div class="big">5 / 5</div>
+      <div class="bar"><div class="bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="card">
+      <h3>Endpointy API</h3>
+      <div class="big">36</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">wszystkie moduły</div>
+    </div>
+    <div class="card">
+      <h3>Stan deploymentu</h3>
+      <div class="big" style="font-size:18px"><span class="badge badge-warn">DEV</span></div>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">lokalne Docker Compose</div>
+    </div>
+    <div class="card">
+      <h3>Autorzy</h3>
+      <div class="big" style="font-size:18px">Hermes + zespół AI</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px">13 asystentów</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">🆕 Nowe funkcje (v2.0)</h2>
+  <table>
+    <tr><th>Moduł</th><th>Opis</th><th>Status</th></tr>
+    <tr><td>🛒 Lista zakupów</td><td>Wspólna checklista — dodajesz, rodzina widzi, odhaczasz kupione</td><td><span class="badge badge-ok">Gotowe</span></td></tr>
+    <tr><td>✅ Zadania domowe</td><td>Lista zadań z przypisaniem do osoby i terminem</td><td><span class="badge badge-ok">Gotowe</span></td></tr>
+    <tr><td>🧾 Wydatki</td><td>Prosty dziennik wydatków — kwota + opis + data</td><td><span class="badge badge-ok">Gotowe</span></td></tr>
+    <tr><td>🥧 Budżet miesięczny</td><td>Dochody i wydatki, live balance, kalkulator oszczędności</td><td><span class="badge badge-ok">Gotowe</span></td></tr>
+    <tr><td>📈 Inwestycje</td><td>Lokaty z auto-obliczaniem daty końca i prognozy zysku</td><td><span class="badge badge-ok">Gotowe</span></td></tr>
+  </table>
+
+  <h2 class="section-title">⚠️ Ryzyka i blokery</h2>
+  <ul class="risks">
+    <li><span>🟡</span> <strong>Brak testów automatycznych</strong> — wszystkie nowe moduły nie mają testów jednostkowych ani integracyjnych</li>
+    <li><span>🟡</span> <strong>Brak src/lib/api/*</strong> — część frontendowych hooków nie działa przez brakujące pliki API (pre-existing)</li>
+    <li><span>🟢</span> <strong>Brak deploymentu produkcyjnego</strong> — aplikacja działa tylko lokalnie, potrzebny tani VPS/Hetzner</li>
+  </ul>
+
+  <h2 class="section-title">🔗 Pełna dokumentacja</h2>
+  <p>
+    <a class="link" href="../business/features.md">📋 Opis funkcji</a> &nbsp;·&nbsp;
+    <a class="link" href="../business/CHANGELOG.md">📝 Lista zmian</a> &nbsp;·&nbsp;
+    <a class="link" href="../technical/architecture.md">🔧 Architektura</a> &nbsp;·&nbsp;
+    <a class="link" href="../technical/api.md">📡 API Reference</a> &nbsp;·&nbsp;
+    <a class="link" href="../technical/data-model.md">🗄️ Model danych</a>
+  </p>
+</div>
+
+<footer>FamilyOrganiser © 2026 &nbsp;·&nbsp; Wygenerowano automatycznie z docs/ &nbsp;·&nbsp; Otwórz w przeglądarce</footer>
+</body>
+</html>
