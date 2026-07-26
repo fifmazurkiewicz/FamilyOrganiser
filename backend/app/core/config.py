@@ -18,9 +18,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "FamilyOrganiser"
     DEBUG: bool = False
 
-    DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/familyorg"
-
-    REDIS_URL: str = "redis://localhost:6379/0"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./familyorg.db"
 
     SECRET_KEY: str = "changeme-in-production"
     ALGORITHM: str = "HS256"

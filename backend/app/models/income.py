@@ -4,7 +4,7 @@ from enum import Enum as PyEnum
 from decimal import Decimal
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Numeric, Date, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -22,12 +22,12 @@ class IncomeTemplate(Base):
     """Recurring income template (e.g. monthly salary)."""
     __tablename__ = "income_templates"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False
+        Uuid, ForeignKey("accounts.id"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     base_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
@@ -46,15 +46,15 @@ class Income(Base):
     """Actual income entry per month."""
     __tablename__ = "incomes"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False
+        Uuid, ForeignKey("accounts.id"), nullable=False
     )
     template_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("income_templates.id"), nullable=True
+        Uuid, ForeignKey("income_templates.id"), nullable=True
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)

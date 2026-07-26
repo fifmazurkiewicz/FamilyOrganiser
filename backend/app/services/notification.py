@@ -3,26 +3,41 @@ from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.models.notification import Notification, NotificationType
-from app.repositories.notification import NotificationRepository
 
 
 class NotificationService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-        self._repo = NotificationRepository(session)
 
     async def list(self, user_id: UUID, *, unread_only: bool = False) -> List[Notification]:
-        return await self._repo.list_for_user(user_id, unread_only=unread_only)
+        conditions = [Notification.user_id == user_id]
+        if unread_only:
+            conditions.append(Notification.is_read == False)
+
+        result = await self._session.execute(
+            select(Notification)
+            .where(*conditions)
+            .order_by(Notification.created_at.desc())
+            .limit(100)
+        )
+        return list(result.scalars().all())
 
     async def unread_count(self, user_id: UUID) -> int:
-        return await self._repo.unread_count(user_id)
+        result = await self._session.execute(
+            select(func.count()).where(
+                Notification.user_id == user_id,
+                Notification.is_read == False,
+            )
+        )
+        return result.scalar() or 0
 
     async def mark_read(self, notification_id: UUID, user_id: UUID) -> Notification:
-        notif = await self._repo.get(notification_id)
+        notif = await self._session.get(Notification, notification_id)
         if not notif:
             raise NotFoundError("Notification not found")
         if notif.user_id != user_id:
@@ -33,7 +48,13 @@ class NotificationService:
         return notif
 
     async def mark_all_read(self, user_id: UUID) -> int:
-        notifications = await self._repo.list_unread_for_user(user_id)
+        result = await self._session.execute(
+            select(Notification).where(
+                Notification.user_id == user_id,
+                Notification.is_read == False,
+            )
+        )
+        notifications = result.scalars().all()
         now = datetime.now(timezone.utc)
         for notif in notifications:
             notif.is_read = True
@@ -49,6 +70,15 @@ class NotificationService:
         body: str,
         data: Optional[dict] = None,
     ) -> Notification:
-        notif = await self._repo.add_notification(user_id, notification_type, title, body, data)
+        notif = Notification(
+            user_id=user_id,
+            notification_type=notification_type,
+            title=title,
+            body=body,
+            data=data,
+        )
+        self._session.add(notif)
+        await self._session.flush()
+        await self._session.refresh(notif)
         await self._session.commit()
         return notif

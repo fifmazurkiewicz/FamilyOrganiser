@@ -1,77 +1,103 @@
+"""Income management service."""
 import uuid
-from datetime import date
 from typing import List
-
+from sqlalchemy import extract, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import ForbiddenError
+from app.core.exceptions import NotFoundError
 from app.models.income import Income, IncomeTemplate
-from app.repositories.income import IncomeRepository, IncomeTemplateRepository
-from app.schemas.income import (
-    IncomeCreate, IncomeUpdate, IncomeResponse,
-    IncomeTemplateCreate, IncomeTemplateResponse,
-)
 
 
 class IncomeService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.repo = IncomeRepository(db)
-        self.template_repo = IncomeTemplateRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    # --- Templates ---
+    async def list_templates(self, user_id: uuid.UUID) -> List[IncomeTemplate]:
+        result = await self._session.execute(
+            select(IncomeTemplate)
+            .where(IncomeTemplate.user_id == user_id, IncomeTemplate.is_active == True)
+            .order_by(IncomeTemplate.created_at)
+        )
+        return list(result.scalars().all())
 
-    async def list_templates(self, user_id: uuid.UUID) -> List[IncomeTemplateResponse]:
-        templates = await self.template_repo.list_for_user(user_id)
-        return [IncomeTemplateResponse.model_validate(t) for t in templates]
+    async def create_template(self, data: dict, user_id: uuid.UUID) -> IncomeTemplate:
+        template = IncomeTemplate(
+            user_id=user_id,
+            account_id=data["account_id"],
+            name=data["name"],
+            base_amount=data["base_amount"],
+            currency=data.get("currency", "PLN"),
+            category=data.get("category", "salary"),
+            day_of_month=data["day_of_month"],
+        )
+        self._session.add(template)
+        await self._session.commit()
+        await self._session.refresh(template)
+        return template
 
-    async def create_template(self, user_id: uuid.UUID, data: IncomeTemplateCreate) -> IncomeTemplateResponse:
-        tmpl = IncomeTemplate(user_id=user_id, **data.model_dump())
-        await self.template_repo.add(tmpl)
-        await self.template_repo.commit()
-        return IncomeTemplateResponse.model_validate(tmpl)
+    async def get_template(self, template_id: uuid.UUID) -> IncomeTemplate:
+        template = await self._session.get(IncomeTemplate, template_id)
+        if not template:
+            raise NotFoundError("Income template not found")
+        return template
 
-    async def delete_template(self, user_id: uuid.UUID, template_id: uuid.UUID) -> None:
-        tmpl = await self.template_repo.get_or_raise(template_id)
-        if tmpl.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        tmpl.is_active = False
-        await self.template_repo.commit()
+    async def update_template(self, template: IncomeTemplate, data: dict) -> IncomeTemplate:
+        for key, value in data.items():
+            if value is not None and hasattr(template, key):
+                setattr(template, key, value)
+        await self._session.commit()
+        await self._session.refresh(template)
+        return template
 
-    # --- Incomes ---
+    async def delete_template(self, template: IncomeTemplate) -> None:
+        await self._session.delete(template)
+        await self._session.commit()
 
-    async def list(self, user_id: uuid.UUID, year: int | None = None, month: int | None = None) -> List[IncomeResponse]:
-        incomes = await self.repo.list_for_user(user_id, year=year, month=month)
-        return [IncomeResponse.model_validate(i) for i in incomes]
+    async def list_incomes(
+        self, user_id: uuid.UUID, year: int | None = None, month: int | None = None
+    ) -> List[Income]:
+        stmt = select(Income).where(Income.user_id == user_id)
+        if year:
+            stmt = stmt.where(extract("year", Income.income_date) == year)
+        if month:
+            stmt = stmt.where(extract("month", Income.income_date) == month)
+        stmt = stmt.order_by(Income.income_date.desc())
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
 
-    async def create(self, user_id: uuid.UUID, data: IncomeCreate) -> IncomeResponse:
-        is_modified = False
-        if data.template_id and data.base_amount:
-            is_modified = data.amount != data.base_amount
-
+    async def create_income(self, data: dict, user_id: uuid.UUID) -> Income:
         income = Income(
             user_id=user_id,
-            is_modified=is_modified,
-            **data.model_dump(),
+            account_id=data["account_id"],
+            template_id=data.get("template_id"),
+            name=data["name"],
+            amount=data["amount"],
+            base_amount=data.get("base_amount"),
+            currency=data.get("currency", "PLN"),
+            category=data.get("category", "salary"),
+            income_date=data["income_date"],
+            is_modified=data.get("is_modified", False),
+            is_skipped=data.get("is_skipped", False),
+            description=data.get("description"),
         )
-        await self.repo.add(income)
-        await self.repo.commit()
-        return IncomeResponse.model_validate(income)
+        self._session.add(income)
+        await self._session.commit()
+        await self._session.refresh(income)
+        return income
 
-    async def update(self, user_id: uuid.UUID, income_id: uuid.UUID, data: IncomeUpdate) -> IncomeResponse:
-        income = await self.repo.get_or_raise(income_id)
-        if income.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        for field, value in data.model_dump(exclude_none=True).items():
-            setattr(income, field, value)
-        if income.base_amount and income.amount != income.base_amount:
-            income.is_modified = True
-        await self.repo.commit()
-        return IncomeResponse.model_validate(income)
+    async def get_income(self, income_id: uuid.UUID) -> Income:
+        income = await self._session.get(Income, income_id)
+        if not income:
+            raise NotFoundError("Income not found")
+        return income
 
-    async def delete(self, user_id: uuid.UUID, income_id: uuid.UUID) -> None:
-        income = await self.repo.get_or_raise(income_id)
-        if income.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        await self.repo.delete(income)
-        await self.repo.commit()
+    async def update_income(self, income: Income, data: dict) -> Income:
+        for key, value in data.items():
+            if value is not None and hasattr(income, key):
+                setattr(income, key, value)
+        await self._session.commit()
+        await self._session.refresh(income)
+        return income
+
+    async def delete_income(self, income: Income) -> None:
+        await self._session.delete(income)
+        await self._session.commit()

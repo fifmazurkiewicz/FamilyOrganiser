@@ -4,25 +4,54 @@ from decimal import Decimal
 from typing import List
 from uuid import UUID
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError
 from app.models.account import Account, AccountType, JointAccountOwner
 from app.models.transaction import Transaction, TransactionScope, TransactionType
-from app.repositories.account import AccountRepository
 
 
 class AccountService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-        self._accounts = AccountRepository(session)
+
+    # --- inline AccountRepository ---
+
+    async def _list_by_owner(self, owner_id: UUID) -> List[Account]:
+        result = await self._session.execute(
+            select(Account).where(
+                Account.owner_id == owner_id,
+                Account.is_active == True,
+            )
+        )
+        return list(result.scalars().all())
+
+    async def _get_joint_ownership(
+        self, account_id: UUID, user_id: UUID
+    ) -> JointAccountOwner | None:
+        result = await self._session.execute(
+            select(JointAccountOwner).where(
+                JointAccountOwner.account_id == account_id,
+                JointAccountOwner.user_id == user_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def _list_joint_accounts(self, user_id: UUID) -> List[JointAccountOwner]:
+        result = await self._session.execute(
+            select(JointAccountOwner).where(JointAccountOwner.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
+    # --- service methods ---
 
     async def get_accessible(self, account_id: UUID, user_id: UUID) -> Account:
-        account = await self._accounts.get(account_id)
+        account = await self._session.get(Account, account_id)
         if not account:
             raise NotFoundError("Account not found")
         if account.owner_id != user_id:
-            joint = await self._accounts.get_joint_ownership(account_id, user_id)
+            joint = await self._get_joint_ownership(account_id, user_id)
             if not joint:
                 raise ForbiddenError("Access denied to this account")
         return account
@@ -34,14 +63,14 @@ class AccountService:
         return account
 
     async def list_all(self, user_id: UUID) -> List[Account]:
-        owned = await self._accounts.list_by_owner(user_id)
+        owned = await self._list_by_owner(user_id)
         owned_ids = {a.id for a in owned}
 
-        joint_ownerships = await self._accounts.list_joint_accounts(user_id)
+        joint_ownerships = await self._list_joint_accounts(user_id)
         extra: List[Account] = []
         for jo in joint_ownerships:
             if jo.account_id not in owned_ids:
-                acc = await self._accounts.get(jo.account_id)
+                acc = await self._session.get(Account, jo.account_id)
                 if acc and acc.is_active:
                     extra.append(acc)
 
@@ -131,7 +160,7 @@ class AccountService:
     async def add_joint_owner(
         self, account: Account, user_id: UUID, notify_on_transaction: bool
     ) -> JointAccountOwner:
-        existing = await self._accounts.get_joint_ownership(account.id, user_id)
+        existing = await self._get_joint_ownership(account.id, user_id)
         if existing:
             raise ConflictError("User is already a joint owner of this account")
 

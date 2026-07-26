@@ -4,7 +4,7 @@ from enum import Enum as PyEnum
 from decimal import Decimal
 from sqlalchemy import String, DateTime, ForeignKey, Enum, Numeric, Date, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -18,23 +18,23 @@ class TransferType(str, PyEnum):
 class Transfer(Base):
     __tablename__ = "transfers"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     transfer_type: Mapped[TransferType] = mapped_column(Enum(TransferType), nullable=False)
 
     from_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True
     )
     to_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True
     )
     from_goal_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("savings_goals.id"), nullable=True
+        Uuid, ForeignKey("savings_goals.id"), nullable=True
     )
     to_goal_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("savings_goals.id"), nullable=True
+        Uuid, ForeignKey("savings_goals.id"), nullable=True
     )
 
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)

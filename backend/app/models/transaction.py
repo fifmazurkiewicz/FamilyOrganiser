@@ -6,7 +6,7 @@ from sqlalchemy import (
     String, Boolean, DateTime, ForeignKey, Enum, Numeric, Date, Text, Integer, Table, Column
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -25,20 +25,20 @@ class TransactionScope(str, PyEnum):
 transaction_tag_association = Table(
     "transaction_tag_associations",
     Base.metadata,
-    Column("transaction_id", UUID(as_uuid=True), ForeignKey("transactions.id", ondelete="CASCADE")),
-    Column("tag_id", UUID(as_uuid=True), ForeignKey("transaction_tags.id", ondelete="CASCADE")),
+    Column("transaction_id", Uuid, ForeignKey("transactions.id", ondelete="CASCADE")),
+    Column("tag_id", Uuid, ForeignKey("transaction_tags.id", ondelete="CASCADE")),
 )
 
 
 class TransactionCategory(Base):
     __tablename__ = "transaction_categories"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )  # None = system default
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("transaction_categories.id"), nullable=True
+        Uuid, ForeignKey("transaction_categories.id"), nullable=True
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -56,9 +56,9 @@ class TransactionCategory(Base):
 class TransactionTag(Base):
     __tablename__ = "transaction_tags"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(50), nullable=False)
 
@@ -70,18 +70,18 @@ class TransactionTag(Base):
 class Transaction(Base):
     __tablename__ = "transactions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
     category_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("transaction_categories.id"), nullable=True
+        Uuid, ForeignKey("transaction_categories.id"), nullable=True
     )
     family_group_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id"), nullable=True
+        Uuid, ForeignKey("family_groups.id"), nullable=True
     )
 
     transaction_type: Mapped[TransactionType] = mapped_column(
@@ -99,7 +99,7 @@ class Transaction(Base):
     receipt_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_recurring: Mapped[bool] = mapped_column(Boolean, default=False)
     recurring_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("recurring_transactions.id"), nullable=True
+        Uuid, ForeignKey("recurring_transactions.id"), nullable=True
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -130,15 +130,15 @@ class RecurringFrequency(str, PyEnum):
 class RecurringTransaction(Base):
     __tablename__ = "recurring_transactions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=False
+        Uuid, ForeignKey("accounts.id"), nullable=False
     )
     category_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("transaction_categories.id"), nullable=True
+        Uuid, ForeignKey("transaction_categories.id"), nullable=True
     )
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)

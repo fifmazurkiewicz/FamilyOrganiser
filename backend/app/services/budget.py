@@ -1,116 +1,80 @@
+"""Budget management service."""
 import uuid
-from decimal import Decimal
-from datetime import date
-from typing import List
-
-from sqlalchemy import select, func, extract
+from typing import List, Optional
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.core.exceptions import NotFoundError, ForbiddenError
 from app.models.budget import Budget, BudgetCategory
-from app.models.transaction import Transaction, TransactionCategory
-from app.repositories.budget import BudgetRepository, BudgetCategoryRepository
-from app.schemas.budget import BudgetCreate, BudgetUpdate, BudgetResponse, BudgetCategoryResponse
 
 
 class BudgetService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.repo = BudgetRepository(db)
-        self.cat_repo = BudgetCategoryRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    async def list(self, user_id: uuid.UUID) -> List[BudgetResponse]:
-        budgets = await self.repo.list_for_user(user_id)
-        result = []
-        for b in budgets:
-            cats = await self._enrich_categories(b, user_id)
-            resp = BudgetResponse.model_validate(b)
-            resp.categories = cats
-            result.append(resp)
-        return result
+    async def list_for_user(self, user_id: uuid.UUID) -> List[Budget]:
+        result = await self._session.execute(
+            select(Budget).where(Budget.user_id == user_id).order_by(Budget.year.desc(), Budget.month.desc())
+        )
+        return list(result.scalars().all())
 
-    async def create(self, user_id: uuid.UUID, data: BudgetCreate) -> BudgetResponse:
+    async def get(self, budget_id: uuid.UUID, user_id: uuid.UUID) -> Budget:
+        result = await self._session.execute(select(Budget).where(Budget.id == budget_id))
+        budget = result.scalar_one_or_none()
+        if not budget:
+            raise NotFoundError("Budget not found")
+        if budget.user_id != user_id:
+            raise ForbiddenError("Access denied")
+        return budget
+
+    async def create(self, data: dict, user_id: uuid.UUID) -> Budget:
         budget = Budget(
             user_id=user_id,
-            name=data.name,
-            scope=data.scope,
-            year=data.year,
-            month=data.month,
-            family_group_id=data.family_group_id,
-            alert_threshold_percent=data.alert_threshold_percent,
+            family_group_id=data.get("family_group_id"),
+            name=data["name"],
+            scope=data.get("scope", "personal"),
+            year=data["year"],
+            month=data.get("month"),
+            alert_threshold_percent=data.get("alert_threshold_percent", 80),
         )
-        await self.repo.add(budget)
-        await self.db.flush()
+        self._session.add(budget)
+        await self._session.commit()
+        await self._session.refresh(budget)
+        return budget
 
-        for cat_data in data.categories:
-            bc = BudgetCategory(
-                budget_id=budget.id,
-                category_id=cat_data.category_id,
-                planned_amount=cat_data.planned_amount,
-                currency=cat_data.currency,
-            )
-            self.db.add(bc)
+    async def update(self, budget: Budget, data: dict) -> Budget:
+        for key, value in data.items():
+            if value is not None and hasattr(budget, key):
+                setattr(budget, key, value)
+        await self._session.commit()
+        await self._session.refresh(budget)
+        return budget
 
-        await self.repo.commit()
-        await self.db.refresh(budget)
-        cats = await self._enrich_categories(budget, user_id)
-        resp = BudgetResponse.model_validate(budget)
-        resp.categories = cats
-        return resp
+    async def delete(self, budget: Budget) -> None:
+        await self._session.delete(budget)
+        await self._session.commit()
 
-    async def get(self, user_id: uuid.UUID, budget_id: uuid.UUID) -> BudgetResponse:
-        budget = await self.repo.get_or_raise(budget_id)
-        if budget.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        cats = await self._enrich_categories(budget, user_id)
-        resp = BudgetResponse.model_validate(budget)
-        resp.categories = cats
-        return resp
-
-    async def update(self, user_id: uuid.UUID, budget_id: uuid.UUID, data: BudgetUpdate) -> BudgetResponse:
-        budget = await self.repo.get_or_raise(budget_id)
-        if budget.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        if data.name is not None:
-            budget.name = data.name
-        if data.alert_threshold_percent is not None:
-            budget.alert_threshold_percent = data.alert_threshold_percent
-        await self.repo.commit()
-        cats = await self._enrich_categories(budget, user_id)
-        resp = BudgetResponse.model_validate(budget)
-        resp.categories = cats
-        return resp
-
-    async def delete(self, user_id: uuid.UUID, budget_id: uuid.UUID) -> None:
-        budget = await self.repo.get_or_raise(budget_id)
-        if budget.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        await self.repo.delete(budget)
-        await self.repo.commit()
-
-    async def _enrich_categories(self, budget: Budget, user_id: uuid.UUID) -> List[BudgetCategoryResponse]:
-        cats = await self.cat_repo.list_for_budget(budget.id)
-        result = []
-        for bc in cats:
-            actual = await self._get_actual_spending(user_id, bc.category_id, budget.year, budget.month)
-            resp = BudgetCategoryResponse.model_validate(bc)
-            resp.actual_amount = actual
-            result.append(resp)
-        return result
-
-    async def _get_actual_spending(
-        self,
-        user_id: uuid.UUID,
-        category_id: uuid.UUID,
-        year: int,
-        month: int | None,
-    ) -> Decimal:
-        stmt = select(func.coalesce(func.sum(Transaction.amount_pln), Decimal("0"))).where(
-            Transaction.user_id == user_id,
-            Transaction.category_id == category_id,
-            extract("year", Transaction.transaction_date) == year,
+    # Categories
+    async def list_categories(self, budget_id: uuid.UUID) -> List[BudgetCategory]:
+        result = await self._session.execute(
+            select(BudgetCategory).where(BudgetCategory.budget_id == budget_id)
         )
-        if month:
-            stmt = stmt.where(extract("month", Transaction.transaction_date) == month)
-        result = await self.db.execute(stmt)
-        return result.scalar_one() or Decimal("0")
+        return list(result.scalars().all())
+
+    async def create_category(self, data: dict) -> BudgetCategory:
+        category = BudgetCategory(
+            budget_id=data["budget_id"],
+            category_id=data["category_id"],
+            planned_amount=data["planned_amount"],
+            currency=data.get("currency", "PLN"),
+        )
+        self._session.add(category)
+        await self._session.commit()
+        await self._session.refresh(category)
+        return category
+
+    async def delete_category(self, category_id: uuid.UUID) -> None:
+        category = await self._session.get(BudgetCategory, category_id)
+        if not category:
+            raise NotFoundError("Budget category not found")
+        await self._session.delete(category)
+        await self._session.commit()

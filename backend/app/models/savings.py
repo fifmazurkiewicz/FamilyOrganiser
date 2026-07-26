@@ -4,7 +4,7 @@ from enum import Enum as PyEnum
 from decimal import Decimal
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Numeric, Date, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -21,15 +21,15 @@ class GoalVisibility(str, PyEnum):
 class SavingsGoal(Base):
     __tablename__ = "savings_goals"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     family_group_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id"), nullable=True
+        Uuid, ForeignKey("family_groups.id"), nullable=True
     )
     linked_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True
     )
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -72,15 +72,15 @@ class SavingsGoal(Base):
 class SavingsContribution(Base):
     __tablename__ = "savings_contributions"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     goal_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("savings_goals.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("savings_goals.id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     source_account_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id"), nullable=True
+        Uuid, ForeignKey("accounts.id"), nullable=True
     )
 
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
@@ -100,12 +100,12 @@ class SavingsContribution(Base):
 class SavingsGoalMember(Base):
     __tablename__ = "savings_goal_members"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     goal_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("savings_goals.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("savings_goals.id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
     goal: Mapped["SavingsGoal"] = relationship("SavingsGoal", back_populates="members")

@@ -1,111 +1,106 @@
+"""Savings goal management service."""
 import uuid
-from decimal import Decimal
-from datetime import date
 from typing import List
-
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import NotFoundError, ForbiddenError
-from app.models.savings import SavingsGoal, SavingsContribution
-from app.repositories.savings import SavingsGoalRepository, SavingsContributionRepository
-from app.schemas.savings import (
-    SavingsGoalCreate, SavingsGoalUpdate, SavingsGoalResponse,
-    ContributionCreate, ContributionResponse,
-)
+from app.core.exceptions import NotFoundError
+from app.models.savings import SavingsGoal, SavingsContribution, SavingsGoalMember
 
 
 class SavingsService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.goal_repo = SavingsGoalRepository(db)
-        self.contrib_repo = SavingsContributionRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    async def list_goals(self, user_id: uuid.UUID) -> List[SavingsGoalResponse]:
-        goals = await self.goal_repo.list_for_user(user_id)
-        return [self._to_response(g) for g in goals]
+    async def list_goals(self, user_id: uuid.UUID) -> List[SavingsGoal]:
+        result = await self._session.execute(
+            select(SavingsGoal)
+            .where(SavingsGoal.user_id == user_id, SavingsGoal.is_active == True)
+            .order_by(SavingsGoal.priority.desc(), SavingsGoal.created_at.desc())
+        )
+        return list(result.scalars().all())
 
-    async def create_goal(self, user_id: uuid.UUID, data: SavingsGoalCreate) -> SavingsGoalResponse:
+    async def get_goal(self, goal_id: uuid.UUID) -> SavingsGoal:
+        goal = await self._session.get(SavingsGoal, goal_id)
+        if not goal:
+            raise NotFoundError("Savings goal not found")
+        return goal
+
+    async def create_goal(self, data: dict) -> SavingsGoal:
         goal = SavingsGoal(
-            user_id=user_id,
-            name=data.name,
-            description=data.description,
-            icon=data.icon,
-            color=data.color,
-            target_amount=data.target_amount,
-            currency=data.currency,
-            goal_type=data.goal_type,
-            visibility=data.visibility,
-            target_date=data.target_date,
-            monthly_contribution=data.monthly_contribution,
-            linked_account_id=data.linked_account_id,
-            family_group_id=data.family_group_id,
-            priority=data.priority,
+            user_id=data["user_id"],
+            family_group_id=data.get("family_group_id"),
+            linked_account_id=data.get("linked_account_id"),
+            name=data["name"],
+            description=data.get("description"),
+            icon=data.get("icon"),
+            color=data.get("color"),
+            target_amount=data["target_amount"],
+            currency=data.get("currency", "PLN"),
+            goal_type=data.get("goal_type", "personal"),
+            visibility=data.get("visibility", "private"),
+            target_date=data.get("target_date"),
+            monthly_contribution=data.get("monthly_contribution"),
+            priority=data.get("priority", 0),
         )
-        await self.goal_repo.add(goal)
-        await self.goal_repo.commit()
-        return self._to_response(goal)
+        self._session.add(goal)
+        await self._session.commit()
+        await self._session.refresh(goal)
+        return goal
 
-    async def get_goal(self, user_id: uuid.UUID, goal_id: uuid.UUID) -> SavingsGoalResponse:
-        goal = await self.goal_repo.get_or_raise(goal_id)
-        if goal.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        return self._to_response(goal)
+    async def update_goal(self, goal: SavingsGoal, data: dict) -> SavingsGoal:
+        for key, value in data.items():
+            if value is not None and hasattr(goal, key):
+                setattr(goal, key, value)
+        await self._session.commit()
+        await self._session.refresh(goal)
+        return goal
 
-    async def update_goal(self, user_id: uuid.UUID, goal_id: uuid.UUID, data: SavingsGoalUpdate) -> SavingsGoalResponse:
-        goal = await self.goal_repo.get_or_raise(goal_id)
-        if goal.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        for field, value in data.model_dump(exclude_none=True).items():
-            setattr(goal, field, value)
-        await self.goal_repo.commit()
-        return self._to_response(goal)
+    async def delete_goal(self, goal: SavingsGoal) -> None:
+        await self._session.delete(goal)
+        await self._session.commit()
 
-    async def delete_goal(self, user_id: uuid.UUID, goal_id: uuid.UUID) -> None:
-        goal = await self.goal_repo.get_or_raise(goal_id)
-        if goal.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        await self.goal_repo.delete(goal)
-        await self.goal_repo.commit()
-
-    async def add_contribution(
-        self, user_id: uuid.UUID, goal_id: uuid.UUID, data: ContributionCreate
-    ) -> ContributionResponse:
-        goal = await self.goal_repo.get_or_raise(goal_id)
-        if goal.user_id != user_id:
-            raise ForbiddenError("Access denied")
-
-        contrib = SavingsContribution(
-            goal_id=goal_id,
-            user_id=user_id,
-            amount=data.amount,
-            currency=goal.currency,
-            contribution_date=data.contribution_date,
-            note=data.note,
-            is_withdrawal=data.is_withdrawal,
-            source_account_id=data.source_account_id,
+    async def list_contributions(self, goal_id: uuid.UUID) -> List[SavingsContribution]:
+        result = await self._session.execute(
+            select(SavingsContribution)
+            .where(SavingsContribution.goal_id == goal_id)
+            .order_by(SavingsContribution.contribution_date.desc())
         )
-        self.db.add(contrib)
+        return list(result.scalars().all())
 
-        if data.is_withdrawal:
-            goal.current_amount = max(Decimal("0"), goal.current_amount - data.amount)
-        else:
-            goal.current_amount += data.amount
+    async def create_contribution(self, data: dict) -> SavingsContribution:
+        contribution = SavingsContribution(
+            goal_id=data["goal_id"],
+            user_id=data["user_id"],
+            source_account_id=data.get("source_account_id"),
+            amount=data["amount"],
+            currency=data.get("currency", "PLN"),
+            contribution_date=data["contribution_date"],
+            note=data.get("note"),
+            is_withdrawal=data.get("is_withdrawal", False),
+        )
+        self._session.add(contribution)
+        goal = await self._session.get(SavingsGoal, data["goal_id"])
+        if goal:
+            if data.get("is_withdrawal"):
+                goal.current_amount = max(goal.current_amount - data["amount"], 0)
+            else:
+                goal.current_amount += data["amount"]
+        await self._session.commit()
+        await self._session.refresh(contribution)
+        return contribution
 
-        if goal.current_amount >= goal.target_amount:
-            goal.is_completed = True
+    async def list_goal_members(self, goal_id: uuid.UUID) -> List[SavingsGoalMember]:
+        result = await self._session.execute(
+            select(SavingsGoalMember).where(SavingsGoalMember.goal_id == goal_id)
+        )
+        return list(result.scalars().all())
 
-        await self.goal_repo.commit()
-        return ContributionResponse.model_validate(contrib)
-
-    async def list_contributions(self, user_id: uuid.UUID, goal_id: uuid.UUID) -> List[ContributionResponse]:
-        goal = await self.goal_repo.get_or_raise(goal_id)
-        if goal.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        contribs = await self.contrib_repo.list_for_goal(goal_id)
-        return [ContributionResponse.model_validate(c) for c in contribs]
-
-    def _to_response(self, goal: SavingsGoal) -> SavingsGoalResponse:
-        resp = SavingsGoalResponse.model_validate(goal)
-        if goal.target_amount > 0:
-            resp.progress_percent = min(100.0, float(goal.current_amount / goal.target_amount * 100))
-        return resp
+    async def add_goal_member(self, data: dict) -> SavingsGoalMember:
+        member = SavingsGoalMember(
+            goal_id=data["goal_id"],
+            user_id=data["user_id"],
+        )
+        self._session.add(member)
+        await self._session.commit()
+        await self._session.refresh(member)
+        return member

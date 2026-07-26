@@ -1,134 +1,86 @@
+"""Investment management service."""
 import uuid
-from decimal import Decimal
-from datetime import date
 from typing import List
-
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import ForbiddenError
-from app.models.investment import Investment, PolishBond, BondType
-from app.repositories.investment import InvestmentRepository, PolishBondRepository
-from app.schemas.investment import (
-    InvestmentCreate, InvestmentUpdate, InvestmentResponse,
-    PolishBondCreate, PolishBondResponse,
-)
-
-
-# Bond duration in years by type
-_BOND_YEARS: dict[BondType, int] = {
-    BondType.OFL: 0,   # 3-month, treated as <1yr
-    BondType.ROR: 1,
-    BondType.DOR: 2,
-    BondType.TOS: 3,
-    BondType.COI: 4,
-    BondType.EDO: 10,
-    BondType.ROS: 6,
-    BondType.ROD: 12,
-}
+from app.core.exceptions import NotFoundError
+from app.models.investment import Investment, PolishBond
 
 
 class InvestmentService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.repo = InvestmentRepository(db)
-        self.bond_repo = PolishBondRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    async def list(self, user_id: uuid.UUID) -> List[InvestmentResponse]:
-        investments = await self.repo.list_for_user(user_id)
-        return [self._to_response(inv) for inv in investments]
+    async def list_for_user(self, user_id: uuid.UUID) -> List[Investment]:
+        result = await self._session.execute(
+            select(Investment)
+            .where(Investment.user_id == user_id)
+            .order_by(Investment.created_at.desc())
+        )
+        return list(result.scalars().all())
 
-    async def create(self, user_id: uuid.UUID, data: InvestmentCreate) -> InvestmentResponse:
-        inv = Investment(user_id=user_id, **data.model_dump())
-        await self.repo.add(inv)
-        await self.repo.commit()
-        return self._to_response(inv)
+    async def get(self, investment_id: uuid.UUID) -> Investment:
+        investment = await self._session.get(Investment, investment_id)
+        if not investment:
+            raise NotFoundError("Investment not found")
+        return investment
 
-    async def get(self, user_id: uuid.UUID, investment_id: uuid.UUID) -> InvestmentResponse:
-        inv = await self.repo.get_or_raise(investment_id)
-        if inv.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        return self._to_response(inv)
+    async def create(self, data: dict) -> Investment:
+        investment = Investment(
+            user_id=data["user_id"],
+            investment_type=data["investment_type"],
+            name=data["name"],
+            ticker=data.get("ticker"),
+            quantity=data.get("quantity"),
+            purchase_price=data.get("purchase_price"),
+            current_price=data.get("current_price"),
+            currency=data.get("currency", "PLN"),
+            purchase_date=data.get("purchase_date"),
+            notes=data.get("notes"),
+            is_shared=data.get("is_shared", False),
+            address=data.get("address"),
+            rental_income_monthly=data.get("rental_income_monthly"),
+            interest_rate=data.get("interest_rate"),
+            maturity_date=data.get("maturity_date"),
+            bank_name=data.get("bank_name"),
+        )
+        self._session.add(investment)
+        await self._session.commit()
+        await self._session.refresh(investment)
+        return investment
 
-    async def update(self, user_id: uuid.UUID, investment_id: uuid.UUID, data: InvestmentUpdate) -> InvestmentResponse:
-        inv = await self.repo.get_or_raise(investment_id)
-        if inv.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        for field, value in data.model_dump(exclude_none=True).items():
-            setattr(inv, field, value)
-        await self.repo.commit()
-        return self._to_response(inv)
+    async def update(self, investment: Investment, data: dict) -> Investment:
+        for key, value in data.items():
+            if value is not None and hasattr(investment, key):
+                setattr(investment, key, value)
+        await self._session.commit()
+        await self._session.refresh(investment)
+        return investment
 
-    async def delete(self, user_id: uuid.UUID, investment_id: uuid.UUID) -> None:
-        inv = await self.repo.get_or_raise(investment_id)
-        if inv.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        await self.repo.delete(inv)
-        await self.repo.commit()
+    async def delete(self, investment: Investment) -> None:
+        await self._session.delete(investment)
+        await self._session.commit()
 
-    # --- Polish Bonds ---
+    async def list_bonds(self, user_id: uuid.UUID) -> List[PolishBond]:
+        result = await self._session.execute(
+            select(PolishBond)
+            .where(PolishBond.user_id == user_id, PolishBond.is_active == True)
+            .order_by(PolishBond.purchase_date.desc())
+        )
+        return list(result.scalars().all())
 
-    async def list_bonds(self, user_id: uuid.UUID) -> List[PolishBondResponse]:
-        bonds = await self.bond_repo.list_for_user(user_id)
-        return [self._bond_to_response(b) for b in bonds]
-
-    async def create_bond(self, user_id: uuid.UUID, data: PolishBondCreate) -> PolishBondResponse:
-        years = _BOND_YEARS.get(data.bond_type, 1)
-        from dateutil.relativedelta import relativedelta
-        if data.bond_type == BondType.OFL:
-            from datetime import timedelta
-            maturity = data.purchase_date + timedelta(days=90)
-        else:
-            maturity = data.purchase_date + relativedelta(years=years)
-
+    async def create_bond(self, data: dict) -> PolishBond:
         bond = PolishBond(
-            user_id=user_id,
-            bond_type=data.bond_type,
-            series=data.series,
-            quantity=data.quantity,
-            purchase_date=data.purchase_date,
-            maturity_date=maturity,
-            first_period_rate=data.first_period_rate,
-            notes=data.notes,
+            user_id=data["user_id"],
+            bond_type=data["bond_type"],
+            series=data["series"],
+            quantity=data["quantity"],
+            purchase_date=data["purchase_date"],
+            maturity_date=data["maturity_date"],
+            first_period_rate=data["first_period_rate"],
+            notes=data.get("notes"),
         )
-        await self.bond_repo.add(bond)
-        await self.bond_repo.commit()
-        return self._bond_to_response(bond)
-
-    async def delete_bond(self, user_id: uuid.UUID, bond_id: uuid.UUID) -> None:
-        bond = await self.bond_repo.get_or_raise(bond_id)
-        if bond.user_id != user_id:
-            raise ForbiddenError("Access denied")
-        bond.is_active = False
-        await self.bond_repo.commit()
-
-    def _to_response(self, inv: Investment) -> InvestmentResponse:
-        resp = InvestmentResponse.model_validate(inv)
-        if inv.quantity and inv.current_price:
-            resp.total_value = inv.quantity * inv.current_price
-        if inv.quantity and inv.purchase_price and inv.current_price:
-            cost = inv.quantity * inv.purchase_price
-            if cost > 0:
-                resp.roi_percent = float((inv.quantity * inv.current_price - cost) / cost * 100)
-        return resp
-
-    def _bond_to_response(self, bond: PolishBond) -> PolishBondResponse:
-        nominal = Decimal(bond.quantity) * Decimal("100")
-        today = date.today()
-        days_held = (today - bond.purchase_date).days
-        accrued = nominal * bond.first_period_rate * Decimal(days_held) / Decimal("365")
-        current_value = nominal + accrued
-
-        return PolishBondResponse(
-            id=bond.id,
-            bond_type=bond.bond_type,
-            series=bond.series,
-            quantity=bond.quantity,
-            purchase_date=bond.purchase_date,
-            maturity_date=bond.maturity_date,
-            first_period_rate=bond.first_period_rate,
-            current_value=current_value,
-            nominal_value=nominal,
-            accrued_interest=accrued,
-            is_active=bond.is_active,
-            notes=bond.notes,
-        )
+        self._session.add(bond)
+        await self._session.commit()
+        await self._session.refresh(bond)
+        return bond

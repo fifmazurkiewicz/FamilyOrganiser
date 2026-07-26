@@ -4,7 +4,7 @@ from enum import Enum as PyEnum
 from decimal import Decimal
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Numeric, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -16,9 +16,9 @@ class BudgetEntryType(str, PyEnum):
 class MonthlyBudget(Base):
     __tablename__ = "monthly_budgets"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     family_group_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
     )
     year: Mapped[int] = mapped_column(Integer, nullable=False)
     month: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -34,9 +34,9 @@ class MonthlyBudget(Base):
 class BudgetEntry(Base):
     __tablename__ = "monthly_budget_entries"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     budget_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("monthly_budgets.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("monthly_budgets.id", ondelete="CASCADE"), nullable=False
     )
     entry_type: Mapped[BudgetEntryType] = mapped_column(
         Enum(BudgetEntryType), nullable=False
@@ -45,7 +45,7 @@ class BudgetEntry(Base):
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     is_recurring: Mapped[bool] = mapped_column(Boolean, default=False)
     created_by: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
 
     budget: Mapped["MonthlyBudget"] = relationship("MonthlyBudget", back_populates="entries")

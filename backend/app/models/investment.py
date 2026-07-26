@@ -4,7 +4,7 @@ from enum import Enum as PyEnum
 from decimal import Decimal
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Numeric, Date, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -32,9 +32,9 @@ class BondType(str, PyEnum):
 class Investment(Base):
     __tablename__ = "investments"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     investment_type: Mapped[InvestmentType] = mapped_column(Enum(InvestmentType), nullable=False)
 
@@ -70,9 +70,9 @@ class Investment(Base):
 class PolishBond(Base):
     __tablename__ = "polish_bonds"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     bond_type: Mapped[BondType] = mapped_column(Enum(BondType), nullable=False)
     series: Mapped[str] = mapped_column(String(20), nullable=False)  # e.g. EDO0336

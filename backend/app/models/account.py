@@ -3,7 +3,7 @@ from datetime import datetime, date, timezone
 from enum import Enum as PyEnum
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Numeric, Date, Text, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 from decimal import Decimal
 
@@ -21,9 +21,9 @@ class AccountType(str, PyEnum):
 class Account(Base):
     __tablename__ = "accounts"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     account_type: Mapped[AccountType] = mapped_column(Enum(AccountType), nullable=False)
@@ -64,12 +64,12 @@ class Account(Base):
 class JointAccountOwner(Base):
     __tablename__ = "joint_account_owners"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     account_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     notify_on_transaction: Mapped[bool] = mapped_column(Boolean, default=True)
     added_at: Mapped[datetime] = mapped_column(

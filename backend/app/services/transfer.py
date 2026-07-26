@@ -1,5 +1,5 @@
+"""Transfer service."""
 import uuid
-from datetime import date
 from typing import List
 
 from sqlalchemy import select
@@ -9,33 +9,23 @@ from app.core.exceptions import ForbiddenError, BusinessLogicError
 from app.models.transfer import Transfer, TransferType
 from app.models.account import Account
 from app.models.savings import SavingsGoal
-from app.repositories.base import BaseRepository
 
 
-class TransferRepository(BaseRepository[Transfer]):
-    model = Transfer
+class TransferService:
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
 
-    async def list_for_user(self, user_id: uuid.UUID) -> List[Transfer]:
-        result = await self._session.execute(
+    async def list(self, user_id: uuid.UUID) -> List[Transfer]:
+        result = await self.db.execute(
             select(Transfer)
             .where(Transfer.user_id == user_id)
             .order_by(Transfer.transfer_date.desc(), Transfer.created_at.desc())
         )
         return list(result.scalars().all())
 
-
-class TransferService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.repo = TransferRepository(db)
-
-    async def list(self, user_id: uuid.UUID) -> List[Transfer]:
-        return await self.repo.list_for_user(user_id)
-
     async def create(self, user_id: uuid.UUID, data: dict) -> Transfer:
         transfer_type = TransferType(data["transfer_type"])
 
-        # Validate and update balances / goal amounts
         if transfer_type == TransferType.ACCOUNT_TO_ACCOUNT:
             await self._validate_account(user_id, data.get("from_account_id"))
             await self._validate_account(user_id, data.get("to_account_id"))
@@ -61,8 +51,9 @@ class TransferService:
             await self._credit_goal(data["to_goal_id"], data["amount"])
 
         transfer = Transfer(user_id=user_id, **data)
-        await self.repo.add(transfer)
-        await self.repo.commit()
+        self.db.add(transfer)
+        await self.db.commit()
+        await self.db.refresh(transfer)
         return transfer
 
     async def _validate_account(self, user_id: uuid.UUID, account_id: uuid.UUID | None) -> Account:

@@ -13,8 +13,6 @@ from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 from sqlalchemy.dialects.sqlite.base import SQLiteTypeCompiler
-from sqlalchemy.dialects.postgresql import JSONB as PG_JSONB
-from sqlalchemy.dialects.sqlite.base import SQLiteDialect
 
 from app.db.base import Base, get_db
 from app.api.deps import get_current_user
@@ -24,27 +22,10 @@ from app.core.config import settings
 from app.core.security import create_access_token
 
 # ---------------------------------------------------------------------------
-# Monkey-patch SQLite to handle PostgreSQL JSONB
+# SQLite JSON support — compile JSON as TEXT
 # ---------------------------------------------------------------------------
-# SQLite can't render JSONB — we compile it as TEXT so tables can be created.
 
-_orig_visit_json = SQLiteTypeCompiler.visit_JSON
-
-def _patched_visit_json(self, type_, **kw):
-    """Treat JSON and JSONB as TEXT for SQLite."""
-    return "TEXT"
-
-
-def _install_sqlite_jsonb_workaround():
-    """If JSONB hasn't been mapped yet, register both visit_JSON and
-    (the missing) visit_JSONB as TEXT."""
-    if not hasattr(SQLiteTypeCompiler, "visit_JSONB"):
-        SQLiteTypeCompiler.visit_JSONB = _patched_visit_json
-    # JSON may also cause issues; safer to handle both
-    SQLiteTypeCompiler.visit_JSON = _patched_visit_json
-
-
-_install_sqlite_jsonb_workaround()
+SQLiteTypeCompiler.visit_JSON = lambda self, type_, **kw: "TEXT"
 
 # ---------------------------------------------------------------------------
 # Test database

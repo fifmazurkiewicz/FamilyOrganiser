@@ -4,6 +4,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Tuple
 from uuid import UUID
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -18,19 +19,59 @@ from app.models.audit_log import AuditLog
 from app.models.family import FamilyGroup, FamilyMembership, FamilyRole, InvitationLink
 from app.models.notification import Notification, NotificationType
 from app.models.user import User
-from app.repositories.family import (
-    FamilyGroupRepository,
-    FamilyMembershipRepository,
-    InvitationLinkRepository,
-)
 
 
 class FamilyService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-        self._groups = FamilyGroupRepository(session)
-        self._memberships = FamilyMembershipRepository(session)
-        self._invitations = InvitationLinkRepository(session)
+
+    # --- inline FamilyMembershipRepository ---
+
+    async def _get_membership(
+        self, user_id: UUID, group_id: UUID
+    ) -> FamilyMembership | None:
+        result = await self._session.execute(
+            select(FamilyMembership).where(
+                FamilyMembership.user_id == user_id,
+                FamilyMembership.family_group_id == group_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def _list_memberships_by_user(self, user_id: UUID) -> List[FamilyMembership]:
+        result = await self._session.execute(
+            select(FamilyMembership).where(FamilyMembership.user_id == user_id)
+        )
+        return list(result.scalars().all())
+
+    async def _list_memberships_by_group(self, group_id: UUID) -> List[FamilyMembership]:
+        result = await self._session.execute(
+            select(FamilyMembership).where(FamilyMembership.family_group_id == group_id)
+        )
+        return list(result.scalars().all())
+
+    async def _member_count(self, group_id: UUID) -> int:
+        result = await self._session.execute(
+            select(func.count()).where(FamilyMembership.family_group_id == group_id)
+        )
+        return result.scalar() or 0
+
+    # --- inline InvitationLinkRepository ---
+
+    async def _get_invitation_by_token(self, token: str) -> InvitationLink | None:
+        result = await self._session.execute(
+            select(InvitationLink).where(InvitationLink.token == token)
+        )
+        return result.scalar_one_or_none()
+
+    async def _list_invitations_by_group(self, group_id: UUID) -> List[InvitationLink]:
+        result = await self._session.execute(
+            select(InvitationLink).where(
+                InvitationLink.family_group_id == group_id,
+                InvitationLink.is_active == True,
+            )
+        )
+        return list(result.scalars().all())
 
     # ------------------------------------------------------------------ groups
 
@@ -50,28 +91,27 @@ class FamilyService:
         return group
 
     async def list_user_groups(self, user_id: UUID) -> List[Tuple[FamilyGroup, int]]:
-        memberships = await self._memberships.list_by_user(user_id)
+        memberships = await self._list_memberships_by_user(user_id)
         result = []
         for m in memberships:
-            group = await self._groups.get(m.family_group_id)
+            group = await self._session.get(FamilyGroup, m.family_group_id)
             if group:
-                count = await self._memberships.member_count(m.family_group_id)
+                count = await self._member_count(m.family_group_id)
                 result.append((group, count))
         return result
 
     async def admin_list_all_groups(self) -> List[Tuple[FamilyGroup, int]]:
-        from sqlalchemy import select
         result = await self._session.execute(
             select(FamilyGroup).order_by(FamilyGroup.created_at.desc())
         )
         groups = result.scalars().all()
         return [
-            (g, await self._memberships.member_count(g.id))
+            (g, await self._member_count(g.id))
             for g in groups
         ]
 
     async def admin_delete_group(self, group_id: UUID) -> None:
-        group = await self._groups.get(group_id)
+        group = await self._session.get(FamilyGroup, group_id)
         if not group:
             raise NotFoundError("Group not found")
         await self._session.delete(group)
@@ -82,7 +122,7 @@ class FamilyService:
     async def require_membership(
         self, user_id: UUID, group_id: UUID
     ) -> FamilyMembership:
-        membership = await self._memberships.get_membership(user_id, group_id)
+        membership = await self._get_membership(user_id, group_id)
         if not membership:
             raise ForbiddenError("Not a member of this family group")
         return membership
@@ -94,18 +134,18 @@ class FamilyService:
         return membership
 
     async def list_members(self, group_id: UUID) -> List[FamilyMembership]:
-        return await self._memberships.list_by_group(group_id)
+        return await self._list_memberships_by_group(group_id)
 
     async def remove_member(
         self, actor: User, group_id: UUID, target_user_id: UUID
     ) -> None:
         await self.require_admin(actor.id, group_id)
 
-        target = await self._memberships.get_membership(target_user_id, group_id)
+        target = await self._get_membership(target_user_id, group_id)
         if not target:
             raise NotFoundError("Member not found in this group")
 
-        group = await self._groups.get(group_id)
+        group = await self._session.get(FamilyGroup, group_id)
         await self._session.delete(target)
 
         notif = Notification(
@@ -122,7 +162,7 @@ class FamilyService:
     ) -> None:
         my_membership = await self.require_admin(actor.id, group_id)
 
-        target = await self._memberships.get_membership(new_admin_id, group_id)
+        target = await self._get_membership(new_admin_id, group_id)
         if not target:
             raise NotFoundError("Target member not found in this group")
 
@@ -172,7 +212,7 @@ class FamilyService:
         expire_days: int = 7,
     ) -> InvitationLink:
         await self.require_admin(actor.id, group_id)
-        count = await self._memberships.member_count(group_id)
+        count = await self._member_count(group_id)
         if count >= settings.MAX_FAMILY_GROUP_MEMBERS:
             raise GroupLimitExceededError()
 
@@ -190,88 +230,50 @@ class FamilyService:
         await self._session.refresh(link)
         return link
 
-    async def join_via_invitation(self, user: User, token: str) -> FamilyGroup:
-        link = await self._invitations.get_by_token(token)
-        if not link or not link.is_active:
-            raise BusinessLogicError("Invalid or revoked invitation link")
+    async def list_invitations(
+        self, actor: User, group_id: UUID
+    ) -> List[InvitationLink]:
+        await self.require_admin(actor.id, group_id)
+        return await self._list_invitations_by_group(group_id)
+
+    async def delete_invitation(
+        self, actor: User, group_id: UUID, link_id: UUID
+    ) -> None:
+        await self.require_admin(actor.id, group_id)
+        link = await self._session.get(InvitationLink, link_id)
+        if not link or link.family_group_id != group_id:
+            raise NotFoundError("Invitation link not found")
+        link.is_active = False
+        await self._session.commit()
+
+    async def join_via_invitation(self, user: User, token: str) -> FamilyMembership:
+        link = await self._get_invitation_by_token(token)
+        if not link:
+            raise NotFoundError("Invitation link not found")
+        if not link.is_active or link.used:
+            raise BusinessLogicError("This invitation has expired or is no longer active")
         if link.expires_at < datetime.now(timezone.utc):
-            raise BusinessLogicError("Invitation link has expired")
-        if link.single_use and link.used:
-            raise BusinessLogicError("This invitation link has already been used")
+            raise BusinessLogicError("This invitation link has expired")
 
-        count = await self._memberships.member_count(link.family_group_id)
-        if count >= settings.MAX_FAMILY_GROUP_MEMBERS:
-            raise GroupLimitExceededError()
-
-        existing = await self._memberships.get_membership(user.id, link.family_group_id)
+        existing = await self._get_membership(user.id, link.family_group_id)
         if existing:
             raise ConflictError("Already a member of this family group")
 
-        self._session.add(
-            FamilyMembership(
-                user_id=user.id,
-                family_group_id=link.family_group_id,
-                role=FamilyRole.MEMBER,
-            )
+        count = await self._member_count(link.family_group_id)
+        if count >= settings.MAX_FAMILY_GROUP_MEMBERS:
+            raise GroupLimitExceededError()
+
+        membership = FamilyMembership(
+            user_id=user.id,
+            family_group_id=link.family_group_id,
+            role=FamilyRole.MEMBER,
         )
+        self._session.add(membership)
 
         if link.single_use:
             link.used = True
             link.is_active = False
 
         await self._session.commit()
-
-        group = await self._groups.get(link.family_group_id)
-        if not group:
-            raise NotFoundError("Group not found")
-        return group
-
-    async def revoke_invitation(
-        self, actor: User, group_id: UUID, link_id: UUID
-    ) -> None:
-        await self.require_admin(actor.id, group_id)
-        link = await self._invitations.get(link_id)
-        if not link or link.family_group_id != group_id:
-            raise NotFoundError("Invitation not found")
-        link.is_active = False
-        await self._session.commit()
-
-    async def admin_reset_member_password(
-        self,
-        actor: User,
-        group_id: UUID,
-        target_user_id: UUID,
-        new_password: str,
-    ) -> None:
-        from app.core.security import hash_password
-        from app.repositories.user import UserRepository
-
-        await self.require_admin(actor.id, group_id)
-        await self.require_membership(target_user_id, group_id)
-
-        user_repo = UserRepository(self._session)
-        target = await user_repo.get(target_user_id)
-        if not target:
-            raise NotFoundError("User not found")
-
-        target.hashed_password = hash_password(new_password)
-
-        self._session.add(
-            Notification(
-                user_id=target.id,
-                notification_type=NotificationType.PASSWORD_RESET,
-                title="Hasło zostało zmienione",
-                body="Twoje hasło zostało zmienione przez administratora grupy rodzinnej.",
-            )
-        )
-        self._session.add(
-            AuditLog(
-                actor_id=actor.id,
-                target_user_id=target.id,
-                family_group_id=group_id,
-                action="family_admin_password_reset",
-                resource_type="user",
-                resource_id=str(target.id),
-            )
-        )
-        await self._session.commit()
+        await self._session.refresh(membership)
+        return membership

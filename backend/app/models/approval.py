@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum as PyEnum
 from sqlalchemy import String, DateTime, ForeignKey, Enum, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -25,16 +25,16 @@ class ApprovalActionType(str, PyEnum):
 class ApprovalRequest(Base):
     __tablename__ = "approval_requests"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     initiator_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     family_group_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id"), nullable=False
+        Uuid, ForeignKey("family_groups.id"), nullable=False
     )
     action_type: Mapped[ApprovalActionType] = mapped_column(Enum(ApprovalActionType), nullable=False)
     resource_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    resource_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)
+    resource_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[ApprovalStatus] = mapped_column(
         Enum(ApprovalStatus), default=ApprovalStatus.PENDING
@@ -54,12 +54,12 @@ class ApprovalRequest(Base):
 class ApprovalVote(Base):
     __tablename__ = "approval_votes"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     request_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("approval_requests.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("approval_requests.id", ondelete="CASCADE"), nullable=False
     )
     voter_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     approved: Mapped[bool] = mapped_column(Boolean, nullable=False)
     comment: Mapped[str | None] = mapped_column(Text, nullable=True)
