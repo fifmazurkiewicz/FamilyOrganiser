@@ -221,3 +221,51 @@ async def client_auth_headers(test_user: User) -> dict:
 async def service_db(db_session: AsyncSession):
     """Returns the async DB session for direct service tests."""
     return db_session
+
+
+# ---------------------------------------------------------------------------
+# Model fixtures for new modules (shopping, tasks, budget, investments)
+# ---------------------------------------------------------------------------
+
+@pytest_asyncio.fixture
+async def shopping_list(db_session: AsyncSession, family_group, test_user):
+    from app.models.shopping import ShoppingList
+    lst = ShoppingList(name="Test List", family_group_id=family_group.id, created_by=test_user.id)
+    db_session.add(lst)
+    await db_session.flush()
+    await db_session.refresh(lst)
+    return lst
+
+
+@pytest_asyncio.fixture
+async def task_list(db_session: AsyncSession, family_group, test_user):
+    from app.models.task import TaskList
+    lst = TaskList(name="Test Tasks", family_group_id=family_group.id, created_by=test_user.id)
+    db_session.add(lst)
+    await db_session.flush()
+    await db_session.refresh(lst)
+    return lst
+
+
+@pytest_asyncio.fixture
+async def budget(db_session: AsyncSession, family_group):
+    from app.models.monthly_budget import MonthlyBudget
+    from datetime import date
+    today = date.today()
+    b = MonthlyBudget(family_group_id=family_group.id, year=today.year, month=today.month)
+    db_session.add(b)
+    await db_session.flush()
+    await db_session.refresh(b)
+    return b
+
+
+@pytest_asyncio.fixture
+async def expense(db_session: AsyncSession, family_group, test_user):
+    from app.models.expense import SimpleExpense
+    from datetime import date
+    exp = SimpleExpense(family_group_id=family_group.id, user_id=test_user.id,
+                        amount=100.00, description="Test expense", expense_date=date.today())
+    db_session.add(exp)
+    await db_session.flush()
+    await db_session.refresh(exp)
+    return exp

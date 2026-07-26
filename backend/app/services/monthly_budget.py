@@ -90,8 +90,9 @@ class MonthlyBudgetService:
                     created_by=user_id,
                 )
                 self.db.add(new_entry)
-
+        await self.budget_repo.add(budget)
         await self.budget_repo.commit()
+        budget = await self.budget_repo.get_or_raise(budget.id)
         return MonthlyBudgetResponse.model_validate(budget)
 
     async def get_budget(self, budget_id: uuid.UUID) -> MonthlyBudgetResponse:

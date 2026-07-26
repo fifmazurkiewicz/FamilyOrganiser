@@ -37,6 +37,7 @@ class TaskService:
         )
         await self.list_repo.add(lst)
         await self.list_repo.commit()
+        lst = await self.list_repo.get_or_raise(lst.id)
         return TaskListResponse.model_validate(lst)
 
     async def get_list(self, list_id: uuid.UUID) -> TaskListResponse:
