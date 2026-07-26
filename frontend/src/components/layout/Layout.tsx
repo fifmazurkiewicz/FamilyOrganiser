@@ -15,17 +15,17 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 const navItems = [
   { to: "/app", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/accounts", icon: CreditCard, label: "Konta" },
-  { to: "/transactions", icon: Receipt, label: "Transakcje" },
-  { to: "/shopping", icon: ShoppingCart, label: "Lista zakupów" },
-  { to: "/tasks", icon: CheckSquare, label: "Zadania" },
-  { to: "/expenses", icon: Receipt, label: "Wydatki" },
-  { to: "/budget-monthly", icon: PieChart, label: "Budżet miesięczny" },
-  { to: "/savings", icon: PiggyBank, label: "Oszczędności" },
-  { to: "/investments", icon: TrendingUp, label: "Inwestycje" },
-  { to: "/income", icon: DollarSign, label: "Przychody" },
-  { to: "/reports", icon: BarChart2, label: "Raporty" },
-  { to: "/groups", icon: Users, label: "Grupy rodzinne" },
+  { to: "/app/accounts", icon: CreditCard, label: "Konta" },
+  { to: "/app/transactions", icon: Receipt, label: "Transakcje" },
+  { to: "/app/shopping", icon: ShoppingCart, label: "Lista zakupów" },
+  { to: "/app/tasks", icon: CheckSquare, label: "Zadania" },
+  { to: "/app/expenses", icon: Receipt, label: "Wydatki" },
+  { to: "/app/budget-monthly", icon: PieChart, label: "Budżet miesięczny" },
+  { to: "/app/savings", icon: PiggyBank, label: "Oszczędności" },
+  { to: "/app/investments", icon: TrendingUp, label: "Inwestycje" },
+  { to: "/app/income", icon: DollarSign, label: "Przychody" },
+  { to: "/app/reports", icon: BarChart2, label: "Raporty" },
+  { to: "/app/groups", icon: Users, label: "Grupy rodzinne" },
 ];
 
 function UserAvatar({ name, size = "sm" }: { name?: string; size?: "sm" | "md" }) {

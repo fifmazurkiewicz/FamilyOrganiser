@@ -17,15 +17,20 @@ class ShoppingService:
     # ── Lists ──
 
     async def create_list(self, user_id: uuid.UUID, data: ShoppingListCreate) -> ShoppingList:
-        lst = ShoppingList(
-            family_group_id=data.family_group_id,
-            name=data.name,
-            created_by=user_id,
-        )
-        self._session.add(lst)
-        await self._session.commit()
-        await self._session.refresh(lst)
-        return lst
+            lst = ShoppingList(
+                family_group_id=data.family_group_id,
+                name=data.name,
+                created_by=user_id,
+            )
+            self._session.add(lst)
+            await self._session.commit()
+            # Re-fetch with eager-loaded items to avoid MissingGreenlet on lazy access
+            result = await self._session.execute(
+                select(ShoppingList)
+                .options(selectinload(ShoppingList.items))
+                .where(ShoppingList.id == lst.id)
+            )
+            return result.scalars().first()
 
     async def list_lists(self, family_group_id: uuid.UUID) -> List[ShoppingList]:
         result = await self._session.execute(
