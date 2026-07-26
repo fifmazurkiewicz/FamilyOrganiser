@@ -11,6 +11,11 @@ from app.models.approval import ApprovalRequest, ApprovalVote
 from app.models.notification import Notification
 from app.models.exchange_rate import ExchangeRate
 from app.models.audit_log import AuditLog
+from app.models.shopping import ShoppingList, ShoppingItem
+from app.models.task import TaskList, TaskItem
+from app.models.expense import SimpleExpense
+from app.models.monthly_budget import MonthlyBudget, BudgetEntry, BudgetEntryType
+from app.models.simple_investment import SimpleInvestment, SimpleInvestmentType, InterestPeriod, DurationUnit
 
 __all__ = [
     "User", "SecurityQuestion",
@@ -26,4 +31,9 @@ __all__ = [
     "Notification",
     "ExchangeRate",
     "AuditLog",
+    "ShoppingList", "ShoppingItem",
+    "TaskList", "TaskItem",
+    "SimpleExpense",
+    "MonthlyBudget", "BudgetEntry", "BudgetEntryType",
+    "SimpleInvestment", "SimpleInvestmentType", "InterestPeriod", "DurationUnit",
 ]

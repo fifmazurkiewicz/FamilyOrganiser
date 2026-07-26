@@ -9,9 +9,14 @@ from app.api.v1.endpoints import (
     family,
     income,
     investments,
+    monthly_budgets,
     notifications,
     reports,
     savings,
+    shopping,
+    simple_expenses,
+    simple_investments,
+    tasks,
     transactions,
     transfers,
     users,
@@ -32,3 +37,8 @@ router.include_router(transfers.router)
 router.include_router(reports.router)
 router.include_router(notifications.router)
 router.include_router(exchange_rates.router)
+router.include_router(shopping.router)
+router.include_router(tasks.router)
+router.include_router(simple_expenses.router)
+router.include_router(monthly_budgets.router)
+router.include_router(simple_investments.router)
