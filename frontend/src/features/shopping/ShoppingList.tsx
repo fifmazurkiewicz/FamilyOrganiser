@@ -104,7 +104,7 @@ function ShoppingItemsView({
 
   const toggleItem = useMutation({
     mutationFn: ({ itemId, is_bought }: { itemId: string; is_bought: boolean }) =>
-      api.patch(`/v1/shopping-lists/${listId}/items/${itemId}`, { is_bought }),
+      api.patch(`/v1/shopping/lists/${listId}/items/${itemId}`, { is_bought }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["shopping-lists"] });
     },
@@ -113,7 +113,7 @@ function ShoppingItemsView({
 
   const addItem = useMutation({
     mutationFn: (name: string) =>
-      api.post(`/v1/shopping-lists/${listId}/items`, { name, quantity: 1 }),
+      api.post(`/v1/shopping/lists/${listId}/items`, { name, quantity: 1 }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["shopping-lists"] });
       setNewItem("");
@@ -123,7 +123,7 @@ function ShoppingItemsView({
 
   const removeItem = useMutation({
     mutationFn: (itemId: string) =>
-      api.delete(`/v1/shopping-lists/${listId}/items/${itemId}`),
+      api.delete(`/v1/shopping/lists/${listId}/items/${itemId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["shopping-lists"] }),
     onError: () => toast("error", "Błąd", "Nie udało się usunąć pozycji."),
   });
@@ -231,12 +231,12 @@ export function ShoppingList() {
     isLoading,
   } = useQuery<ShoppingList[]>({
     queryKey: ["shopping-lists"],
-    queryFn: () => api.get("/v1/shopping-lists/").then((r) => r.data),
+    queryFn: () => api.get("/v1/shopping/lists/").then((r) => r.data),
   });
 
   const createList = useMutation({
     mutationFn: (name: string) =>
-      api.post("/v1/shopping-lists/", { name }),
+      api.post("/v1/shopping/lists/", { name }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["shopping-lists"] });
       setCreateOpen(false);
@@ -247,7 +247,7 @@ export function ShoppingList() {
   });
 
   const deleteList = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/shopping-lists/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/shopping/lists/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["shopping-lists"] });
       if (selectedListId) setSelectedListId(null);

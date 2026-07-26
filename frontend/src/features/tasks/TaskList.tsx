@@ -118,7 +118,7 @@ function TaskItemsView({
 
   const toggleDone = useMutation({
     mutationFn: ({ itemId, is_done }: { itemId: string; is_done: boolean }) =>
-      api.patch(`/v1/task-lists/${listId}/items/${itemId}`, { is_done }),
+      api.patch(`/v1/tasks/lists/${listId}/items/${itemId}`, { is_done }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
     onError: () => toast("error", "Błąd", "Nie udało się zaktualizować zadania."),
   });
@@ -131,13 +131,13 @@ function TaskItemsView({
       itemId: string;
       assignee_id: string | null;
     }) =>
-      api.patch(`/v1/task-lists/${listId}/items/${itemId}`, { assignee_id }),
+      api.patch(`/v1/tasks/lists/${listId}/items/${itemId}`, { assignee_id }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
   });
 
   const addItem = useMutation({
     mutationFn: (title: string) =>
-      api.post(`/v1/task-lists/${listId}/items`, { title }),
+      api.post(`/v1/tasks/lists/${listId}/items`, { title }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["task-lists"] });
       setNewTitle("");
@@ -148,7 +148,7 @@ function TaskItemsView({
 
   const removeItem = useMutation({
     mutationFn: (itemId: string) =>
-      api.delete(`/v1/task-lists/${listId}/items/${itemId}`),
+      api.delete(`/v1/tasks/lists/${listId}/items/${itemId}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
   });
 
@@ -285,11 +285,11 @@ export function TaskList() {
 
   const { data: lists, isLoading } = useQuery<TaskList[]>({
     queryKey: ["task-lists"],
-    queryFn: () => api.get("/v1/task-lists/").then((r) => r.data),
+    queryFn: () => api.get("/v1/tasks/lists/").then((r) => r.data),
   });
 
   const createList = useMutation({
-    mutationFn: (name: string) => api.post("/v1/task-lists/", { name }),
+    mutationFn: (name: string) => api.post("/v1/tasks/lists/", { name }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["task-lists"] });
       setCreateOpen(false);
@@ -300,7 +300,7 @@ export function TaskList() {
   });
 
   const deleteList = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/task-lists/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/tasks/lists/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["task-lists"] });
       if (selectedListId) setSelectedListId(null);

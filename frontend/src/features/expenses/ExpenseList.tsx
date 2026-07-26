@@ -67,12 +67,12 @@ export function ExpenseList() {
 
   const { data: expenses, isLoading } = useQuery<Expense[]>({
     queryKey: ["expenses"],
-    queryFn: () => api.get("/v1/expenses/").then((r) => r.data),
+    queryFn: () => api.get("/v1/simple-expenses/").then((r) => r.data),
   });
 
   const addExpense = useMutation({
     mutationFn: (data: { amount: number; description: string; expense_date: string }) =>
-      api.post("/v1/expenses/", data),
+      api.post("/v1/simple-expenses/", data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["expenses"] });
       setAddOpen(false);
@@ -83,7 +83,7 @@ export function ExpenseList() {
   });
 
   const deleteExpense = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/expenses/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/simple-expenses/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["expenses"] });
       toast("success", "Usunięto", "Wydatek został usunięty.");
