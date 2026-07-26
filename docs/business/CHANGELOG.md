@@ -1,5 +1,14 @@
 # Lista zmian (CHANGELOG)
 
+## [2.1] — w trakcie
+
+### 🔄 W realizacji
+- 🧪 **Testy** — unit + integration dla 5 modułów
+- 📦 **lib/api** — brakujące pliki API dla frontendu
+- 📊 **Eksport Excel** — wydatki i budżet do .xlsx
+- 📚 **Archiwum list** — historia odhaczonych zakupów i zadań
+- 🔔 **Powiadomienia** — alerty przy dodawaniu/kupowaniu/wykonywaniu
+
 ## [2.0] — 2026-07-26
 
 ### Nowe moduły rodzinne

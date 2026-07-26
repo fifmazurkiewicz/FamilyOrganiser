@@ -68,6 +68,10 @@ Model (SQLAlchemy ORM)
 **Decyzja:** Diagramy w Mermaid (renderowane przez GitHub), dokumentacja w repo obok kodu.
 **Powód:** Diagramy "jako kod" są wersjonowane i nie wymagają zewnętrznych narzędzi.
 
+### ADR-005: Excel export, archiwum, powiadomienia (v2.1)
+**Decyzja:** Eksport do .xlsx przez openpyxl, archiwum list przez query param, powiadomienia przez istniejący model Notification.
+**Powód:** Zobacz `docs/technical/adr-005-phase3.md` — szczegóły implementacji.
+
 ## Stack technologiczny
 
 | Warstwa | Technologia |
