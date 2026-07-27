@@ -37,9 +37,6 @@ class User(Base):
     memberships: Mapped[list["FamilyMembership"]] = relationship(
         "FamilyMembership", back_populates="user", cascade="all, delete-orphan"
     )
-    accounts: Mapped[list["Account"]] = relationship(
-        "Account", back_populates="owner", foreign_keys="Account.owner_id"
-    )
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="user", cascade="all, delete-orphan"
     )

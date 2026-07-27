@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Download, BarChart2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { reportsApi } from "@/lib/api/reports";
 import { formatCurrency } from "@/utils/currency";
@@ -16,7 +14,6 @@ export function ReportsPanel() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
-  const [exporting, setExporting] = useState(false);
 
   const { data: categories, isLoading: catsLoading } = useQuery({
     queryKey: ["expenses-by-category", year, month],
@@ -28,25 +25,31 @@ export function ReportsPanel() {
     queryFn: () => reportsApi.monthlyTrend(12),
   });
 
-  const handleExport = async () => {
-    setExporting(true);
-    try { await reportsApi.exportExcel(year, month); } finally { setExporting(false); }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-gray-900">Raporty finansowe</h2>
         <div className="flex items-center gap-2">
-          <select className="rounded-lg border border-gray-300 px-2 py-1 text-sm" value={month} onChange={(e) => setMonth(parseInt(e.target.value))}>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>)}
+          <select
+            className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            value={month}
+            onChange={(e) => setMonth(parseInt(e.target.value))}
+          >
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+              <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
+            ))}
           </select>
-          <input type="number" className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm" value={year} onChange={(e) => setYear(parseInt(e.target.value))} />
-          <Button variant="outline" size="sm" onClick={handleExport} loading={exporting}>
-            <Download className="h-4 w-4" /> Excel
-          </Button>
+          <input
+            type="number"
+            className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            value={year}
+            onChange={(e) => setYear(parseInt(e.target.value))}
+          />
         </div>
       </div>
+      <p className="text-sm text-gray-500">
+        Dane z budżetów miesięcznych Twoich grup. Eksport Excel jest dostępny w module Budżet miesięczny.
+      </p>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -57,8 +60,18 @@ export function ReportsPanel() {
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
-                  <Pie data={categories} dataKey="amount" nameKey="category" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                    {categories.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  <Pie
+                    data={categories}
+                    dataKey="amount"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={90}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {categories.map((_, i) => (
+                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
                   </Pie>
                   <Tooltip formatter={(v: number) => formatCurrency(v)} />
                 </PieChart>

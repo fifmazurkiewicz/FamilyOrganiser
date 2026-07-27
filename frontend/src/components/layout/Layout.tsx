@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import {
   LayoutDashboard, TrendingUp,
-  BarChart2, Users, Bell, User, LogOut, ChevronDown,
+  BarChart2, Users, Bell, LogOut, ChevronDown,
   Shield, Menu, X, Home, ChevronRight, ShoppingCart, CheckSquare,
   PieChart
 } from "lucide-react";
@@ -104,13 +104,14 @@ export default function Layout() {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-br from-gray-50 via-white to-primary-light/30">
+    <div className="flex h-dvh overflow-hidden bg-gradient-to-br from-gray-50 via-white to-primary-light/30">
       {overlay}
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 flex-shrink-0 bg-white/90 backdrop-blur-md border-r border-gray-200/60 flex flex-col shadow-xl shadow-gray-200/20 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] flex-shrink-0 bg-white/90 backdrop-blur-md border-r border-gray-200/60 flex flex-col shadow-xl shadow-gray-200/20 transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
+          "pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]",
           !sidebarOpen && !isDesktop && "-translate-x-full"
         )}
       >
@@ -135,7 +136,7 @@ export default function Layout() {
         <div className="px-4 py-3 border-b border-gray-100/80">
           {groups.length === 0 ? (
             <button
-              onClick={() => handleNav("/groups")}
+              onClick={() => handleNav("/app/groups")}
               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg border border-dashed border-gray-300 text-sm text-gray-500 hover:border-primary hover:text-primary hover:bg-primary-light/50 transition-all"
             >
               <Users className="h-4 w-4" />
@@ -172,7 +173,7 @@ export default function Layout() {
                   ))}
                   <div className="border-t border-gray-100">
                     <button
-                      onClick={() => { handleNav("/groups"); setGroupMenuOpen(false); }}
+                      onClick={() => { handleNav("/app/groups"); setGroupMenuOpen(false); }}
                       className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-primary-light/50 transition-colors"
                     >
                       + Utwórz / zarządzaj grupami
@@ -208,9 +209,9 @@ export default function Layout() {
         </nav>
 
         {/* Bottom section */}
-        <div className="p-3 border-t border-gray-100/80 space-y-1">
+        <div className="p-3 border-t border-gray-100/80 space-y-1 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <NavLink
-            to="/notifications"
+            to="/app/notifications"
             onClick={() => !isDesktop && setSidebarOpen(false)}
             className={({ isActive }) =>
               cn(
@@ -229,7 +230,7 @@ export default function Layout() {
           </NavLink>
 
           <NavLink
-            to="/profile"
+            to="/app/profile"
             onClick={() => !isDesktop && setSidebarOpen(false)}
             className={({ isActive }) =>
               cn(
@@ -244,7 +245,7 @@ export default function Layout() {
 
           {user?.is_app_admin && (
             <NavLink
-              to="/admin"
+              to="/app/admin"
               onClick={() => !isDesktop && setSidebarOpen(false)}
               className={({ isActive }) =>
                 cn(
@@ -272,11 +273,16 @@ export default function Layout() {
       <main className="flex-1 overflow-y-auto">
         {/* Mobile top bar */}
         {!isDesktop && (
-          <div className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
-            <button onClick={() => setSidebarOpen(true)} className="p-1.5 -ml-1 rounded-lg hover:bg-gray-100 text-gray-600">
+          <div className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-1 rounded-lg hover:bg-gray-100 text-gray-600 min-h-11 min-w-11 flex items-center justify-center"
+              aria-label="Otwórz menu"
+            >
               <Menu className="h-5 w-5" />
             </button>
-            <button onClick={() => navigate("/")} className="flex items-center gap-2">
+            <button type="button" onClick={() => navigate("/")} className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                 <Home className="h-3.5 w-3.5 text-white" />
               </div>
@@ -284,12 +290,17 @@ export default function Layout() {
                 Family<span className="text-primary">Organiser</span>
               </span>
             </button>
-            <button onClick={() => navigate("/profile")} className="p-1 -mr-1">
+            <button
+              type="button"
+              onClick={() => navigate("/app/profile")}
+              className="p-1 -mr-1 min-h-11 min-w-11 flex items-center justify-center"
+              aria-label="Profil"
+            >
               <UserAvatar name={user?.full_name} />
             </button>
           </div>
         )}
-        <div className={cn(!isDesktop && "pt-0")}>
+        <div className={cn(!isDesktop && "pt-0 pb-[env(safe-area-inset-bottom)]")}>
           <Outlet />
         </div>
       </main>

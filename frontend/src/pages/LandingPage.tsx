@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import {
-  LayoutDashboard, Users, PiggyBank, TrendingUp, BarChart2,
+  Users, PiggyBank, TrendingUp, BarChart2,
   Shield, ArrowRight, Home, CreditCard, Sparkles
 } from "lucide-react";
 

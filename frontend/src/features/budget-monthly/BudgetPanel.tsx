@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Plus,
-  PieChart,
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
@@ -286,7 +285,7 @@ export function BudgetPanel() {
 
   const toggleRecurring = useMutation({
     mutationFn: ({ id, is_recurring }: { id: string; is_recurring: boolean }) =>
-          api.put(`/v1/monthly-budgets/entries/${id}`, { is_recurring }),
+      api.patch(`/v1/monthly-budgets/entries/${id}`, { is_recurring }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["monthly-budget"] }),
   });
 

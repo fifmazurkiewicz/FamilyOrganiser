@@ -6,7 +6,8 @@ from apscheduler.triggers.cron import CronTrigger
 
 from app.core.config import settings
 from app.db.base import engine, Base
-from app.services.seed import seed_admin_user, seed_categories
+import app.models  # noqa: F401 — register ORM metadata for create_all
+from app.services.seed import seed_admin_user
 from app.db.base import AsyncSessionLocal
 from app.api.v1.router import router as api_v1_router
 from app.middleware.logging_middleware import RequestLoggingMiddleware
@@ -20,9 +21,8 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    # Seed default data
+    # Seed default admin
     async with AsyncSessionLocal() as db:
-        await seed_categories(db)
         await seed_admin_user(db)
 
     # Schedule tasks
