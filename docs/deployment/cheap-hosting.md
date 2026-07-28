@@ -315,7 +315,7 @@ Te rzeczy jeszcze nie są „produkcyjne” w obecnym stanie projektu:
 1. `docker-compose.prod.yml` — bez hot-reload i bez exposu Postgresa.
 2. `frontend/Dockerfile` multi-stage: `npm run build` → `nginx:alpine` z `dist`.
 3. `docker/nginx.prod.conf` — static + `/api` + SSL.
-4. `.env.production.example` — checklista sekretów.
+4. `.env.example` — checklista sekretów (lokalnie i produkcja).
 5. Skrypt `scripts/backup.sh` + krótka instrukcja restore.
 
 Gdy będziesz gotowy, można to wdrożyć w repo jako kolejny krok (bez zmiany logiki biznesowej).

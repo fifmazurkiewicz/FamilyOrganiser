@@ -1,5 +1,6 @@
 # Produkcja na Hetzner VPS: Caddy (TLS) + backend API.
 # Użycie (na serwerze, katalog z tym plikiem i sklonowanym repo):
+#   cp .env.example .env   # uzupełnij DATABASE_URL, SUPABASE_*, CORS, SECRET_KEY
 #   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 #
 # Wymagane w .env: DATABASE_URL, SUPABASE_URL, SUPABASE_JWT_SECRET,
