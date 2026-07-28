@@ -30,7 +30,7 @@ Ceny orientacyjne (EU, bez VAT, stan ~połowa 2026). Sprawdź aktualny cennik pr
 | **Oracle Cloud Always Free** (VM Ampere) | **0 €** | Eksperyment / hobby | Darmowe 4 OCPU / 24 GB (w limicie Always Free) | Kapryśna rejestracja, limity, więcej roboty z ARM |
 | **Hetzner Cloud** (np. CX22 / CX23) | **~4–6 €** | **Rekomendowane** | Prosto, stabilnie, dużo transferu, EU (DE/FI) | Płatne (ale nadal bardzo tanio) |
 | Contabo / podobne VPS | ~4–8 € | Budget | Dużo dysku | Często wolniejszy I/O, gorszy support |
-| Railway / Render / Fly.io | ~5–20 €+ | Szybki PoC | Mało DevOps | Free tier śpi / limity; baza osobno drożeje; gorszy stosunek cena/jakość przy Postgres |
+| Railway / Render / **Fly.io** | ~0–10 €+ | Szybki PoC | Mało DevOps; w repo jest gotowy `Dockerfile` + `fly.toml` (SQLite na volume) — zob. [fly-io.md](fly-io.md) | Maszyna może „zasypiać”; SQLite na volume ≠ pełny Postgres |
 | VPS PL (np. home.pl, OVH Start) | zwykle drożej | Preferencja lokalnego billing | Faktura PL | Często drożej przy tych samych parametrach |
 
 ### Rekomendacja

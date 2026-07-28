@@ -1,5 +1,10 @@
+from pathlib import Path
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -13,6 +18,8 @@ from app.api.v1.router import router as api_v1_router
 from app.middleware.logging_middleware import RequestLoggingMiddleware
 
 scheduler = AsyncIOScheduler()
+_static_env = os.environ.get("STATIC_DIR", "").strip()
+STATIC_DIR = Path(_static_env).resolve() if _static_env else None
 
 
 @asynccontextmanager
@@ -66,3 +73,29 @@ app.include_router(api_v1_router, prefix="/api")
 @app.get("/api/health")
 async def health():
     return {"status": "ok", "service": "FamilyOrganiser API"}
+
+
+def _register_spa(static_dir: Path) -> None:
+    """Serve Vite build (same origin as /api) for Fly / single-container deploy."""
+    assets = static_dir / "assets"
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="assets")
+
+    @app.get("/")
+    async def spa_index():
+        return FileResponse(static_dir / "index.html")
+
+    @app.get("/{full_path:path}")
+    async def spa_fallback(full_path: str):
+        candidate = (static_dir / full_path).resolve()
+        try:
+            candidate.relative_to(static_dir)
+        except ValueError:
+            return FileResponse(static_dir / "index.html")
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(static_dir / "index.html")
+
+
+if STATIC_DIR is not None and STATIC_DIR.is_dir() and (STATIC_DIR / "index.html").is_file():
+    _register_spa(STATIC_DIR)

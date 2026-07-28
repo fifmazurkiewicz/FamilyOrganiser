@@ -16,6 +16,7 @@
 
 ### 🚀 Deploy
 - [Najtańszy hosting](deployment/cheap-hosting.md) — VPS vs free tier, Compose, HTTPS, checklista
+- [Fly.io](deployment/fly-io.md) — Dockerfile, `fly.toml`, volume SQLite, sekrety
 
 ### 📊 Dla zarządu
 - [Executive Summary](executive/summary.html) — dashboard HTML (otwórz w przeglądarce)
