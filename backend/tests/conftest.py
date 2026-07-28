@@ -20,6 +20,7 @@ from app.models.user import User
 from app.models.family import FamilyGroup, FamilyMembership, FamilyRole
 from app.core.config import settings
 from app.core.security import create_access_token
+import app.models  # noqa: F401 — register all ORM tables for create_all
 
 # ---------------------------------------------------------------------------
 # SQLite JSON support — compile JSON as TEXT

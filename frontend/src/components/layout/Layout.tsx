@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { useGroupStore } from "@/stores/groupStore";
+import { clearClientSession } from "@/lib/session";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/api/client";
 import {
@@ -40,7 +41,7 @@ function UserAvatar({ name, size = "sm" }: { name?: string; size?: "sm" | "md" }
 }
 
 export default function Layout() {
-  const { logout, user, setUser } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const { activeGroup, groups, setGroups, setActiveGroup } = useGroupStore();
   const navigate = useNavigate();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
@@ -60,7 +61,7 @@ export default function Layout() {
   };
 
   const { data: userData } = useQuery({
-    queryKey: ["me"],
+    queryKey: ["me", user?.id],
     queryFn: () => api.get("/v1/users/me").then((r) => r.data),
   });
 
@@ -69,8 +70,9 @@ export default function Layout() {
   }, [userData, setUser]);
 
   const { data: groupsData } = useQuery({
-    queryKey: ["groups"],
+    queryKey: ["groups", user?.id],
     queryFn: () => api.get("/v1/groups/").then((r) => r.data),
+    enabled: !!user?.id,
   });
 
   useEffect(() => {
@@ -85,13 +87,14 @@ export default function Layout() {
   }, [groupsData, activeGroup, setGroups, setActiveGroup]);
 
   const { data: notifData } = useQuery({
-    queryKey: ["notif-count"],
+    queryKey: ["notif-count", user?.id],
     queryFn: () => api.get("/v1/notifications/count").then((r) => r.data),
+    enabled: !!user?.id,
     refetchInterval: 30000,
   });
 
   const handleLogout = () => {
-    logout();
+    clearClientSession();
     navigate("/login");
   };
 

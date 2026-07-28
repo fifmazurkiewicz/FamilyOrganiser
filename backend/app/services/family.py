@@ -236,7 +236,7 @@ class FamilyService:
         await self.require_admin(actor.id, group_id)
         return await self._list_invitations_by_group(group_id)
 
-    async def delete_invitation(
+    async def revoke_invitation(
         self, actor: User, group_id: UUID, link_id: UUID
     ) -> None:
         await self.require_admin(actor.id, group_id)
@@ -246,13 +246,16 @@ class FamilyService:
         link.is_active = False
         await self._session.commit()
 
-    async def join_via_invitation(self, user: User, token: str) -> FamilyMembership:
+    async def join_via_invitation(self, user: User, token: str) -> FamilyGroup:
         link = await self._get_invitation_by_token(token)
         if not link:
             raise NotFoundError("Invitation link not found")
         if not link.is_active or link.used:
             raise BusinessLogicError("This invitation has expired or is no longer active")
-        if link.expires_at < datetime.now(timezone.utc):
+        expires_at = link.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
             raise BusinessLogicError("This invitation link has expired")
 
         existing = await self._get_membership(user.id, link.family_group_id)
@@ -275,5 +278,8 @@ class FamilyService:
             link.is_active = False
 
         await self._session.commit()
-        await self._session.refresh(membership)
-        return membership
+
+        group = await self._session.get(FamilyGroup, link.family_group_id)
+        if not group:
+            raise NotFoundError("Family group not found")
+        return group

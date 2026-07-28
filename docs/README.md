@@ -14,6 +14,9 @@
 - [API Reference](technical/api.md) — endpointy, autoryzacja, przykłady
 - [Model danych](technical/data-model.md) — ERD, encje, relacje
 
+### 🚀 Deploy
+- [Najtańszy hosting](deployment/cheap-hosting.md) — VPS vs free tier, Compose, HTTPS, checklista
+
 ### 📊 Dla zarządu
 - [Executive Summary](executive/summary.html) — dashboard HTML (otwórz w przeglądarce)
 

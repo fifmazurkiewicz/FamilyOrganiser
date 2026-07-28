@@ -8,25 +8,37 @@ from app.models.user import User, SecurityQuestion
 
 
 async def seed_admin_user(db: AsyncSession) -> None:
-    """Create default admin account from ADMIN_EMAIL / ADMIN_PASSWORD if not exists."""
+    """Create or sync default admin from ADMIN_EMAIL / ADMIN_PASSWORD."""
     result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL).limit(1))
-    if result.scalar_one_or_none():
+    admin = result.scalar_one_or_none()
+    password_hash = hash_password(settings.ADMIN_PASSWORD)
+
+    if admin is None:
+        admin = User(
+            email=settings.ADMIN_EMAIL,
+            hashed_password=password_hash,
+            full_name="Administrator",
+            default_currency="PLN",
+            is_app_admin=True,
+            is_active=True,
+            is_locked=False,
+        )
+        db.add(admin)
+        await db.flush()
+
+        db.add(
+            SecurityQuestion(
+                user_id=admin.id,
+                question="Jak miało na imię Twoje pierwsze zwierzę domowe?",
+                hashed_answer=hash_security_answer(settings.ADMIN_PASSWORD),
+            )
+        )
+        await db.commit()
         return
 
-    admin = User(
-        email=settings.ADMIN_EMAIL,
-        hashed_password=hash_password(settings.ADMIN_PASSWORD),
-        full_name="Administrator",
-        default_currency="PLN",
-        is_app_admin=True,
-    )
-    db.add(admin)
-    await db.flush()
-
-    sq = SecurityQuestion(
-        user_id=admin.id,
-        question="Jak miało na imię Twoje pierwsze zwierzę domowe?",
-        hashed_answer=hash_security_answer(settings.ADMIN_PASSWORD),
-    )
-    db.add(sq)
+    # Always sync seed admin credentials from .env (local/dev bootstrap)
+    admin.hashed_password = password_hash
+    admin.is_app_admin = True
+    admin.is_locked = False
+    admin.is_active = True
     await db.commit()

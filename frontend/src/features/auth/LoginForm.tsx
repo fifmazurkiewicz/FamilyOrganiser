@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { beginClientSession } from "@/lib/session";
 import { authApi } from "@/lib/api/auth";
 import { usersApi } from "@/lib/api/users";
 import { Input } from "@/components/ui/Input";
@@ -9,7 +10,7 @@ import { Eye, EyeOff, LogIn } from "lucide-react";
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const { setTokens, setUser } = useAuthStore();
+  const setUser = useAuthStore((s) => s.setUser);
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,34 +22,49 @@ export function LoginForm() {
     setLoading(true);
     try {
       const tokens = await authApi.login(form);
-      setTokens(tokens.access_token, tokens.refresh_token);
+      beginClientSession(tokens.access_token, tokens.refresh_token);
       const user = await usersApi.me();
       setUser(user);
       navigate("/app");
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      setError(msg || "Nieprawidłowy email lub hasło");
+      const axiosErr = err as {
+        response?: { data?: { detail?: string | { msg?: string }[] } };
+        code?: string;
+        message?: string;
+      };
+      const detail = axiosErr.response?.data?.detail;
+      if (typeof detail === "string") {
+        setError(detail === "Invalid email or password" ? "Nieprawidłowy email lub hasło" : detail);
+      } else if (!axiosErr.response) {
+        setError("Brak połączenia z API. Uruchom backend na porcie 8000.");
+      } else {
+        setError("Nieprawidłowy email lub hasło");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form method="post" action="/login" onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
       <Input
+        id="login-email"
         label="Email"
         type="email"
+        name="username"
         value={form.email}
         onChange={(e) => setForm({ ...form, email: e.target.value })}
-        autoComplete="email"
+        autoComplete="username"
         placeholder="twoj@email.pl"
         required
       />
       <div className="space-y-1">
         <div className="relative">
           <Input
+            id="login-password"
             label="Hasło"
             type={showPassword ? "text" : "password"}
+            name="password"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             autoComplete="current-password"
@@ -60,6 +76,7 @@ export function LoginForm() {
             onClick={() => setShowPassword(!showPassword)}
             className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors"
             tabIndex={-1}
+            aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>

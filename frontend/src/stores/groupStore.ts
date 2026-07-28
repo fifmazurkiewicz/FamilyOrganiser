@@ -13,6 +13,7 @@ interface GroupState {
   groups: FamilyGroup[];
   setActiveGroup: (group: FamilyGroup | null) => void;
   setGroups: (groups: FamilyGroup[]) => void;
+  reset: () => void;
 }
 
 export const useGroupStore = create<GroupState>()(
@@ -22,6 +23,7 @@ export const useGroupStore = create<GroupState>()(
       groups: [],
       setActiveGroup: (group) => set({ activeGroup: group }),
       setGroups: (groups) => set({ groups }),
+      reset: () => set({ activeGroup: null, groups: [] }),
     }),
     {
       name: "group-storage",

@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:80"
+    CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:3001,http://localhost:80"
 
     ADMIN_EMAIL: str = "admin@admin.com"
     ADMIN_PASSWORD: str = "changeme"
