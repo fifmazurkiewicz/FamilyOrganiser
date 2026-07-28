@@ -1,15 +1,12 @@
-# fly.toml app configuration file generated for FamilyOrganiser
+# fly.toml — familyorganiser-rtepja (Fly.io Launch, 2026-07-28)
 #
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-# Setup:
-#   fly launch --no-deploy   # albo: fly apps create <name>
-#   fly volumes create familyorg_data --region waw --size 1
-#   fly secrets set SECRET_KEY=... ADMIN_PASSWORD=... CORS_ORIGINS_STR=https://<app>.fly.dev
-#   fly deploy
+# Deploy from latest main:
+#   fly deploy -a familyorganiser-rtepja
+# Secrets:
+#   fly secrets set SECRET_KEY=... ADMIN_PASSWORD=... CORS_ORIGINS_STR=https://familyorganiser-rtepja.fly.dev -a familyorganiser-rtepja
 
-app = 'familyorganiser'
-primary_region = 'waw'
+app = 'familyorganiser-rtepja'
+primary_region = 'ams'
 
 [build]
   dockerfile = 'Dockerfile'
@@ -19,7 +16,11 @@ primary_region = 'waw'
   STATIC_DIR = '/app/static'
   DATABASE_URL = 'sqlite+aiosqlite:////data/familyorg.db'
   ADMIN_EMAIL = 'admin@admin.com'
-  # SECRET_KEY, ADMIN_PASSWORD, CORS_ORIGINS_STR → fly secrets
+
+[[mounts]]
+  source = 'familyorg_data'
+  destination = '/data'
+  initial_size = '1gb'
 
 [http_service]
   internal_port = 8080
@@ -40,8 +41,3 @@ primary_region = 'waw'
   memory = '512mb'
   cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = 'familyorg_data'
-  destination = '/data'
-  initial_size = '1gb'
