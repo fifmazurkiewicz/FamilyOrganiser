@@ -273,7 +273,7 @@ export function InvestmentList() {
                   <div>
                     <p className="text-xs text-gray-500">Kwota</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(inv.principal_amount, inv.currency)}
+                      {formatCurrency(inv.principal_amount)}
                     </p>
                   </div>
 
@@ -281,11 +281,16 @@ export function InvestmentList() {
                   <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <Percent className="h-3 w-3" />
-                      {inv.rate}%
+                      {inv.interest_rate}%
                     </div>
                     <div className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {inv.duration_months} mies.
+                      {inv.duration_value}{" "}
+                      {inv.duration_unit === "years"
+                        ? "lat"
+                        : inv.duration_unit === "quarters"
+                          ? "kw."
+                          : "mies."}
                     </div>
                     <div className="flex items-center gap-1 col-span-2">
                       <Calendar className="h-3 w-3" />
@@ -311,7 +316,7 @@ export function InvestmentList() {
 
                   {/* Projected total */}
                   <p className="text-sm font-semibold text-primary">
-                    Projekcja łącznie: {formatCurrency(inv.projected_total, inv.currency)}
+                    Projekcja łącznie: {formatCurrency(inv.projected_total)}
                   </p>
 
                   {/* Delete */}

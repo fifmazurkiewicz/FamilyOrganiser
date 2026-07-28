@@ -1,12 +1,21 @@
 import { api } from "@/api/client";
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string;
+  is_app_admin: boolean;
+  is_locked: boolean;
+  is_active: boolean;
+}
+
 export const usersApi = {
   me: () => api.get("/v1/users/me").then((r) => r.data),
 
   update: (data: { full_name?: string; default_currency?: string; avatar_url?: string }) =>
     api.patch("/v1/users/me", data).then((r) => r.data),
 
-  listUsers: () => api.get("/v1/users/").then((r) => r.data),
+  listUsers: (): Promise<AdminUser[]> => api.get("/v1/users/").then((r) => r.data),
 
   lockUser: (userId: string) =>
     api.post(`/v1/users/${userId}/lock`).then((r) => r.data),
