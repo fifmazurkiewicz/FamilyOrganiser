@@ -74,7 +74,9 @@ export default function LoginPage() {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-5 sm:p-8">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Witaj ponownie</h2>
-              <p className="mt-1 text-sm text-gray-500">Zaloguj się, aby kontynuować</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Zaloguj się magic linkiem albo przez Google
+              </p>
             </div>
             <LoginForm />
             <p className="mt-8 text-center text-sm text-gray-500">

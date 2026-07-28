@@ -94,8 +94,7 @@ export default function Layout() {
   });
 
   const handleLogout = () => {
-    clearClientSession();
-    navigate("/login");
+    void clearClientSession().then(() => navigate("/login"));
   };
 
   // Overlay for mobile

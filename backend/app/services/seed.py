@@ -8,7 +8,23 @@ from app.models.user import User, SecurityQuestion
 
 
 async def seed_admin_user(db: AsyncSession) -> None:
-    """Create or sync default admin from ADMIN_EMAIL / ADMIN_PASSWORD."""
+    """Create or sync default admin from ADMIN_EMAIL / ADMIN_PASSWORD.
+
+    When Supabase Auth is enabled, only promote existing user by email —
+    do not invent local passwords.
+    """
+    if settings.supabase_auth_enabled:
+        result = await db.execute(
+            select(User).where(User.email == settings.ADMIN_EMAIL.lower()).limit(1)
+        )
+        admin = result.scalar_one_or_none()
+        if admin is not None:
+            admin.is_app_admin = True
+            admin.is_locked = False
+            admin.is_active = True
+            await db.commit()
+        return
+
     result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL).limit(1))
     admin = result.scalar_one_or_none()
     password_hash = hash_password(settings.ADMIN_PASSWORD)

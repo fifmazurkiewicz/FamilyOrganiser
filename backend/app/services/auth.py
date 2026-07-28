@@ -76,7 +76,11 @@ class AuthService:
 
     async def login(self, email: str, password: str) -> tuple[str, str]:
         user = await self._get_user_by_email(email)
-        if not user or not verify_password(password, user.hashed_password):
+        if (
+            not user
+            or not user.hashed_password
+            or not verify_password(password, user.hashed_password)
+        ):
             raise UnauthorizedError("Invalid email or password")
         if user.is_locked:
             raise AccountLockedError()
@@ -134,7 +138,9 @@ class AuthService:
     async def change_password(
         self, user: User, current_password: str, new_password: str
     ) -> None:
-        if not verify_password(current_password, user.hashed_password):
+        if not user.hashed_password or not verify_password(
+            current_password, user.hashed_password
+        ):
             raise BusinessLogicError("Incorrect current password")
         user.hashed_password = hash_password(new_password)
         await self._session.commit()

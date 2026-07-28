@@ -1,5 +1,8 @@
 version: "3.9"
 
+# Lokalny development (Postgres + hot reload).
+# Produkcja VPS: docker-compose.prod.yml (Caddy + API).
+
 services:
   db:
     image: postgres:16-alpine

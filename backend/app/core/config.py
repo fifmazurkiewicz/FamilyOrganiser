@@ -20,10 +20,16 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "sqlite+aiosqlite:///./familyorg.db"
 
+    # Legacy app JWT (local tests / AUTH_MODE=legacy)
     SECRET_KEY: str = "changeme-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
+
+    # Supabase Auth (production)
+    SUPABASE_URL: str = ""
+    SUPABASE_JWT_SECRET: str = ""
+    SUPABASE_JWT_AUDIENCE: str = "authenticated"
 
     CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:3001,http://localhost:80"
 
@@ -38,6 +44,20 @@ class Settings(BaseSettings):
     @cached_property
     def CORS_ORIGINS(self) -> List[str]:
         return [o.strip() for o in self.CORS_ORIGINS_STR.split(",") if o.strip()]
+
+    @property
+    def supabase_auth_enabled(self) -> bool:
+        return bool(self.SUPABASE_URL.strip() or self.SUPABASE_JWT_SECRET.strip())
+
+    @property
+    def supabase_issuer(self) -> str:
+        base = self.SUPABASE_URL.rstrip("/")
+        return f"{base}/auth/v1" if base else ""
+
+    @property
+    def supabase_jwks_url(self) -> str:
+        base = self.SUPABASE_URL.rstrip("/")
+        return f"{base}/auth/v1/.well-known/jwks.json" if base else ""
 
 
 settings = Settings()

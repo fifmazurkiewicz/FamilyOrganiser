@@ -218,3 +218,6 @@ docker/certs/
 # Environment files (keep .env.example)
 .env.local
 .env.*.local
+
+# Local learning notes (learning-tutor subagent) — never commit
+learning/

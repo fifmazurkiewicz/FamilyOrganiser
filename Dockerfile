@@ -1,21 +1,7 @@
-# FamilyOrganiser — obraz produkcyjny pod Fly.io (frontend + API, jeden proces).
+# FamilyOrganiser — obraz produkcyjny API-only (frontend na Vercel).
 # Build context: root repozytorium.
+# Port: 8080. Health: GET /api/health
 
-# ── Frontend (Vite) ──────────────────────────────────────────────
-FROM node:20-alpine AS frontend
-
-WORKDIR /frontend
-
-COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
-
-COPY frontend/ ./
-# Pusty URL = requesty względne /api (ten sam origin co SPA).
-ENV VITE_API_URL=
-RUN npm run build
-
-
-# ── Backend deps ─────────────────────────────────────────────────
 FROM python:3.12-slim AS backend-build
 
 WORKDIR /build
@@ -32,7 +18,6 @@ COPY backend/pyproject.toml backend/poetry.lock ./
 RUN poetry install --no-interaction --no-ansi --without dev --no-root
 
 
-# ── Runtime ──────────────────────────────────────────────────────
 FROM python:3.12-slim AS runtime
 
 WORKDIR /app
@@ -46,14 +31,14 @@ COPY --from=backend-build /usr/local/lib/python3.12/site-packages /usr/local/lib
 COPY --from=backend-build /usr/local/bin /usr/local/bin
 
 COPY backend/app ./app
-COPY --from=frontend /frontend/dist ./static
-COPY docker/entrypoint-fly.sh /entrypoint.sh
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini ./alembic.ini
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PORT=8080 \
-    STATIC_DIR=/app/static \
     DATABASE_URL=sqlite+aiosqlite:////data/familyorg.db
 
 EXPOSE 8080

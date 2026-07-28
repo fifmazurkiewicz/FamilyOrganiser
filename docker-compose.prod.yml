@@ -1,0 +1,43 @@
+# Produkcja na Hetzner VPS: Caddy (TLS) + backend API.
+# Użycie (na serwerze, katalog z tym plikiem i sklonowanym repo):
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+#
+# Wymagane w .env: DATABASE_URL, SUPABASE_URL, SUPABASE_JWT_SECRET,
+# CORS_ORIGINS_STR, SECRET_KEY (legacy), ADMIN_EMAIL
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: "8080"
+      CORS_ORIGINS_STR: ${CORS_ORIGINS_STR:-https://family.fmazurkiewicz.dev}
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,16 +1,19 @@
-# Deploy na Fly.io
+# Deploy na Fly.io (archiwum / PoC)
+
+**Status:** nie jest kierunkiem produkcyjnym — produkcja: Vercel FE + Hetzner (Docker + Caddy).  
+Zob. [platform-architecture.md](platform-architecture.md).
+
+**Uwaga:** root `Dockerfile` jest teraz **API-only** (bez bundla Vite). Stary all-in-one pod Fly wymagałby osobnego targetu / historycznego Dockerfile.
 
 **Ostatnia aktualizacja:** 2026-07-28
 
-Jeden kontener: build Vite + FastAPI (uvicorn). SQLite na volume `/data`. HTTPS daje Fly.
-
-## Pliki
+## Pliki (historyczne)
 
 | Plik | Rola |
 |------|------|
-| `Dockerfile` (root) | Multi-stage: frontend → deps → runtime |
-| `fly.toml` | Region `waw`, port 8080, volume, healthcheck |
-| `docker/entrypoint-fly.sh` | Katalog `/data` + port z `$PORT` |
+| `Dockerfile` (root) | API-only, port 8080 |
+| `fly.toml` | Region, volume, healthcheck |
+| `docker/entrypoint-fly.sh` | Alias `entrypoint.sh` |
 | `.dockerignore` | Mniejszy kontekst builda |
 
 ## Wymagania
@@ -18,7 +21,7 @@ Jeden kontener: build Vite + FastAPI (uvicorn). SQLite na volume `/data`. HTTPS 
 - Konto [fly.io](https://fly.io) + CLI: `powershell -Command "iwr https://fly.io/install.ps1 -useb | iex"` (Windows)
 - Zalogowanie: `fly auth login`
 
-## Pierwszy deploy
+## Pierwszy deploy (PoC)
 
 ```bash
 # Z katalogu głównego repo

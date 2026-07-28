@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { clearClientSession } from "@/lib/session";
 import { usersApi } from "@/lib/api/users";
-import { authApi } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -16,11 +15,6 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [oldPwd, setOldPwd] = useState("");
-  const [newPwd, setNewPwd] = useState("");
-  const [pwdError, setPwdError] = useState("");
-  const [pwdLoading, setPwdLoading] = useState(false);
-
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -30,21 +24,6 @@ export default function ProfilePage() {
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleChangePwd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPwdError("");
-    setPwdLoading(true);
-    try {
-      await authApi.changePassword(oldPwd, newPwd);
-      setOldPwd("");
-      setNewPwd("");
-    } catch {
-      setPwdError("Nieprawidłowe hasło lub błąd serwera.");
-    } finally {
-      setPwdLoading(false);
     }
   };
 
@@ -63,6 +42,9 @@ export default function ProfilePage() {
               {["PLN", "EUR", "USD", "GBP", "CHF", "CZK"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
+          <p className="text-xs text-gray-500">
+            Logowanie przez Supabase (magic link / Google). Zarządzanie sesją w panelu konta Google lub linku z maila.
+          </p>
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} loading={saving}>Zapisz</Button>
             {saved && <span className="text-sm text-emerald-600">Zapisano!</span>}
@@ -71,24 +53,11 @@ export default function ProfilePage() {
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Zmiana hasła</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={handleChangePwd} className="space-y-4">
-            <Input label="Obecne hasło" type="password" value={oldPwd} onChange={(e) => setOldPwd(e.target.value)} required />
-            <Input label="Nowe hasło" type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={8} />
-            {pwdError && <p className="text-sm text-red-600">{pwdError}</p>}
-            <Button type="submit" variant="secondary" loading={pwdLoading}>Zmień hasło</Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
         <CardContent className="pt-4">
           <Button
             variant="danger"
             onClick={() => {
-              clearClientSession();
-              navigate("/login");
+              void clearClientSession().then(() => navigate("/login"));
             }}
           >
             Wyloguj się

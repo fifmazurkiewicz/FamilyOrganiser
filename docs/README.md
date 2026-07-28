@@ -1,7 +1,8 @@
 # FamilyOrganiser — Dokumentacja
 
 **Wersja:** 2.0  
-**Ostatnia aktualizacja:** 2026-07-26
+**Ostatnia aktualizacja:** 2026-07-28  
+**Domena produkcyjna:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) (FE) · [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev) (API) — Cloudflare + Vercel / Hetzner+Caddy / Supabase — zob. [architektura platformy](deployment/platform-architecture.md)
 
 ## Spis treści
 
@@ -15,8 +16,9 @@
 - [Model danych](technical/data-model.md) — ERD, encje, relacje
 
 ### 🚀 Deploy
+- [**Architektura platformy (decyzja)**](deployment/platform-architecture.md) — Vercel + Hetzner (Docker/Caddy) + Cloudflare + Supabase
 - [Najtańszy hosting](deployment/cheap-hosting.md) — VPS vs free tier, Compose, HTTPS, checklista
-- [Fly.io](deployment/fly-io.md) — Dockerfile, `fly.toml`, volume SQLite, sekrety
+- [Fly.io (PoC)](deployment/fly-io.md) — wcześniejszy wariant; nie jest kierunkiem produkcyjnym
 
 ### 📊 Dla zarządu
 - [Executive Summary](executive/summary.html) — dashboard HTML (otwórz w przeglądarce)

@@ -39,7 +39,7 @@ Ceny orientacyjne (EU, bez VAT, stan ~połowa 2026). Sprawdź aktualny cennik pr
 2. **Jeśli chcesz 0 zł i masz czas:** Oracle Always Free — ta sama architektura Compose, więcej walki z kontem i obrazami ARM.  
 3. **Unikaj na start:** osobnych managed Postgres + managed frontend + managed backend u PaaS — przy tym stacku szybko wychodzi drożej niż jeden mały VPS.
 
-Domena (opcjonalnie): ~40–80 zł/rok (np. `.pl` / `.eu`). Można startować na samym IP + HTTPS przez IP jest niewygodne — lepiej od razu tania domena.
+Domena produkcyjna: **fmazurkiewicz.dev** (Cloudflare). Szczegóły stacku: [platform-architecture.md](platform-architecture.md). Ten dokument zostaje jako porównanie kosztów / ścieżka „wszystko na jednym VPS”.
 
 ---
 

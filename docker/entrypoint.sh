@@ -1,5 +1,4 @@
 #!/bin/sh
-# Legacy name — identical to entrypoint.sh
 set -eu
 
 mkdir -p /data
