@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from enum import Enum as PyEnum
 from sqlalchemy import String, Boolean, DateTime, ForeignKey, Enum, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Uuid
 from app.db.base import Base
 
 
@@ -15,7 +15,7 @@ class FamilyRole(str, PyEnum):
 class FamilyGroup(Base):
     __tablename__ = "family_groups"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
@@ -32,12 +32,12 @@ class FamilyGroup(Base):
 class FamilyMembership(Base):
     __tablename__ = "family_memberships"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     family_group_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
     )
     role: Mapped[FamilyRole] = mapped_column(
         Enum(FamilyRole), default=FamilyRole.MEMBER, nullable=False
@@ -59,13 +59,13 @@ class FamilyMembership(Base):
 class InvitationLink(Base):
     __tablename__ = "invitation_links"
 
-    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
     token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     family_group_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
     )
     created_by_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     single_use: Mapped[bool] = mapped_column(Boolean, default=True)
     used: Mapped[bool] = mapped_column(Boolean, default=False)

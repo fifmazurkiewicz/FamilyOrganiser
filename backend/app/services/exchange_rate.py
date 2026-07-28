@@ -1,7 +1,4 @@
-"""Exchange rate conversion service."""
-from decimal import Decimal
-from typing import Optional
-
+"""Exchange rate service."""
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,17 +17,6 @@ class ExchangeRateService:
             .limit(1)
         )
         return result.scalar_one_or_none()
-
-    async def convert(
-        self, amount: Decimal, currency: str
-    ) -> tuple[Decimal, Optional[Decimal]]:
-        """Return (amount_pln, exchange_rate). If currency is PLN returns (amount, None)."""
-        if currency == "PLN":
-            return amount, None
-        rate_obj = await self.get_latest(currency)
-        if rate_obj:
-            return amount * rate_obj.rate_to_pln, rate_obj.rate_to_pln
-        return amount, None
 
     async def get_all_latest(self) -> dict[str, dict]:
         currencies = ["EUR", "USD", "GBP", "JPY"]

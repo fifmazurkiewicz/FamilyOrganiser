@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useAuthStore } from "@/stores/authStore";
+import { clearClientSession } from "@/lib/session";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -37,8 +38,10 @@ api.interceptors.response.use(
           original.headers.Authorization = `Bearer ${access_token}`;
           return api(original);
         } catch {
-          useAuthStore.getState().logout();
+          clearClientSession();
         }
+      } else {
+        clearClientSession();
       }
     }
     return Promise.reject(error);

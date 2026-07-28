@@ -5,15 +5,10 @@ import LandingPage from "@/pages/LandingPage";
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
 import DashboardPage from "@/pages/DashboardPage";
-import AccountsPage from "@/pages/AccountsPage";
-import TransactionsPage from "@/pages/TransactionsPage";
 import ShoppingPage from "@/pages/ShoppingPage";
 import TasksPage from "@/pages/TasksPage";
-import ExpensesPage from "@/pages/ExpensesPage";
 import BudgetMonthlyPage from "@/pages/BudgetMonthlyPage";
-import SavingsPage from "@/pages/SavingsPage";
 import InvestmentsPage from "@/pages/InvestmentsPage";
-import IncomePage from "@/pages/IncomePage";
 import ReportsPage from "@/pages/ReportsPage";
 import GroupsPage from "@/pages/GroupsPage";
 import ProfilePage from "@/pages/ProfilePage";
@@ -57,16 +52,11 @@ export function AppRouter() {
           }
         >
           <Route index element={<DashboardPage />} />
-          <Route path="accounts" element={<AccountsPage />} />
-          <Route path="transactions" element={<TransactionsPage />} />
           <Route path="shopping" element={<ShoppingPage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="expenses" element={<ExpensesPage />} />
           <Route path="budget" element={<Navigate to="/app/budget-monthly" replace />} />
           <Route path="budget-monthly" element={<BudgetMonthlyPage />} />
-          <Route path="savings" element={<SavingsPage />} />
           <Route path="investments" element={<InvestmentsPage />} />
-          <Route path="income" element={<IncomePage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="groups" element={<GroupsPage />} />
           <Route path="notifications" element={<NotificationsPage />} />

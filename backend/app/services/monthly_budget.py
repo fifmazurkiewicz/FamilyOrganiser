@@ -1,115 +1,109 @@
+"""Monthly budget management service."""
 import uuid
 from decimal import Decimal
-from typing import List, Optional
+from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
-from app.core.exceptions import NotFoundError, ForbiddenError, ConflictError
-from app.models.monthly_budget import MonthlyBudget, BudgetEntry
-from app.models.family import FamilyMembership, FamilyRole
-from app.models.notification import NotificationType
-from app.repositories.monthly_budget import MonthlyBudgetRepository, BudgetEntryRepository
+from app.core.exceptions import NotFoundError
+from app.models.monthly_budget import BudgetEntry, BudgetEntryType, MonthlyBudget
 from app.schemas.monthly_budget import (
-    MonthlyBudgetCreate, MonthlyBudgetResponse,
-    BudgetEntryCreate, BudgetEntryResponse,
+    BudgetEntryCreate,
+    BudgetEntryUpdate,
     BudgetSummaryResponse,
+    MonthlyBudgetCreate,
 )
-from app.services.notification import NotificationService
 
 
 class MonthlyBudgetService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.budget_repo = MonthlyBudgetRepository(db)
-        self.entry_repo = BudgetEntryRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    async def _get_family_admins(self, family_group_id: uuid.UUID) -> List[uuid.UUID]:
-        """Get all admin user IDs for a family group."""
-        result = await self.db.execute(
-            select(FamilyMembership.user_id).where(
-                FamilyMembership.family_group_id == family_group_id,
-                FamilyMembership.role == FamilyRole.ADMIN,
+    async def get_budget_for_month(
+        self, family_group_id: uuid.UUID, year: int, month: int
+    ) -> Optional[MonthlyBudget]:
+        result = await self._session.execute(
+            select(MonthlyBudget)
+            .options(selectinload(MonthlyBudget.entries))
+            .where(
+                MonthlyBudget.family_group_id == family_group_id,
+                MonthlyBudget.year == year,
+                MonthlyBudget.month == month,
             )
         )
-        return [row[0] for row in result.all()]
+        return result.scalars().first()
 
-    async def _notify_admins_if_exceeded(self, budget: MonthlyBudget) -> None:
-        """Check if budget expenses exceed income and notify admins."""
-        entries = await self.entry_repo.list_for_budget(budget.id)
-        total_income = Decimal("0")
-        total_expenses = Decimal("0")
-        for e in entries:
-            if e.entry_type.value == "income":
-                total_income += e.amount
-            else:
-                total_expenses += e.amount
-
-        if total_expenses > total_income and total_income > 0:
-            deficit = total_expenses - total_income
-            admin_ids = await self._get_family_admins(budget.family_group_id)
-            notif_svc = NotificationService(self.db)
-            for admin_id in admin_ids:
-                await notif_svc.create(
-                    user_id=admin_id,
-                    notification_type=NotificationType.BUDGET_EXCEEDED,
-                    title="Przekroczono budżet!",
-                    body=f"Budżet na {budget.month:02d}/{budget.year} przekroczony o {deficit:.2f} PLN.",
-                    data={"budget_id": str(budget.id), "year": budget.year, "month": budget.month},
-                )
+    async def get_budget(self, budget_id: uuid.UUID) -> MonthlyBudget:
+        result = await self._session.execute(
+            select(MonthlyBudget)
+            .options(selectinload(MonthlyBudget.entries))
+            .where(MonthlyBudget.id == budget_id)
+        )
+        budget = result.scalars().first()
+        if budget is None:
+            raise NotFoundError(f"MonthlyBudget {budget_id} not found")
+        return budget
 
     async def get_or_create_budget(
         self, user_id: uuid.UUID, data: MonthlyBudgetCreate
-    ) -> MonthlyBudgetResponse:
-        existing = await self.budget_repo.get_for_month(
+    ) -> MonthlyBudget:
+        existing = await self.get_budget_for_month(
             data.family_group_id, data.year, data.month
         )
-        if existing:
-            return MonthlyBudgetResponse.model_validate(existing)
-
-        # Auto-copy recurring entries from the previous month
-        prev_year, prev_month = (data.year, data.month - 1) if data.month > 1 else (data.year - 1, 12)
-        prev_budget = await self.budget_repo.get_for_month(data.family_group_id, prev_year, prev_month)
+        if existing is not None:
+            return existing
 
         budget = MonthlyBudget(
             family_group_id=data.family_group_id,
             year=data.year,
             month=data.month,
         )
-        await self.budget_repo.add(budget)
+        self._session.add(budget)
+        await self._session.flush()
 
-        if prev_budget:
-            recurring_entries = [e for e in prev_budget.entries if e.is_recurring]
-            for entry in recurring_entries:
-                new_entry = BudgetEntry(
-                    budget_id=budget.id,
-                    entry_type=entry.entry_type,
-                    name=entry.name,
-                    amount=entry.amount,
-                    is_recurring=True,
-                    created_by=user_id,
+        prev_year, prev_month = self._previous_month(data.year, data.month)
+        previous = await self.get_budget_for_month(
+            data.family_group_id, prev_year, prev_month
+        )
+        if previous is not None:
+            for entry in previous.entries:
+                if not entry.is_recurring:
+                    continue
+                self._session.add(
+                    BudgetEntry(
+                        budget_id=budget.id,
+                        entry_type=entry.entry_type,
+                        name=entry.name,
+                        amount=entry.amount,
+                        is_recurring=True,
+                        created_by=user_id,
+                    )
                 )
-                self.db.add(new_entry)
-        await self.budget_repo.add(budget)
-        await self.budget_repo.commit()
-        budget = await self.budget_repo.get_or_raise(budget.id)
-        return MonthlyBudgetResponse.model_validate(budget)
 
-    async def get_budget(self, budget_id: uuid.UUID) -> MonthlyBudgetResponse:
-        budget = await self.budget_repo.get_or_raise(budget_id)
-        return MonthlyBudgetResponse.model_validate(budget)
+        await self._session.commit()
+        return await self.get_budget(budget.id)
 
-    async def get_budget_for_month(
-        self, family_group_id: uuid.UUID, year: int, month: int
-    ) -> MonthlyBudgetResponse | None:
-        budget = await self.budget_repo.get_for_month(family_group_id, year, month)
-        if budget is None:
-            return None
-        return MonthlyBudgetResponse.model_validate(budget)
+    async def get_summary(self, budget_id: uuid.UUID) -> BudgetSummaryResponse:
+        budget = await self.get_budget(budget_id)
+        total_income = Decimal("0")
+        total_expenses = Decimal("0")
+        for entry in budget.entries:
+            if entry.entry_type == BudgetEntryType.INCOME:
+                total_income += entry.amount
+            else:
+                total_expenses += entry.amount
+        return BudgetSummaryResponse(
+            total_income=total_income,
+            total_expenses=total_expenses,
+            remaining=total_income - total_expenses,
+        )
 
     async def add_entry(
         self, user_id: uuid.UUID, budget_id: uuid.UUID, data: BudgetEntryCreate
-    ) -> BudgetEntryResponse:
+    ) -> BudgetEntry:
+        await self.get_budget(budget_id)
         entry = BudgetEntry(
             budget_id=budget_id,
             entry_type=data.entry_type,
@@ -118,45 +112,38 @@ class MonthlyBudgetService:
             is_recurring=data.is_recurring,
             created_by=user_id,
         )
-        await self.entry_repo.add(entry)
-        await self.entry_repo.commit()
+        self._session.add(entry)
+        await self._session.commit()
+        await self._session.refresh(entry)
+        return entry
 
-        # Check budget after adding entry
-        budget = await self.budget_repo.get_or_raise(budget_id)
-        await self._notify_admins_if_exceeded(budget)
-
-        return BudgetEntryResponse.model_validate(entry)
-
-    async def remove_entry(self, entry_id: uuid.UUID) -> None:
-        entry = await self.entry_repo.get_or_raise(entry_id)
-        await self.entry_repo.delete(entry)
-        await self.entry_repo.commit()
+    async def update_entry_partial(
+        self, entry_id: uuid.UUID, data: BudgetEntryUpdate | BudgetEntryCreate
+    ) -> BudgetEntry:
+        entry = await self._session.get(BudgetEntry, entry_id)
+        if not entry:
+            raise NotFoundError(f"BudgetEntry {entry_id} not found")
+        for key, value in data.model_dump(exclude_none=True).items():
+            if hasattr(entry, key):
+                setattr(entry, key, value)
+        await self._session.commit()
+        await self._session.refresh(entry)
+        return entry
 
     async def update_entry(
-        self, entry_id: uuid.UUID, data: BudgetEntryCreate
-    ) -> BudgetEntryResponse:
-        entry = await self.entry_repo.get_or_raise(entry_id)
-        for field, value in data.model_dump().items():
-            setattr(entry, field, value)
-        await self.entry_repo.commit()
+        self, entry_id: uuid.UUID, data: BudgetEntryUpdate | BudgetEntryCreate
+    ) -> BudgetEntry:
+        return await self.update_entry_partial(entry_id, data)
 
-        # Check budget after updating entry
-        budget = await self.budget_repo.get_or_raise(entry.budget_id)
-        await self._notify_admins_if_exceeded(budget)
+    async def remove_entry(self, entry_id: uuid.UUID) -> None:
+        entry = await self._session.get(BudgetEntry, entry_id)
+        if not entry:
+            raise NotFoundError(f"BudgetEntry {entry_id} not found")
+        await self._session.delete(entry)
+        await self._session.commit()
 
-        return BudgetEntryResponse.model_validate(entry)
-
-    async def get_summary(self, budget_id: uuid.UUID) -> BudgetSummaryResponse:
-        entries = await self.entry_repo.list_for_budget(budget_id)
-        total_income = Decimal("0")
-        total_expenses = Decimal("0")
-        for e in entries:
-            if e.entry_type.value == "income":
-                total_income += e.amount
-            else:
-                total_expenses += e.amount
-        return BudgetSummaryResponse(
-            total_income=total_income,
-            total_expenses=total_expenses,
-            remaining=total_income - total_expenses,
-        )
+    @staticmethod
+    def _previous_month(year: int, month: int) -> tuple[int, int]:
+        if month == 1:
+            return year - 1, 12
+        return year, month - 1

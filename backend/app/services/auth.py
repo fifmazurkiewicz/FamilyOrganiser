@@ -1,4 +1,5 @@
 """Authentication and password-management service."""
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -20,13 +21,25 @@ from app.core.security import (
 )
 from app.models.notification import Notification, NotificationType
 from app.models.user import SecurityQuestion, User
-from app.repositories.user import UserRepository
 
 
 class AuthService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
-        self._users = UserRepository(session)
+
+    # --- inline UserRepository ---
+
+    async def _get_user_by_email(self, email: str) -> User | None:
+        result = await self._session.execute(select(User).where(User.email == email))
+        return result.scalar_one_or_none()
+
+    async def _get_security_question(self, user_id) -> SecurityQuestion | None:
+        result = await self._session.execute(
+            select(SecurityQuestion).where(SecurityQuestion.user_id == user_id)
+        )
+        return result.scalar_one_or_none()
+
+    # --- auth methods ---
 
     async def register(
         self,
@@ -38,7 +51,7 @@ class AuthService:
         security_answer: str,
     ) -> tuple[str, str]:
         """Create a new user and return (access_token, refresh_token)."""
-        if await self._users.get_by_email(email):
+        if await self._get_user_by_email(email):
             raise ConflictError("Email already registered")
 
         user = User(
@@ -62,7 +75,7 @@ class AuthService:
         return self._issue_tokens(user)
 
     async def login(self, email: str, password: str) -> tuple[str, str]:
-        user = await self._users.get_by_email(email)
+        user = await self._get_user_by_email(email)
         if not user or not verify_password(password, user.hashed_password):
             raise UnauthorizedError("Invalid email or password")
         if user.is_locked:
@@ -78,16 +91,16 @@ class AuthService:
         if not data or data.get("type") != "refresh":
             raise UnauthorizedError("Invalid refresh token")
 
-        user = await self._users.get(uuid.UUID(data["sub"]))
+        user = await self._session.get(User, uuid.UUID(data["sub"]))
         if not user or not user.is_active or user.is_locked:
             raise UnauthorizedError("User unavailable")
         return self._issue_tokens(user)
 
     async def get_security_question(self, email: str) -> str:
-        user = await self._users.get_by_email(email)
+        user = await self._get_user_by_email(email)
         if not user:
             raise NotFoundError("User not found")
-        sq = await self._users.get_security_question(user.id)
+        sq = await self._get_security_question(user.id)
         if not sq:
             raise NotFoundError("No security question configured")
         return sq.question
@@ -95,13 +108,13 @@ class AuthService:
     async def reset_password_via_security_question(
         self, email: str, answer: str, new_password: str
     ) -> None:
-        user = await self._users.get_by_email(email)
+        user = await self._get_user_by_email(email)
         if not user:
             raise NotFoundError("User not found")
         if user.is_locked:
             raise AccountLockedError()
 
-        sq = await self._users.get_security_question(user.id)
+        sq = await self._get_security_question(user.id)
         if not sq:
             raise BusinessLogicError("No security question configured")
 
@@ -132,7 +145,7 @@ class AuthService:
         import uuid
         from app.models.audit_log import AuditLog
 
-        target = await self._users.get(uuid.UUID(target_user_id))
+        target = await self._session.get(User, uuid.UUID(target_user_id))
         if not target:
             raise NotFoundError("User not found")
 

@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
+import { useGroupStore } from "@/stores/groupStore";
 import { api } from "@/api/client";
 import { cn } from "@/utils/cn";
 import { format } from "date-fns";
@@ -19,11 +20,11 @@ interface TaskItem {
   id: string;
   title: string;
   is_done: boolean;
-  assignee_id?: string;
+  assigned_to?: string;
   assignee_name?: string;
   due_date?: string;
-  completed_by?: string;
-  completed_at?: string;
+  done_by?: string;
+  done_at?: string;
 }
 
 interface TaskList {
@@ -35,6 +36,7 @@ interface TaskList {
 
 interface FamilyMember {
   id: string;
+  user_id: string;
   full_name: string;
 }
 
@@ -87,16 +89,17 @@ function TaskItemsView({
   listId,
   items,
   showHistory,
+  groupId,
 }: {
   listId: string;
   items: TaskItem[];
   showHistory: boolean;
+  groupId: string;
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const [newTitle, setNewTitle] = useState("");
 
-  // Refetch items based on showHistory toggle
   const { data: historyData } = useQuery<TaskItem[]>({
     queryKey: ["task-items", listId, showHistory],
     queryFn: () =>
@@ -111,35 +114,40 @@ function TaskItemsView({
   const displayItems = showHistory ? historyData ?? items : items;
 
   const { data: members } = useQuery<FamilyMember[]>({
-    queryKey: ["family-members"],
-    queryFn: () => api.get("/v1/groups/members").then((r) => r.data),
+    queryKey: ["family-members", groupId],
+    queryFn: () =>
+      api.get(`/v1/groups/${groupId}/members`).then((r) => r.data),
     staleTime: 60000,
+    enabled: !!groupId,
   });
 
+  const invalidateTasks = () => {
+    qc.invalidateQueries({ queryKey: ["task-lists"] });
+    qc.invalidateQueries({ queryKey: ["task-items", listId] });
+  };
+
   const toggleDone = useMutation({
-    mutationFn: ({ itemId, is_done }: { itemId: string; is_done: boolean }) =>
-      api.patch(`/v1/task-lists/${listId}/items/${itemId}`, { is_done }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
+    mutationFn: (itemId: string) => api.post(`/v1/tasks/items/${itemId}/toggle`),
+    onSuccess: () => invalidateTasks(),
     onError: () => toast("error", "Błąd", "Nie udało się zaktualizować zadania."),
   });
 
   const assignUser = useMutation({
     mutationFn: ({
       itemId,
-      assignee_id,
+      assigned_to,
     }: {
       itemId: string;
-      assignee_id: string | null;
-    }) =>
-      api.patch(`/v1/task-lists/${listId}/items/${itemId}`, { assignee_id }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
+      assigned_to: string | null;
+    }) => api.patch(`/v1/tasks/items/${itemId}`, { assigned_to }),
+    onSuccess: () => invalidateTasks(),
   });
 
   const addItem = useMutation({
     mutationFn: (title: string) =>
-      api.post(`/v1/task-lists/${listId}/items`, { title }),
+      api.post(`/v1/tasks/lists/${listId}/items`, { title }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["task-lists"] });
+      invalidateTasks();
       setNewTitle("");
       toast("success", "Dodano", "Zadanie zostało dodane.");
     },
@@ -147,9 +155,8 @@ function TaskItemsView({
   });
 
   const removeItem = useMutation({
-    mutationFn: (itemId: string) =>
-      api.delete(`/v1/task-lists/${listId}/items/${itemId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["task-lists"] }),
+    mutationFn: (itemId: string) => api.delete(`/v1/tasks/items/${itemId}`),
+    onSuccess: () => invalidateTasks(),
   });
 
   const sortedItems = [...displayItems].sort((a, b) => {
@@ -159,7 +166,7 @@ function TaskItemsView({
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim() || addItem.isPending) return;
     addItem.mutate(newTitle.trim());
   };
 
@@ -194,9 +201,8 @@ function TaskItemsView({
               className="flex items-start gap-3 py-3 group"
             >
               <button
-                onClick={() =>
-                  toggleDone.mutate({ itemId: item.id, is_done: !item.is_done })
-                }
+                type="button"
+                onClick={() => toggleDone.mutate(item.id)}
                 className={cn(
                   "w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
                   item.is_done
@@ -225,10 +231,10 @@ function TaskItemsView({
                       {format(new Date(item.due_date), "dd.MM.yyyy", { locale: pl })}
                     </span>
                   )}
-                  {item.is_done && item.completed_by && (
+                  {item.is_done && item.done_by && (
                     <span className="inline-flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {item.completed_by}
+                      {item.done_by}
                     </span>
                   )}
                 </div>
@@ -238,18 +244,18 @@ function TaskItemsView({
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {members && members.length > 0 && (
                     <select
-                      value={item.assignee_id ?? ""}
+                      value={item.assigned_to ?? ""}
                       onChange={(e) =>
                         assignUser.mutate({
                           itemId: item.id,
-                          assignee_id: e.target.value || null,
+                          assigned_to: e.target.value || null,
                         })
                       }
                       className="text-xs border border-gray-200 rounded px-1.5 py-1 bg-white text-gray-600"
                     >
                       <option value="">Przypisz...</option>
                       {members.map((m) => (
-                        <option key={m.id} value={m.id}>
+                        <option key={m.user_id} value={m.user_id}>
                           {m.full_name}
                         </option>
                       ))}
@@ -278,29 +284,41 @@ function TaskItemsView({
 export function TaskList() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { activeGroup } = useGroupStore();
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
   const { data: lists, isLoading } = useQuery<TaskList[]>({
-    queryKey: ["task-lists"],
-    queryFn: () => api.get("/v1/task-lists/").then((r) => r.data),
+    queryKey: ["task-lists", activeGroup?.id],
+    queryFn: () =>
+      api
+        .get("/v1/tasks/lists", {
+          params: { family_group_id: activeGroup!.id },
+        })
+        .then((r) => r.data),
+    enabled: !!activeGroup?.id,
   });
 
   const createList = useMutation({
-    mutationFn: (name: string) => api.post("/v1/task-lists/", { name }),
+    mutationFn: (name: string) =>
+      api.post("/v1/tasks/lists", {
+        name,
+        family_group_id: activeGroup!.id,
+      }),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ["task-lists"] });
       setCreateOpen(false);
       setNewListName("");
+      setSelectedListId(res.data.id);
       toast("success", "Utworzono", `Lista "${res.data.name}" została utworzona.`);
     },
     onError: () => toast("error", "Błąd", "Nie udało się utworzyć listy."),
   });
 
   const deleteList = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/task-lists/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/tasks/lists/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["task-lists"] });
       if (selectedListId) setSelectedListId(null);
@@ -309,6 +327,22 @@ export function TaskList() {
   });
 
   const selectedList = lists?.find((l) => l.id === selectedListId);
+
+  const handleCreateList = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newListName.trim() || !activeGroup?.id || createList.isPending) return;
+    createList.mutate(newListName.trim());
+  };
+
+  if (!activeGroup) {
+    return (
+      <EmptyState
+        icon={CheckSquare}
+        title="Wybierz grupę rodzinną"
+        description="Aby korzystać z list zadań, wybierz aktywną grupę w menu."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -382,6 +416,7 @@ export function TaskList() {
                                 listId={selectedList.id}
                                 items={selectedList.items}
                                 showHistory={showHistory}
+                                groupId={activeGroup.id}
                               />
                 </CardContent>
               </Card>
@@ -399,26 +434,27 @@ export function TaskList() {
         onClose={() => setCreateOpen(false)}
         title="Nowa lista zadań"
       >
-        <div className="space-y-4">
+        <form onSubmit={handleCreateList} className="space-y-4">
           <Input
             label="Nazwa listy"
             value={newListName}
             onChange={(e) => setNewListName(e.target.value)}
             placeholder="np. Prace domowe"
+            autoFocus
           />
           <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
               Anuluj
             </Button>
             <Button
-              onClick={() => createList.mutate(newListName)}
+              type="submit"
               loading={createList.isPending}
               disabled={!newListName.trim()}
             >
               Utwórz
             </Button>
           </div>
-        </div>
+        </form>
       </Modal>
     </div>
   );

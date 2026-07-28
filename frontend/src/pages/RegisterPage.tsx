@@ -10,7 +10,7 @@ const features = [
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-dvh flex">
       {/* Left — branding */}
       <div className="hidden lg:flex lg:w-5/12 xl:w-1/2 bg-gradient-to-br from-primary-dark via-primary to-emerald-400 text-white flex-col justify-between p-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -58,7 +58,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 via-white to-primary-light/20">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-gray-50 via-white to-primary-light/20 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="w-full max-w-md">
           <div className="lg:hidden text-center mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3">
@@ -69,7 +69,7 @@ export default function RegisterPage() {
             </h1>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-5 sm:p-8">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900">Utwórz konto</h2>
               <p className="mt-1 text-sm text-gray-500">Zacznij zarządzać finansami rodziny</p>

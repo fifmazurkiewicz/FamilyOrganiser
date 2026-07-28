@@ -1,0 +1,47 @@
+# fly.toml app configuration file generated for FamilyOrganiser
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+# Setup:
+#   fly launch --no-deploy   # albo: fly apps create <name>
+#   fly volumes create familyorg_data --region waw --size 1
+#   fly secrets set SECRET_KEY=... ADMIN_PASSWORD=... CORS_ORIGINS_STR=https://<app>.fly.dev
+#   fly deploy
+
+app = 'familyorganiser'
+primary_region = 'waw'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  PORT = '8080'
+  STATIC_DIR = '/app/static'
+  DATABASE_URL = 'sqlite+aiosqlite:////data/familyorg.db'
+  ADMIN_EMAIL = 'admin@admin.com'
+  # SECRET_KEY, ADMIN_PASSWORD, CORS_ORIGINS_STR → fly secrets
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '5s'
+    grace_period = '20s'
+    method = 'GET'
+    path = '/api/health'
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+  source = 'familyorg_data'
+  destination = '/data'
+  initial_size = '1gb'

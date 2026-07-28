@@ -1,7 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Plus,
-  PieChart,
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
@@ -23,6 +22,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/api/client";
 import { formatCurrency } from "@/utils/currency";
+import { useGroupStore } from "@/stores/groupStore";
 import { cn } from "@/utils/cn";
 
 // ── Types ──
@@ -231,6 +231,7 @@ function EntryRow({
 export function BudgetPanel() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { activeGroup } = useGroupStore();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -247,7 +248,7 @@ export function BudgetPanel() {
     queryKey: ["monthly-budget", year, month],
     queryFn: () =>
       api
-        .get("/v1/budgets/monthly", { params: { year, month } })
+        .get("/v1/monthly-budgets/by-month", { params: { year, month, family_group_id: activeGroup?.id } })
         .then((r) => r.data),
   });
 
@@ -258,7 +259,7 @@ export function BudgetPanel() {
       is_income: boolean;
       is_recurring: boolean;
     }) =>
-      api.post("/v1/budgets/monthly/entries", {
+      api.post(`/v1/monthly-budgets/${budget?.id}/entries`, {
         ...data,
         year,
         month,
@@ -275,7 +276,7 @@ export function BudgetPanel() {
   });
 
   const deleteEntry = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/budgets/monthly/entries/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/monthly-budgets/entries/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monthly-budget"] });
       toast("success", "Usunięto", "Pozycja została usunięta.");
@@ -284,7 +285,7 @@ export function BudgetPanel() {
 
   const toggleRecurring = useMutation({
     mutationFn: ({ id, is_recurring }: { id: string; is_recurring: boolean }) =>
-      api.patch(`/v1/budgets/monthly/entries/${id}`, { is_recurring }),
+      api.patch(`/v1/monthly-budgets/entries/${id}`, { is_recurring }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["monthly-budget"] }),
   });
 

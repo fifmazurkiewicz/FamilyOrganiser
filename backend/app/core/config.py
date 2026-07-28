@@ -18,16 +18,14 @@ class Settings(BaseSettings):
     APP_NAME: str = "FamilyOrganiser"
     DEBUG: bool = False
 
-    DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/familyorg"
-
-    REDIS_URL: str = "redis://localhost:6379/0"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./familyorg.db"
 
     SECRET_KEY: str = "changeme-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:80"
+    CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:3001,http://localhost:80"
 
     ADMIN_EMAIL: str = "admin@admin.com"
     ADMIN_PASSWORD: str = "changeme"

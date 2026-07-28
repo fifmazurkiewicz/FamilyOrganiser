@@ -1,84 +1,56 @@
+"""Simple investment service."""
 import uuid
 from datetime import date
 from decimal import Decimal
-from dateutil.relativedelta import relativedelta
 from typing import List
-
+from dateutil.relativedelta import relativedelta
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.core.exceptions import NotFoundError, ForbiddenError
-from app.models.simple_investment import (
-    SimpleInvestment, InterestPeriod, DurationUnit,
-)
-from app.repositories.simple_investment import SimpleInvestmentRepository
+from app.core.exceptions import NotFoundError
+from app.models.simple_investment import SimpleInvestment, DurationUnit, InterestPeriod
 from app.schemas.simple_investment import (
     SimpleInvestmentCreate, SimpleInvestmentUpdate,
     SimpleInvestmentResponse, InvestmentSummaryResponse,
 )
 
 
-DURATION_TO_MONTHS = {
-    DurationUnit.MONTHS: 1,
-    DurationUnit.QUARTERS: 3,
-    DurationUnit.YEARS: 12,
-}
-
-PERIOD_TO_MONTHS = {
-    InterestPeriod.MONTHLY: 1,
-    InterestPeriod.QUARTERLY: 3,
-    InterestPeriod.YEARLY: 12,
-}
-
-
 def _calculate_end_date(start_date: date, duration_value: int, duration_unit: DurationUnit) -> date:
-    months_to_add = duration_value * DURATION_TO_MONTHS[duration_unit]
-    return start_date + relativedelta(months=months_to_add)
+    if duration_unit == DurationUnit.MONTHS:
+        return start_date + relativedelta(months=duration_value)
+    elif duration_unit == DurationUnit.QUARTERS:
+        return start_date + relativedelta(months=duration_value * 3)
+    return start_date + relativedelta(years=duration_value)
 
 
 def _calculate_profit(
-    principal: Decimal,
-    rate: Decimal,
-    interest_period: InterestPeriod,
-    duration_value: int,
-    duration_unit: DurationUnit,
+    principal: Decimal, rate: Decimal, period: InterestPeriod,
+    duration_value: int, duration_unit: DurationUnit,
 ) -> Decimal:
-    """Simple interest: profit = principal * rate * (duration in years)."""
-    total_months = Decimal(duration_value * DURATION_TO_MONTHS[duration_unit])
-    period_months = Decimal(PERIOD_TO_MONTHS[interest_period])
-    years_fraction = total_months / Decimal("12")
-    return principal * rate * years_fraction
+    # Simple interest: principal × rate × years
+    if duration_unit == DurationUnit.MONTHS:
+        years = Decimal(duration_value) / Decimal(12)
+    elif duration_unit == DurationUnit.QUARTERS:
+        years = Decimal(duration_value * 3) / Decimal(12)
+    else:
+        years = Decimal(duration_value)
 
+    periods: Decimal
+    if period == InterestPeriod.MONTHLY:
+        periods = years * Decimal(12)
+    elif period == InterestPeriod.QUARTERLY:
+        periods = years * Decimal(4)
+    else:
+        periods = years * Decimal(1)
 
-def _calculate_profit_compound(
-    principal: Decimal,
-    rate: Decimal,
-    interest_period: InterestPeriod,
-    duration_value: int,
-    duration_unit: DurationUnit,
-) -> Decimal:
-    """Compound interest."""
-    total_months = duration_value * DURATION_TO_MONTHS[duration_unit]
-    period_months = PERIOD_TO_MONTHS[interest_period]
-    periods = total_months // period_months
-    period_rate = rate / Decimal(PERIOD_TO_MONTHS[InterestPeriod.YEARLY] / period_months)
-    future_value = principal * (1 + period_rate) ** Decimal(periods)
-    return future_value - principal
+    period_rate = rate / (Decimal(12) if period == InterestPeriod.MONTHLY else Decimal(4) if period == InterestPeriod.QUARTERLY else Decimal(1))
+    return principal * rate * years  # simple interest (matches tests)
 
 
 class SimpleInvestmentService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
-        self.repo = SimpleInvestmentRepository(db)
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
 
-    async def list_investments(
-        self, family_group_id: uuid.UUID
-    ) -> List[SimpleInvestmentResponse]:
-        investments = await self.repo.list_for_family(family_group_id)
-        return [SimpleInvestmentResponse.model_validate(inv) for inv in investments]
-
-    async def create_investment(
-        self, user_id: uuid.UUID, data: SimpleInvestmentCreate
-    ) -> SimpleInvestmentResponse:
+    async def create_investment(self, user_id: uuid.UUID, data: SimpleInvestmentCreate) -> SimpleInvestmentResponse:
         end_date = _calculate_end_date(data.start_date, data.duration_value, data.duration_unit)
         profit = _calculate_profit(
             data.principal_amount, data.interest_rate,
@@ -102,24 +74,34 @@ class SimpleInvestmentService:
             projected_total=projected_total,
             notes=data.notes,
         )
-        await self.repo.add(investment)
-        await self.repo.commit()
+        self._session.add(investment)
+        await self._session.commit()
+        await self._session.refresh(investment)
         return SimpleInvestmentResponse.model_validate(investment)
+
+    async def list_investments(self, family_group_id: uuid.UUID) -> List[SimpleInvestmentResponse]:
+        result = await self._session.execute(
+            select(SimpleInvestment)
+            .where(SimpleInvestment.family_group_id == family_group_id)
+            .order_by(SimpleInvestment.created_at.desc())
+        )
+        return [SimpleInvestmentResponse.model_validate(inv) for inv in result.scalars().all()]
 
     async def get_investment(self, investment_id: uuid.UUID) -> SimpleInvestmentResponse:
-        investment = await self.repo.get_or_raise(investment_id)
+        investment = await self._session.get(SimpleInvestment, investment_id)
+        if not investment:
+            raise NotFoundError(f"SimpleInvestment {investment_id} not found")
         return SimpleInvestmentResponse.model_validate(investment)
 
-    async def update_investment(
-        self, investment_id: uuid.UUID, data: SimpleInvestmentUpdate
-    ) -> SimpleInvestmentResponse:
-        investment = await self.repo.get_or_raise(investment_id)
+    async def update_investment(self, investment_id: uuid.UUID, data: SimpleInvestmentUpdate) -> SimpleInvestmentResponse:
+        investment = await self._session.get(SimpleInvestment, investment_id)
+        if not investment:
+            raise NotFoundError(f"SimpleInvestment {investment_id} not found")
 
         update_dict = data.model_dump(exclude_none=True)
         for field, value in update_dict.items():
             setattr(investment, field, value)
 
-        # Recalculate derived fields
         investment.end_date = _calculate_end_date(
             investment.start_date, investment.duration_value, investment.duration_unit
         )
@@ -129,23 +111,28 @@ class SimpleInvestmentService:
         )
         investment.projected_total = investment.principal_amount + investment.projected_profit
 
-        await self.repo.commit()
+        await self._session.commit()
+        await self._session.refresh(investment)
         return SimpleInvestmentResponse.model_validate(investment)
 
     async def delete_investment(self, investment_id: uuid.UUID) -> None:
-        investment = await self.repo.get_or_raise(investment_id)
-        await self.repo.delete(investment)
-        await self.repo.commit()
+        investment = await self._session.get(SimpleInvestment, investment_id)
+        if not investment:
+            raise NotFoundError(f"SimpleInvestment {investment_id} not found")
+        await self._session.delete(investment)
+        await self._session.commit()
 
-    async def get_summary(
-        self, family_group_id: uuid.UUID
-    ) -> InvestmentSummaryResponse:
-        investments = await self.repo.list_for_family(family_group_id)
+    async def get_summary(self, family_group_id: uuid.UUID) -> InvestmentSummaryResponse:
+        investments = await self._session.execute(
+            select(SimpleInvestment)
+            .where(SimpleInvestment.family_group_id == family_group_id)
+            .order_by(SimpleInvestment.created_at.desc())
+        )
         total_principal = Decimal("0")
         total_profit = Decimal("0")
         total_value = Decimal("0")
         responses = []
-        for inv in investments:
+        for inv in investments.scalars().all():
             resp = SimpleInvestmentResponse.model_validate(inv)
             responses.append(resp)
             total_principal += inv.principal_amount

@@ -97,17 +97,17 @@ export default function AdminPage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {users.map((u) => (
-                  <div key={u.id} className="flex items-center justify-between py-3">
-                    <div>
-                      <p className="font-medium">{u.full_name}</p>
-                      <p className="text-sm text-gray-500">{u.email}</p>
-                      <div className="flex gap-2 mt-1">
+                  <div key={u.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{u.full_name}</p>
+                      <p className="text-sm text-gray-500 truncate">{u.email}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
                         {u.is_app_admin && <Badge variant="info">Admin</Badge>}
                         {u.is_locked && <Badge variant="danger">Zablokowany</Badge>}
                         {!u.is_active && <Badge variant="default">Nieaktywny</Badge>}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2 shrink-0">
                       {u.is_locked ? (
                         <Button variant="outline" size="sm" onClick={() => unlockUser.mutate(u.id)}>
                           <Unlock className="h-4 w-4" /> Odblokuj

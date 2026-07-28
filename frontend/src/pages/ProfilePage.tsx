@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
+import { clearClientSession } from "@/lib/session";
 import { usersApi } from "@/lib/api/users";
 import { authApi } from "@/lib/api/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -7,7 +9,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
 export default function ProfilePage() {
-  const { user, setUser, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuthStore();
   const [name, setName] = useState(user?.full_name ?? "");
   const [currency, setCurrency] = useState(user?.default_currency ?? "PLN");
   const [saving, setSaving] = useState(false);
@@ -81,7 +84,15 @@ export default function ProfilePage() {
 
       <Card>
         <CardContent className="pt-4">
-          <Button variant="danger" onClick={logout}>Wyloguj się</Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              clearClientSession();
+              navigate("/login");
+            }}
+          >
+            Wyloguj się
+          </Button>
         </CardContent>
       </Card>
     </div>

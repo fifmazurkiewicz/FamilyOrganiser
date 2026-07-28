@@ -13,7 +13,7 @@ from app.models.user import User
 from app.services.monthly_budget import MonthlyBudgetService
 from app.schemas.monthly_budget import (
     MonthlyBudgetCreate, MonthlyBudgetResponse,
-    BudgetEntryCreate, BudgetEntryResponse,
+    BudgetEntryCreate, BudgetEntryUpdate, BudgetEntryResponse,
     BudgetSummaryResponse,
 )
 
@@ -194,14 +194,14 @@ async def add_entry(
     return await MonthlyBudgetService(db).add_entry(current_user.id, budget_id, data)
 
 
-@router.put("/entries/{entry_id}", response_model=BudgetEntryResponse)
+@router.patch("/entries/{entry_id}", response_model=BudgetEntryResponse)
 async def update_entry(
     entry_id: uuid.UUID,
-    data: BudgetEntryCreate,
+    data: BudgetEntryUpdate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await MonthlyBudgetService(db).update_entry(entry_id, data)
+    return await MonthlyBudgetService(db).update_entry_partial(entry_id, data)
 
 
 @router.delete("/entries/{entry_id}", status_code=204)

@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/api/client";
+import { useGroupStore } from "@/stores/groupStore";
 import { formatCurrency } from "@/utils/currency";
 import { cn } from "@/utils/cn";
 import { format, addMonths, differenceInDays } from "date-fns";
@@ -31,10 +32,11 @@ interface Investment {
   id: string;
   name: string;
   investment_type: string;
-  amount: number;
-  currency: string;
-  rate: number;
-  duration_months: number;
+  principal_amount: number;
+  interest_rate: number;
+  interest_period: string;
+  duration_value: number;
+  duration_unit: string;
   start_date: string;
   end_date: string;
   projected_profit: number;
@@ -43,13 +45,9 @@ interface Investment {
 }
 
 const typeLabels: Record<string, string> = {
-  bank_deposit: "Lokata",
-  polish_bond: "Obligacja PL",
-  fund: "Fundusz",
-  real_estate: "Nieruchomość",
-  crypto: "Kryptowaluta",
-  stock: "Akcje",
-  etf: "ETF",
+  deposit: "Lokata",
+  bonds: "Obligacje",
+  stocks: "Akcje",
   other: "Inne",
 };
 
@@ -78,10 +76,11 @@ function calculateInvestment(
 export function InvestmentList() {
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { activeGroup } = useGroupStore();
   const [addOpen, setAddOpen] = useState(false);
   const [form, setForm] = useState({
     name: "",
-    investment_type: "bank_deposit",
+    investment_type: "deposit",
     amount: "",
     rate: "",
     duration_months: "",
@@ -91,7 +90,7 @@ export function InvestmentList() {
 
   const { data: investments, isLoading } = useQuery<Investment[]>({
     queryKey: ["investments"],
-    queryFn: () => api.get("/v1/investments/").then((r) => r.data),
+    queryFn: () => api.get("/v1/simple-investments/", { params: { family_group_id: activeGroup?.id } }).then((r) => r.data),
   });
 
   const createInv = useMutation({
@@ -103,13 +102,21 @@ export function InvestmentList() {
       rate: number;
       duration_months: number;
       start_date: string;
-    }) => api.post("/v1/investments/", data),
+    }) => api.post("/v1/simple-investments/", {
+        ...data,
+        family_group_id: activeGroup?.id,
+        interest_period: "yearly",
+        duration_unit: "months",
+        principal_amount: data.amount,
+        interest_rate: data.rate,
+        duration_value: data.duration_months,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["investments"] });
       setAddOpen(false);
       setForm({
         name: "",
-        investment_type: "bank_deposit",
+        investment_type: "deposit",
         amount: "",
         rate: "",
         duration_months: "",
@@ -122,7 +129,7 @@ export function InvestmentList() {
   });
 
   const deleteInv = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/investments/${id}`),
+    mutationFn: (id: string) => api.delete(`/v1/simple-investments/${id}`),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["investments"] });
       toast("success", "Usunięto", "Inwestycja została usunięta.");
@@ -144,7 +151,7 @@ export function InvestmentList() {
 
   const totals = useMemo(() => {
     if (!investments) return null;
-    const totalInvested = investments.reduce((s, i) => s + i.amount, 0);
+    const totalInvested = investments.reduce((s, i) => s + i.principal_amount, 0);
     const totalProfit = investments.reduce((s, i) => s + i.projected_profit, 0);
     const totalProjected = investments.reduce((s, i) => s + i.projected_total, 0);
     return { totalInvested, totalProfit, totalProjected };
@@ -235,7 +242,7 @@ export function InvestmentList() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {investments.map((inv) => {
-            const profitPercent = (inv.projected_profit / inv.amount) * 100;
+            const profitPercent = (inv.projected_profit / inv.principal_amount) * 100;
             const now = new Date();
             const endDate = new Date(inv.end_date);
             const isActive = endDate >= now;
@@ -266,7 +273,7 @@ export function InvestmentList() {
                   <div>
                     <p className="text-xs text-gray-500">Kwota</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {formatCurrency(inv.amount, inv.currency)}
+                      {formatCurrency(inv.principal_amount, inv.currency)}
                     </p>
                   </div>
 
@@ -296,7 +303,7 @@ export function InvestmentList() {
                     </div>
                     <Progress
                       value={inv.projected_profit}
-                      max={inv.amount || 1}
+                      max={inv.principal_amount || 1}
                       className="h-1.5"
                       indicatorClassName="bg-emerald-500"
                     />
