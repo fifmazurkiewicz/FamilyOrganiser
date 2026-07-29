@@ -1,10 +1,9 @@
-# Produkcja na Hetzner VPS: Caddy (TLS) + backend API.
-# Użycie (na serwerze, katalog z tym plikiem i sklonowanym repo):
-#   cp .env.example .env   # uzupełnij DATABASE_URL, SUPABASE_*, CORS, SECRET_KEY
-#   docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+# Produkcja na Hetzner: Caddy + backend.
+# Deploy: GitHub Actions → scripts/deploy.sh (sekrety z GH → .env na VPS).
+# Lokalnie na VPS: docker compose -f docker-compose.prod.yml --env-file .env up -d --build
 #
-# Wymagane w .env: DATABASE_URL, SUPABASE_URL, SUPABASE_JWT_SECRET,
-# CORS_ORIGINS_STR, SECRET_KEY (legacy), ADMIN_EMAIL
+# Wymagane w .env / Secrets: DATABASE_URL, SUPABASE_URL, SUPABASE_JWT_SECRET,
+# CORS_ORIGINS_STR (= https://family.fmazurkiewicz.dev), SECRET_KEY, ADMIN_EMAIL
 
 services:
   caddy:
@@ -29,6 +28,7 @@ services:
       - .env
     environment:
       PORT: "8080"
+      # Domyślnie CORS pod produkcyjny frontend (nadpisywalne z .env / Secrets)
       CORS_ORIGINS_STR: ${CORS_ORIGINS_STR:-https://family.fmazurkiewicz.dev}
     expose:
       - "8080"

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Legacy name — identical to entrypoint.sh
+# Compatibility alias of entrypoint.sh (bez Fly.io). Preferuj docker/entrypoint.sh.
 set -eu
 
 mkdir -p /data

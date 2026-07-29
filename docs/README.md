@@ -16,7 +16,7 @@
 - [Model danych](technical/data-model.md) — ERD, encje, relacje
 
 ### 🚀 Deploy
-- [**Architektura platformy (decyzja)**](deployment/platform-architecture.md) — Vercel + Hetzner (Docker/Caddy) + GH Actions + Supabase
+- [**Architektura platformy (decyzja)**](deployment/platform-architecture.md) — Vercel + Hetzner + GH Actions; **instrukcja krok po kroku**
 - [Najtańszy hosting](deployment/cheap-hosting.md) — VPS vs free tier, Compose, HTTPS, checklista
 - [Fly.io (PoC)](deployment/fly-io.md) — wcześniejszy wariant; nie jest kierunkiem produkcyjnym
 

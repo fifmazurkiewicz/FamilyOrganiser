@@ -97,64 +97,117 @@ Supabase Dashboard → Authentication → URL Configuration:
 | `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | anon / publishable key (publiczny) |
 
-### Env backendu (VPS / Compose)
+### Env backendu (źródło: GitHub Secrets → `.env` na VPS)
 
 | Zmienna | Uwagi |
 |---------|--------|
-| `DATABASE_URL` | `postgresql+asyncpg://…` z Supabase (nadpisuje SQLite z Dockerfile) |
+| `DATABASE_URL` | `postgresql+asyncpg://…` z Supabase |
 | `SUPABASE_URL` | ten sam URL projektu |
-| `SUPABASE_JWT_SECRET` | JWT Secret z Settings → API (weryfikacja HS256; alternatywa: JWKS) |
+| `SUPABASE_JWT_SECRET` | JWT Secret z Settings → API |
 | `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
 | `ADMIN_EMAIL` | email admina (promocja `is_app_admin` po pierwszym logowaniu) |
 | `PORT` | `8080` (domyślnie) |
 
 ---
 
-## Deploy backendu
+## Deploy backendu — instrukcja krok po kroku
 
-Pliki: `docker-compose.prod.yml`, `docker/Caddyfile`, root `Dockerfile` (API-only), `scripts/deploy.sh`, `.github/workflows/deploy.yml`.
+Cel: **family** (Vercel) + **api-family** (Hetzner). Sekrety w **GitHub Actions Secrets** (i Vercel dla FE). Nie commituj `.env`.
 
-Caddy: TLS dla `api-family.fmazurkiewicz.dev` → `backend:8080`.  
-Oba serwisy: `restart: unless-stopped`. Health: `GET /api/health` na porcie **8080**.
+Pliki: `docker-compose.prod.yml`, `docker/Caddyfile`, `Dockerfile`, `scripts/deploy.sh`, `.github/workflows/deploy.yml`.
 
-### Jednorazowo na VPS
+### Krok 1 — DNS (Cloudflare)
 
-1. Docker + Compose, porty 80/443.
-2. Clone prywatnego repo (deploy key lub SSH key z dostępem do GitHub).
-3. `cp .env.example .env` — uzupełnij sekrety (nie w git).
-4. DNS: `api-family` → IP VPS.
-5. Pierwszy start: `chmod +x scripts/deploy.sh && ./scripts/deploy.sh`  
-   albo: `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`.
+1. Wejdź w DNS domeny `fmazurkiewicz.dev`.
+2. Dodaj rekord **A**: nazwa `api-family`, wartość = publiczne IPv4 serwera Hetzner.
+3. Proxy: na start **DNS only** (szara chmura), żeby Caddy dostał Let’s Encrypt.
+4. Poczekaj, aż `api-family.fmazurkiewicz.dev` wskazuje na IP VPS.
 
-Katalog aplikacji (przykład): `/opt/apps/FamilyOrganiser` — ta sama wartość w secrecie `HETZNER_APP_DIR`.
+### Krok 2 — Klucz SSH pod GitHub Actions
 
-### Auto-deploy (GitHub Actions)
+Na komputerze:
 
-Przy pushu do `main` (zmiany w `backend/**`, `Dockerfile`, `docker/**`, `docker-compose.prod.yml`, `scripts/deploy.sh`) workflow **Deploy API (Hetzner)** łączy się po SSH i uruchamia `./scripts/deploy.sh` (`git pull`, `compose up --build`, `alembic upgrade`, healthcheck).
+```bash
+ssh-keygen -t ed25519 -f hetzner_deploy -C "github-actions-familyorganiser" -N ""
+```
 
-Ręcznie: Actions → Deploy API (Hetzner) → Run workflow.
+- `hetzner_deploy` — prywatny → GitHub Secret `HETZNER_SSH_KEY`
+- `hetzner_deploy.pub` — publiczny → VPS `authorized_keys`
 
-**Secrets w GitHub (Settings → Secrets and variables → Actions):**
+### Krok 3 — VPS (Hetzner, raz)
 
-| Secret | Opis |
-|--------|------|
-| `HETZNER_HOST` | IP lub hostname VPS |
-| `HETZNER_USER` | użytkownik SSH (np. `deploy`) |
-| `HETZNER_SSH_KEY` | prywatny klucz SSH (cały PEM) |
-| `HETZNER_APP_DIR` | absolutna ścieżka clone, np. `/opt/apps/FamilyOrganiser` |
-| `DATABASE_URL` | `postgresql+asyncpg://…` (Supabase) |
-| `SUPABASE_URL` | `https://<ref>.supabase.co` |
-| `SUPABASE_JWT_SECRET` | JWT Secret z Supabase → Settings → API |
+1. Zainstaluj Docker, Compose plugin, `git`, `python3`, `curl`.
+2. Sklonuj repo (deploy key / SSH z dostępem do prywatnego GitHub):
+
+```bash
+mkdir -p /opt/apps
+cd /opt/apps
+git clone git@github.com:fifmazurkiewicz/FamilyOrganiser.git
+cd FamilyOrganiser
+git checkout main
+```
+
+3. Dodaj treść `hetzner_deploy.pub` do `~/.ssh/authorized_keys` użytkownika workflow (`root` lub `deploy`), `chmod 600`.
+4. User w grupie `docker` (albo root). Firewall: **22**, **80**, **443**.
+5. Ścieżka `/opt/apps/FamilyOrganiser` = secret `HETZNER_APP_DIR`.
+
+`.env` nie tworzysz ręcznie — powstanie przy pierwszym udanym deployu.
+
+### Krok 4 — Secrets w GitHub
+
+Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
+
+| Secret | Skąd / co |
+|--------|-----------|
+| `HETZNER_HOST` | IPv4 VPS |
+| `HETZNER_USER` | user SSH (`root` / `deploy`) |
+| `HETZNER_SSH_KEY` | cały PEM z `hetzner_deploy` |
+| `HETZNER_APP_DIR` | `/opt/apps/FamilyOrganiser` |
+| `DATABASE_URL` | Supabase URI z driverem `postgresql+asyncpg://` (często pooler `:6543`) |
+| `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
+| `SUPABASE_JWT_SECRET` | Supabase → Settings → API → JWT Secret |
 | `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
-| `SECRET_KEY` | losowy długi string (legacy) |
-| `ADMIN_EMAIL` | email admina aplikacji |
-| `SUPABASE_JWT_AUDIENCE` | opcjonalnie; domyślnie `authenticated` |
+| `SECRET_KEY` | długi losowy string |
+| `ADMIN_EMAIL` | Twój email admina |
 
-Przy każdym deployu Action przekazuje te wartości na VPS; `scripts/deploy.sh` zapisuje je do `.env` (poza gitem). Nie commituj lokalnego `.env`.
+Opcjonalnie: `SUPABASE_JWT_AUDIENCE` = `authenticated`.
 
-Klucz publiczny dodaj do `~/.ssh/authorized_keys` na VPS. Użytkownik musi móc `git pull` i uruchamiać `docker compose` (grupa `docker` albo root). Na VPS musi być `python3` (zapis `.env`).
+### Krok 5 — Supabase Auth URLs
 
-Frontend: bez tego workflow — deploy przez Vercel przy pushu do `frontend/`.
+Authentication → URL Configuration:
+
+- Site URL: `https://family.fmazurkiewicz.dev`
+- Redirect URLs: `https://family.fmazurkiewicz.dev/**`
+
+### Krok 6 — Vercel (frontend)
+
+1. Root Directory = `frontend`, domena `family.fmazurkiewicz.dev`.
+2. Env: `VITE_API_URL=https://api-family.fmazurkiewicz.dev`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+3. Redeploy.
+
+### Krok 7 — Pierwszy deploy API
+
+1. GitHub → **Actions** → **Deploy API (Hetzner)** → **Run workflow** (`main`).
+2. Po sukcesie otwórz: `https://api-family.fmazurkiewicz.dev/api/health` → `{"status":"ok",...}`.
+
+### Krok 8 — Na co dzień
+
+- Push na `main` (backend/Docker) → auto-deploy.
+- Albo ręcznie: Run workflow.
+- Frontend: Vercel.
+
+`deploy.sh`: pull → zapis `.env` z Secrets → `compose up --build` → `alembic upgrade` → health. Caddy → `:8080`, `restart: unless-stopped`.
+
+### Diagnostyka
+
+| Objaw | Sprawdź |
+|-------|---------|
+| SSH Permission denied | klucz, `authorized_keys`, user, port 22 |
+| cd: no such file | `HETZNER_APP_DIR` |
+| git pull failed | dostęp repo na VPS |
+| Brak HTTPS | DNS only, 80/443, logi Caddy |
+| CORS | `CORS_ORIGINS_STR` |
+| 401 API | `SUPABASE_JWT_SECRET` / URL |
 
 ---
 

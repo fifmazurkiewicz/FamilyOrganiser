@@ -1,9 +1,8 @@
-# fly.toml — familyorganiser-rtepja (Fly.io Launch, 2026-07-28)
+# ARCHIWUM / PoC — nie używać w produkcji.
+# Produkcja: Vercel (frontend) + Hetzner Docker/Caddy (API). Zob. docs/deployment/platform-architecture.md
 #
-# Deploy from latest main:
+# Historycznie: familyorganiser-rtepja (Fly.io Launch, 2026-07-28)
 #   fly deploy -a familyorganiser-rtepja
-# Secrets:
-#   fly secrets set SECRET_KEY=... ADMIN_PASSWORD=... CORS_ORIGINS_STR=https://familyorganiser-rtepja.fly.dev -a familyorganiser-rtepja
 
 app = 'familyorganiser-rtepja'
 primary_region = 'ams'

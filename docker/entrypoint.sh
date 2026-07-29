@@ -1,4 +1,5 @@
 #!/bin/sh
+# API entrypoint (Hetzner / Docker Compose). Port z $PORT, domyślnie 8080.
 set -eu
 
 mkdir -p /data
