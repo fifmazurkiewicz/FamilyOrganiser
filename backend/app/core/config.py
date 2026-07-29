@@ -25,10 +25,11 @@ def postgres_connect_args(database_url: str) -> dict:
     if "postgresql" in database_url or "postgres" in database_url:
         if "supabase.com" in database_url or "supabase.co" in database_url:
             # Pooler Supabase: TLS wymagany; pełna weryfikacja łańcucha pada w slim Docker.
+            # Transaction pooler (6543) nie obsługuje prepared statements asyncpg.
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-            return {"ssl": ctx}
+            return {"ssl": ctx, "statement_cache_size": 0}
         return {"ssl": True}
     return {}
 
