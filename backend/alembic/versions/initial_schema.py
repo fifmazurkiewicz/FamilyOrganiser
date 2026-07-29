@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects.postgresql import UUID
 
 revision = "initial_schema"
-down_revision = None
+down_revision = "reset_public_once"
 branch_labels = None
 depends_on = None
 

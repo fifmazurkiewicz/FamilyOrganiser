@@ -132,44 +132,6 @@ if not reachable:
     sys.exit(1)
 PY
 
-echo "==> alembic baseline check"
-"${COMPOSE[@]}" exec -T backend python - <<'PY'
-import asyncio
-import sys
-
-from sqlalchemy import text
-
-from app.db.base import engine
-
-
-async def main() -> None:
-    async with engine.connect() as conn:
-        users = await conn.scalar(text("SELECT to_regclass('public.users')"))
-        alembic_tbl = await conn.scalar(text("SELECT to_regclass('public.alembic_version')"))
-        version = None
-        if alembic_tbl:
-            version = await conn.scalar(text("SELECT version_num FROM alembic_version LIMIT 1"))
-
-    if users and not version:
-        print(
-            "BŁĄD: schemat częściowy — tabela users istnieje bez alembic_version.",
-            "Wyczyść bazę w Supabase SQL Editor, potem odpal deploy ponownie:",
-            "",
-            "  DROP SCHEMA public CASCADE;",
-            "  CREATE SCHEMA public;",
-            "  GRANT ALL ON SCHEMA public TO postgres;",
-            "  GRANT ALL ON SCHEMA public TO public;",
-            "",
-            "(Nie dotyka auth.* — tylko tabele aplikacji w public.)",
-            sep="\n",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-
-asyncio.run(main())
-PY
-
 echo "==> alembic upgrade"
 "${COMPOSE[@]}" exec -T backend alembic upgrade head
 
