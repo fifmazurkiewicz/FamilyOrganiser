@@ -22,18 +22,35 @@ async def get_or_create_user_from_claims(
     except ValueError:
         return None
 
-    email = (claims.get("email") or "").strip().lower()
     meta = claims.get("user_metadata") or {}
     if not isinstance(meta, dict):
         meta = {}
+
+    email = (
+        (claims.get("email") or meta.get("email") or "").strip().lower()
+    )
     full_name = (
-        (meta.get("full_name") or meta.get("name") or "").strip()
+        (meta.get("full_name") or meta.get("name") or claims.get("name") or "")
+        .strip()
         or (email.split("@")[0] if email else "Użytkownik")
     )[:100]
 
     result = await db.execute(select(User).where(User.supabase_auth_id == auth_id))
     user = result.scalar_one_or_none()
     if user:
+        changed = False
+        if email and user.email != email:
+            user.email = email
+            changed = True
+        if full_name and user.full_name != full_name and user.full_name in ("", "Użytkownik"):
+            user.full_name = full_name
+            changed = True
+        if email and email == settings.ADMIN_EMAIL.lower() and not user.is_app_admin:
+            user.is_app_admin = True
+            changed = True
+        if changed:
+            await db.commit()
+            await db.refresh(user)
         return user
 
     if email:
