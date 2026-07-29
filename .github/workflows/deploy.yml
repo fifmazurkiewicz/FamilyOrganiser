@@ -9,6 +9,7 @@ on:
     paths:
       - "backend/**"
       - "Dockerfile"
+      - ".dockerignore"
       - "docker-compose.prod.yml"
       - "docker/**"
       - "scripts/deploy.sh"
