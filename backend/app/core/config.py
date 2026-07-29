@@ -17,6 +17,15 @@ def normalize_database_url(url: str) -> str:
     return url
 
 
+def postgres_connect_args(database_url: str) -> dict:
+    """asyncpg + Supabase wymaga SSL; SQLite ma własne connect_args."""
+    if "sqlite" in database_url:
+        return {"check_same_thread": False}
+    if "postgresql" in database_url or "postgres" in database_url:
+        return {"ssl": True}
+    return {}
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=(BASE_DIR / ".env", BASE_DIR.parent / ".env"),
