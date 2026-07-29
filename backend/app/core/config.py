@@ -2,6 +2,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import List
 import ssl
+import uuid
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -9,12 +10,19 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
+def is_supabase_database_url(url: str) -> bool:
+    return "supabase.com" in url or "supabase.co" in url
+
+
 def normalize_database_url(url: str) -> str:
     """Supabase kopiuje postgresql:// — SQLAlchemy async wymaga postgresql+asyncpg://."""
     if url.startswith("postgresql://"):
-        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
-    if url.startswith("postgres://"):
-        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
+        url = "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+    elif url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url.removeprefix("postgres://")
+    if is_supabase_database_url(url) and "prepared_statement_cache_size" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}prepared_statement_cache_size=0"
     return url
 
 
@@ -23,14 +31,24 @@ def postgres_connect_args(database_url: str) -> dict:
     if "sqlite" in database_url:
         return {"check_same_thread": False}
     if "postgresql" in database_url or "postgres" in database_url:
-        if "supabase.com" in database_url or "supabase.co" in database_url:
-            # Pooler Supabase: TLS wymagany; pełna weryfikacja łańcucha pada w slim Docker.
-            # Transaction pooler (6543) nie obsługuje prepared statements asyncpg.
+        if is_supabase_database_url(database_url):
+            # Pooler Supabase: TLS wymagany; transaction pooler (6543) + prepared statements.
             ctx = ssl.create_default_context()
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
-            return {"ssl": ctx, "statement_cache_size": 0}
+            return {
+                "ssl": ctx,
+                "statement_cache_size": 0,
+                "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
+            }
         return {"ssl": True}
+    return {}
+
+
+def postgres_engine_kwargs(database_url: str) -> dict:
+    """SQLAlchemy asyncpg: wyłącz cache prepared statements na Supabase poolerze."""
+    if is_supabase_database_url(database_url):
+        return {"prepared_statement_cache_size": 0}
     return {}
 
 

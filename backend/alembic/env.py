@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.db.base import Base
 from app.models import *  # noqa: import all models
-from app.core.config import postgres_connect_args, settings
+from app.core.config import postgres_connect_args, postgres_engine_kwargs, settings
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
@@ -45,6 +45,7 @@ async def run_async_migrations() -> None:
         settings.DATABASE_URL,
         poolclass=pool.NullPool,
         connect_args=postgres_connect_args(settings.DATABASE_URL),
+        **postgres_engine_kwargs(settings.DATABASE_URL),
     )
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
