@@ -17,12 +17,9 @@ def is_supabase_database_url(url: str) -> bool:
 def normalize_database_url(url: str) -> str:
     """Supabase kopiuje postgresql:// — SQLAlchemy async wymaga postgresql+asyncpg://."""
     if url.startswith("postgresql://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgresql://")
-    elif url.startswith("postgres://"):
-        url = "postgresql+asyncpg://" + url.removeprefix("postgres://")
-    if is_supabase_database_url(url) and "prepared_statement_cache_size" not in url:
-        sep = "&" if "?" in url else "?"
-        url = f"{url}{sep}prepared_statement_cache_size=0"
+        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
     return url
 
 
@@ -42,13 +39,6 @@ def postgres_connect_args(database_url: str) -> dict:
                 "prepared_statement_name_func": lambda: f"__asyncpg_{uuid.uuid4()}__",
             }
         return {"ssl": True}
-    return {}
-
-
-def postgres_engine_kwargs(database_url: str) -> dict:
-    """SQLAlchemy asyncpg: wyłącz cache prepared statements na Supabase poolerze."""
-    if is_supabase_database_url(database_url):
-        return {"prepared_statement_cache_size": 0}
     return {}
 
 

@@ -83,6 +83,15 @@ host = parsed.hostname or ""
 port = parsed.port or 5432
 print(f"DB host: {host}:{port}")
 
+if "pooler.supabase.com" in host and port == 6543:
+    print(
+        "UWAGA: transaction pooler (:6543) psuje alembic/asyncpg (prepared statements).",
+        "Użyj session poolera (:5432) w DATABASE_URL — Supabase → Database → Session pooler.",
+        sep="\n",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+
 if host.startswith("db.") and host.endswith(".supabase.co"):
     print(
         "UWAGA: direct connection (db.*.supabase.co) często pada na VPS bez IPv6.",
