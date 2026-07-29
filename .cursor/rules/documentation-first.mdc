@@ -1,0 +1,16 @@
+---
+description: Documentation first — najpierw docs/decyzje, potem kod
+alwaysApply: true
+---
+
+# Documentation first
+
+Przed implementacją istotnej zmiany (feature, API, model danych, deploy, decyzja architektoniczna):
+
+1. Sprawdź istniejącą dokumentację (`docs/`, README, ADR, AGENTS.md).
+2. Jeśli brakuje opisu lub jest nieaktualny — **najpierw** uzupełnij / zaproponuj docs (lub krótką specyfikację w czacie do akceptacji), **potem** kod.
+3. Hotfix / trywialny refactor bez zmiany zachowania: docs nie blokują, ale jeśli odkryjesz drift — odnotuj lub popraw docs w tej samej sesji.
+4. Po wdrożeniu: kod i docs muszą być spójne; nie zamykaj zadania ze świadomym rozjazdem.
+5. Nie wymyślaj faktów w docs — oznaczaj założenia. Zero sekretów w dokumentacji.
+
+Wyjątek: użytkownik wyraźnie każe „tylko kod, bez docs” — wtedy wykonaj, ale krótko ostrzeż o ryzyku driftu.

@@ -1,0 +1,20 @@
+---
+description: Aktualizuj docs przy zmianach infrastruktury i decyzji
+alwaysApply: true
+---
+
+# Dokumentacja na bieżąco
+
+Po zmianach infrastruktury, domeny, hostingu, Supabase lub decyzji deployowych
+zaktualizuj odpowiednie pliki w `docs/` w tej samej sesji (zwłaszcza
+`docs/deployment/platform-architecture.md` i `docs/README.md`).
+
+Nie czekaj na osobne polecenie „zaktualizuj docs”, jeśli fakt jest już ustalony.
+Nie twórz nowych plików docs bez potrzeby — najpierw uzupełniaj istniejące.
+Wykorzystaj skill githubbook do aktualizowania dokumentacji. 
+
+
+# Dokumentacja po potwierdzeniu 
+
+Na koniec wdrożeń funkcji, zmian w kodzie zapytaj czy masz przygotować zmiany w dokumentacji projektu. 
+Wykorzystaj skill githubbook do aktualizowania dokumentacji. 
