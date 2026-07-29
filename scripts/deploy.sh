@@ -34,6 +34,10 @@ for key in keys:
     val = os.environ.get(key)
     if val is None or val == "":
         continue
+    if key == "DATABASE_URL":
+        val = val.replace("postgresql://", "postgresql+asyncpg://", 1).replace(
+            "postgres://", "postgresql+asyncpg://", 1
+        )
     lines.append(f"{key}={val}")
 if not os.environ.get("PORT"):
     lines.append("PORT=8080")

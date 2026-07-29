@@ -2,9 +2,19 @@ from functools import cached_property
 from pathlib import Path
 from typing import List
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def normalize_database_url(url: str) -> str:
+    """Supabase kopiuje postgresql:// — SQLAlchemy async wymaga postgresql+asyncpg://."""
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
+    return url
 
 
 class Settings(BaseSettings):
@@ -40,6 +50,13 @@ class Settings(BaseSettings):
     APPROVAL_REQUEST_EXPIRE_DAYS: int = 7
     MAX_SECURITY_QUESTION_ATTEMPTS: int = 5
     EXCHANGE_RATE_FETCH_HOUR: int = 6
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def _normalize_database_url(cls, value: str) -> str:
+        if isinstance(value, str):
+            return normalize_database_url(value)
+        return value
 
     @cached_property
     def CORS_ORIGINS(self) -> List[str]:
