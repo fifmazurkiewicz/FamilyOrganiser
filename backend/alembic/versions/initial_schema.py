@@ -13,35 +13,8 @@ down_revision = "reset_public_once"
 branch_labels = None
 depends_on = None
 
-family_role = sa.Enum("admin", "member", name="familyrole", create_type=False)
-notification_type = sa.Enum(
-    "budget_alert",
-    "goal_achieved",
-    "goal_reminder",
-    "recurring_reminder",
-    "recurring_unconfirmed",
-    "deposit_maturity",
-    "bond_maturity",
-    "weekly_summary",
-    "group_removed",
-    "password_reset",
-    "approval_request",
-    "approval_resolved",
-    "joint_account_transaction",
-    "admin_password_reset",
-    "shopping_item_added",
-    "shopping_item_bought",
-    "task_completed",
-    "budget_exceeded",
-    name="notificationtype",
-    create_type=False,
-)
-
 
 def upgrade() -> None:
-    family_role.create(op.get_bind(), checkfirst=True)
-    notification_type.create(op.get_bind(), checkfirst=True)
-
     op.create_table(
         "users",
         sa.Column("id", UUID(as_uuid=True), primary_key=True),
@@ -97,7 +70,7 @@ def upgrade() -> None:
             sa.ForeignKey("family_groups.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column("role", family_role, nullable=False, server_default="member"),
+        sa.Column("role", sa.String(20), nullable=False, server_default="member"),
         sa.Column("joined_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("share_expenses", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("share_investments", sa.Boolean(), nullable=False, server_default="false"),
@@ -138,7 +111,7 @@ def upgrade() -> None:
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
         ),
-        sa.Column("notification_type", notification_type, nullable=False),
+        sa.Column("notification_type", sa.String(50), nullable=False),
         sa.Column("title", sa.String(200), nullable=False),
         sa.Column("body", sa.Text(), nullable=False),
         sa.Column("is_read", sa.Boolean(), nullable=False, server_default="false"),
@@ -202,5 +175,3 @@ def downgrade() -> None:
     op.drop_index("ix_users_supabase_auth_id", table_name="users")
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
-    notification_type.drop(op.get_bind(), checkfirst=True)
-    family_role.drop(op.get_bind(), checkfirst=True)
