@@ -1,6 +1,7 @@
 from functools import cached_property
 from pathlib import Path
 from typing import List
+import ssl
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -22,6 +23,12 @@ def postgres_connect_args(database_url: str) -> dict:
     if "sqlite" in database_url:
         return {"check_same_thread": False}
     if "postgresql" in database_url or "postgres" in database_url:
+        if "supabase.com" in database_url or "supabase.co" in database_url:
+            # Pooler Supabase: TLS wymagany; pełna weryfikacja łańcucha pada w slim Docker.
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            return {"ssl": ctx}
         return {"ssl": True}
     return {}
 

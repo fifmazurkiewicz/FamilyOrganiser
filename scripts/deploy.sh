@@ -91,6 +91,7 @@ if host.startswith("db.") and host.endswith(".supabase.co"):
         sep="\n",
         file=sys.stderr,
     )
+    sys.exit(1)
 
 try:
     infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
