@@ -13,7 +13,7 @@ down_revision = "reset_public_once"
 branch_labels = None
 depends_on = None
 
-family_role = sa.Enum("admin", "member", name="familyrole")
+family_role = sa.Enum("admin", "member", name="familyrole", create_type=False)
 notification_type = sa.Enum(
     "budget_alert",
     "goal_achieved",
@@ -34,6 +34,7 @@ notification_type = sa.Enum(
     "task_completed",
     "budget_exceeded",
     name="notificationtype",
+    create_type=False,
 )
 
 
