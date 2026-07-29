@@ -46,10 +46,10 @@ print(f"Wrote .env ({len(lines)} keys)")
 PY
 }
 
-echo "==> git pull"
+echo "==> git sync (origin/main)"
 git fetch origin main
-git checkout main
-git pull --ff-only origin main
+git checkout -f main
+git reset --hard origin/main
 
 sync_env_from_ci
 

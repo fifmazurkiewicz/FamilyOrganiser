@@ -39,9 +39,6 @@ jobs:
           script: |
             set -euo pipefail
             cd "$APP_DIR"
-            git fetch origin main
-            git checkout main
-            git pull --ff-only origin main
             chmod +x scripts/deploy.sh
             ./scripts/deploy.sh
         env:
