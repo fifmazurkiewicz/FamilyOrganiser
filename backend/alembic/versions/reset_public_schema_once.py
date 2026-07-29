@@ -5,6 +5,7 @@ Revises:
 Create Date: 2026-07-30
 """
 from alembic import op
+import sqlalchemy as sa
 
 revision = "reset_public_once"
 down_revision = None
@@ -19,6 +20,11 @@ def upgrade() -> None:
     op.execute("GRANT ALL ON SCHEMA public TO public")
     op.execute("GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role")
     op.execute("GRANT ALL ON SCHEMA public TO service_role")
+    # DROP SCHEMA usuwa alembic_version — odtwórz, żeby Alembic mógł zapisać revisję.
+    op.create_table(
+        "alembic_version",
+        sa.Column("version_num", sa.String(32), nullable=False, primary_key=True),
+    )
 
 
 def downgrade() -> None:
