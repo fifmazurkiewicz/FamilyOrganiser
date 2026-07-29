@@ -2,7 +2,7 @@
 
 **Status:** przyjęta  
 **Data:** 2026-07-28  
-**Ostatnia aktualizacja:** 2026-07-28  
+**Ostatnia aktualizacja:** 2026-07-30  
 **Zastępuje:** podejście „jedna apka na Fly.io” (zostaje w docs jako archiwum / PoC)
 
 ---
@@ -110,13 +110,51 @@ Supabase Dashboard → Authentication → URL Configuration:
 
 ---
 
-## Deploy backendu (skrót)
+## Deploy backendu
 
-Pliki w repo: `docker-compose.prod.yml`, `docker/Caddyfile`, root `Dockerfile` (API-only).
+Pliki: `docker-compose.prod.yml`, `docker/Caddyfile`, root `Dockerfile` (API-only), `scripts/deploy.sh`, `.github/workflows/deploy.yml`.
 
-Na VPS (np. `/opt/apps/`): clone repo, `.env` z sekretami, `docker compose -f docker-compose.prod.yml up -d --build`.
+Caddy: TLS dla `api-family.fmazurkiewicz.dev` → `backend:8080`.  
+Oba serwisy: `restart: unless-stopped`. Health: `GET /api/health` na porcie **8080**.
 
-Caddy terminuje TLS dla `api-family.fmazurkiewicz.dev` i proxy do `backend:8080`.
+### Jednorazowo na VPS
+
+1. Docker + Compose, porty 80/443.
+2. Clone prywatnego repo (deploy key lub SSH key z dostępem do GitHub).
+3. `cp .env.example .env` — uzupełnij sekrety (nie w git).
+4. DNS: `api-family` → IP VPS.
+5. Pierwszy start: `chmod +x scripts/deploy.sh && ./scripts/deploy.sh`  
+   albo: `docker compose -f docker-compose.prod.yml --env-file .env up -d --build`.
+
+Katalog aplikacji (przykład): `/opt/apps/FamilyOrganiser` — ta sama wartość w secrecie `HETZNER_APP_DIR`.
+
+### Auto-deploy (GitHub Actions)
+
+Przy pushu do `main` (zmiany w `backend/**`, `Dockerfile`, `docker/**`, `docker-compose.prod.yml`, `scripts/deploy.sh`) workflow **Deploy API (Hetzner)** łączy się po SSH i uruchamia `./scripts/deploy.sh` (`git pull`, `compose up --build`, `alembic upgrade`, healthcheck).
+
+Ręcznie: Actions → Deploy API (Hetzner) → Run workflow.
+
+**Secrets w GitHub (Settings → Secrets and variables → Actions):**
+
+| Secret | Opis |
+|--------|------|
+| `HETZNER_HOST` | IP lub hostname VPS |
+| `HETZNER_USER` | użytkownik SSH (np. `deploy`) |
+| `HETZNER_SSH_KEY` | prywatny klucz SSH (cały PEM) |
+| `HETZNER_APP_DIR` | absolutna ścieżka clone, np. `/opt/apps/FamilyOrganiser` |
+| `DATABASE_URL` | `postgresql+asyncpg://…` (Supabase) |
+| `SUPABASE_URL` | `https://<ref>.supabase.co` |
+| `SUPABASE_JWT_SECRET` | JWT Secret z Supabase → Settings → API |
+| `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
+| `SECRET_KEY` | losowy długi string (legacy) |
+| `ADMIN_EMAIL` | email admina aplikacji |
+| `SUPABASE_JWT_AUDIENCE` | opcjonalnie; domyślnie `authenticated` |
+
+Przy każdym deployu Action przekazuje te wartości na VPS; `scripts/deploy.sh` zapisuje je do `.env` (poza gitem). Nie commituj lokalnego `.env`.
+
+Klucz publiczny dodaj do `~/.ssh/authorized_keys` na VPS. Użytkownik musi móc `git pull` i uruchamiać `docker compose` (grupa `docker` albo root). Na VPS musi być `python3` (zapis `.env`).
+
+Frontend: bez tego workflow — deploy przez Vercel przy pushu do `frontend/`.
 
 ---
 
@@ -124,8 +162,8 @@ Caddy terminuje TLS dla `api-family.fmazurkiewicz.dev` i proxy do `backend:8080`
 
 1. Jedna apka = jedna subdomena FE (+ osobna subdomena API gdy własny backend).
 2. Max ~5 osób na projekt.
-3. Sekrety tylko w env Vercel / VPS — nie w git.
-4. Fly.io pozostaje historycznym PoC.
+3. Sekrety tylko w env Vercel / VPS / GitHub Actions secrets — nie w git.
+4. Fly.io (`fly.toml`) pozostaje historycznym PoC — nie używamy w produkcji.
 
 ---
 

@@ -1,0 +1,54 @@
+# Auto-deploy backendu na Hetzner. Sekrety aplikacji idą z GitHub Secrets → .env na VPS.
+# Frontend: Vercel (osobno).
+
+name: Deploy API (Hetzner)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - "docker-compose.prod.yml"
+      - "docker/**"
+      - "scripts/deploy.sh"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-hetzner-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          port: 22
+          script_stop: true
+          command_timeout: 15m
+          envs: APP_DIR,DATABASE_URL,SUPABASE_URL,SUPABASE_JWT_SECRET,SUPABASE_JWT_AUDIENCE,CORS_ORIGINS_STR,SECRET_KEY,ADMIN_EMAIL,PORT
+          script: |
+            set -euo pipefail
+            cd "$APP_DIR"
+            git fetch origin main
+            git checkout main
+            git pull --ff-only origin main
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
+        env:
+          APP_DIR: ${{ secrets.HETZNER_APP_DIR }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+          SUPABASE_JWT_AUDIENCE: ${{ secrets.SUPABASE_JWT_AUDIENCE }}
+          CORS_ORIGINS_STR: ${{ secrets.CORS_ORIGINS_STR }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          PORT: "8080"
