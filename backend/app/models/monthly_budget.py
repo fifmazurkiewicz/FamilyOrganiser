@@ -39,7 +39,7 @@ class BudgetEntry(Base):
         Uuid, ForeignKey("monthly_budgets.id", ondelete="CASCADE"), nullable=False
     )
     entry_type: Mapped[BudgetEntryType] = mapped_column(
-        Enum(BudgetEntryType), nullable=False
+        Enum(BudgetEntryType, native_enum=False), nullable=False
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)

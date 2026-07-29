@@ -36,7 +36,7 @@ class Notification(Base):
         Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     notification_type: Mapped[NotificationType] = mapped_column(
-        Enum(NotificationType), nullable=False
+        Enum(NotificationType, native_enum=False), nullable=False
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)

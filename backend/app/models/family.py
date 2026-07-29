@@ -40,7 +40,7 @@ class FamilyMembership(Base):
         Uuid, ForeignKey("family_groups.id", ondelete="CASCADE"), nullable=False
     )
     role: Mapped[FamilyRole] = mapped_column(
-        Enum(FamilyRole), default=FamilyRole.MEMBER, nullable=False
+        Enum(FamilyRole, native_enum=False), default=FamilyRole.MEMBER, nullable=False
     )
     joined_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

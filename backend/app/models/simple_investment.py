@@ -39,19 +39,19 @@ class SimpleInvestment(Base):
     )
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     investment_type: Mapped[SimpleInvestmentType] = mapped_column(
-        Enum(SimpleInvestmentType), nullable=False
+        Enum(SimpleInvestmentType, native_enum=False), nullable=False
     )
     principal_amount: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
     interest_rate: Mapped[Decimal] = mapped_column(
         Numeric(6, 4), nullable=False
     )  # percentage as decimal, e.g. 0.05 = 5%
     interest_period: Mapped[InterestPeriod] = mapped_column(
-        Enum(InterestPeriod), default=InterestPeriod.YEARLY
+        Enum(InterestPeriod, native_enum=False), default=InterestPeriod.YEARLY
     )
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     duration_value: Mapped[int] = mapped_column(Integer, nullable=False)
     duration_unit: Mapped[DurationUnit] = mapped_column(
-        Enum(DurationUnit), default=DurationUnit.MONTHS
+        Enum(DurationUnit, native_enum=False), default=DurationUnit.MONTHS
     )
     end_date: Mapped[date] = mapped_column(Date, nullable=True)
     projected_profit: Mapped[Decimal] = mapped_column(
