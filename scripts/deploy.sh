@@ -105,8 +105,9 @@ reachable = False
 for info in infos:
     fam, _, _, _, sockaddr = info
     label = "IPv6" if fam == socket.AF_INET6 else "IPv4"
+    addr = (sockaddr[0], sockaddr[1])
     try:
-        with socket.create_connection(sockaddr, timeout=5):
+        with socket.create_connection(addr, timeout=5):
             print(f"Połączenie TCP ({label}): OK")
             reachable = True
             break
