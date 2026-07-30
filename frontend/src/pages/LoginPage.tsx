@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { LoginForm } from "@/features/auth/LoginForm";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Home, Users, TrendingUp, Shield } from "lucide-react";
 
 const features = [
@@ -60,10 +59,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-background to-primary-light/20 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] relative">
-        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
-          <ThemeToggle variant="compact" />
-        </div>
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-background to-primary-light/20 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
         <div className="w-full max-w-md">
           {/* Mobile logo (visible only on small screens) */}
           <div className="lg:hidden text-center mb-6">

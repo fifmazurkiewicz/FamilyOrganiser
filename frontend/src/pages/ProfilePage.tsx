@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
-import { clearClientSession } from "@/lib/session";
 import { usersApi } from "@/lib/api/users";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -10,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function ProfilePage() {
-  const navigate = useNavigate();
   const { user, setUser } = useAuthStore();
   const [name, setName] = useState(user?.full_name ?? "");
   const [currency, setCurrency] = useState(user?.default_currency ?? "PLN");
@@ -92,19 +89,6 @@ export default function ProfilePage() {
             <Button onClick={handleSave} loading={saving}>Zapisz</Button>
             {saved && <span className="text-sm text-success">Zapisano!</span>}
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-4">
-          <Button
-            variant="danger"
-            onClick={() => {
-              void clearClientSession().then(() => navigate("/login"));
-            }}
-          >
-            Wyloguj się
-          </Button>
         </CardContent>
       </Card>
     </div>

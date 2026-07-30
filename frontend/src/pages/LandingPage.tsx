@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   Users, PiggyBank, TrendingUp, BarChart2,
   Shield, ArrowRight, Home, CreditCard, Sparkles
@@ -54,7 +53,6 @@ export default function LandingPage() {
               </span>
             </Link>
             <div className="flex items-center gap-3">
-              <ThemeToggle variant="compact" />
               <Link
                 to="/login"
                 className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
