@@ -39,24 +39,24 @@ class TestShoppingListCRUD:
             test_user.id, ShoppingListCreate(name="List B", family_group_id=family_group.id)
         )
 
-        lists = await svc.list_lists(family_group.id)
+        lists = await svc.list_lists(test_user.id, family_group.id)
         assert len(lists) == 2
         names = {l.name for l in lists}
         assert names == {"List A", "List B"}
 
     async def test_list_lists_family_isolation(
-        self, db_session: AsyncSession, test_user, family_group, family_group2
+        self, db_session: AsyncSession, test_user, test_user2, family_group, family_group2
     ):
         svc = ShoppingService(db_session)
         await svc.create_list(
             test_user.id, ShoppingListCreate(name="Family 1 List", family_group_id=family_group.id)
         )
         await svc.create_list(
-            test_user.id, ShoppingListCreate(name="Family 2 List", family_group_id=family_group2.id)
+            test_user2.id, ShoppingListCreate(name="Family 2 List", family_group_id=family_group2.id)
         )
 
-        f1_lists = await svc.list_lists(family_group.id)
-        f2_lists = await svc.list_lists(family_group2.id)
+        f1_lists = await svc.list_lists(test_user.id, family_group.id)
+        f2_lists = await svc.list_lists(test_user2.id, family_group2.id)
 
         assert len(f1_lists) == 1
         assert f1_lists[0].name == "Family 1 List"
@@ -82,7 +82,7 @@ class TestShoppingListCRUD:
         created = await svc.create_list(
             test_user.id, ShoppingListCreate(name="Old Name", family_group_id=family_group.id)
         )
-        updated = await svc.update_list(created.id, ShoppingListUpdate(name="New Name"))
+        updated = await svc.update_list(test_user.id, created.id, ShoppingListUpdate(name="New Name"))
         assert updated.name == "New Name"
 
         # Verify persistence
@@ -94,7 +94,7 @@ class TestShoppingListCRUD:
         created = await svc.create_list(
             test_user.id, ShoppingListCreate(name="Temp", family_group_id=family_group.id)
         )
-        await svc.delete_list(created.id)
+        await svc.delete_list(test_user.id, created.id)
 
         with pytest.raises(NotFoundError):
             await svc.get_list(created.id)
@@ -110,7 +110,7 @@ class TestShoppingListCRUD:
         await svc.create_item(test_user.id, lst.id, ShoppingItemCreate(name="Milk"))
         await svc.create_item(test_user.id, lst.id, ShoppingItemCreate(name="Bread"))
 
-        await svc.delete_list(lst.id)
+        await svc.delete_list(test_user.id, lst.id)
 
         with pytest.raises(NotFoundError):
             await svc.get_list(lst.id)
@@ -167,7 +167,7 @@ class TestShoppingItemCRUD:
         await svc.create_item(test_user.id, shopping_list.id, ShoppingItemCreate(name="B"))
         await svc.create_item(test_user.id, shopping_list.id, ShoppingItemCreate(name="C"))
 
-        items = await svc.list_items(shopping_list.id)
+        items = await svc.list_items(test_user.id, shopping_list.id)
         assert len(items) == 3
 
     async def test_update_item(
@@ -177,8 +177,7 @@ class TestShoppingItemCRUD:
         created = await svc.create_item(
             test_user.id, shopping_list.id, ShoppingItemCreate(name="Old", quantity=1)
         )
-        updated = await svc.update_item(
-            created.id, ShoppingItemUpdate(name="New", quantity=5)
+        updated = await svc.update_item(test_user.id, created.id, ShoppingItemUpdate(name="New", quantity=5)
         )
         assert updated.name == "New"
         assert updated.quantity == 5
@@ -219,7 +218,7 @@ class TestShoppingItemCRUD:
         item = await svc.create_item(
             test_user.id, shopping_list.id, ShoppingItemCreate(name="Delete me")
         )
-        await svc.delete_item(item.id)
+        await svc.delete_item(test_user.id, item.id)
 
-        items = await svc.list_items(shopping_list.id)
+        items = await svc.list_items(test_user.id, shopping_list.id)
         assert len(items) == 0

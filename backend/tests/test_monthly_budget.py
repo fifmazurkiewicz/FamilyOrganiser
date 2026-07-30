@@ -61,12 +61,12 @@ class TestMonthlyBudgetCreate:
             MonthlyBudgetCreate(family_group_id=family_group.id, year=2026, month=5),
         )
 
-        found = await svc.get_budget_for_month(family_group.id, 2026, 5)
+        found = await svc.get_budget_for_month(test_user.id, family_group.id, 2026, 5)
         assert found is not None
         assert found.year == 2026
         assert found.month == 5
 
-        not_found = await svc.get_budget_for_month(family_group.id, 2025, 1)
+        not_found = await svc.get_budget_for_month(test_user.id, family_group.id, 2025, 1)
         assert not_found is None
 
 
@@ -121,6 +121,7 @@ class TestBudgetEntries:
             ),
         )
         updated = await svc.update_entry(
+            test_user.id,
             created.id,
             BudgetEntryCreate(
                 entry_type=BudgetEntryType.EXPENSE,
@@ -146,15 +147,15 @@ class TestBudgetEntries:
                 is_recurring=False,
             ),
         )
-        await svc.remove_entry(entry.id)
+        await svc.remove_entry(test_user.id, entry.id)
 
         with pytest.raises(NotFoundError):
-            await svc.remove_entry(entry.id)  # Now missing
+            await svc.remove_entry(test_user.id, entry.id)  # Now missing
 
     async def test_remove_entry_not_found(self, db_session: AsyncSession, test_user, budget):
         svc = MonthlyBudgetService(db_session)
         with pytest.raises(NotFoundError):
-            await svc.remove_entry(uuid.uuid4())
+            await svc.remove_entry(test_user.id, uuid.uuid4())
 
 
 class TestBudgetSummary:
@@ -205,7 +206,7 @@ class TestBudgetSummary:
             ),
         )
 
-        summary = await svc.get_summary(budget.id)
+        summary = await svc.get_summary(test_user.id, budget.id)
 
         assert summary.total_income == Decimal("7000.00")
         assert summary.total_expenses == Decimal("4000.00")
@@ -217,7 +218,7 @@ class TestBudgetSummary:
             test_user.id,
             MonthlyBudgetCreate(family_group_id=family_group.id, year=2026, month=7),
         )
-        summary = await svc.get_summary(budget.id)
+        summary = await svc.get_summary(test_user.id, budget.id)
         assert summary.total_income == Decimal("0")
         assert summary.total_expenses == Decimal("0")
         assert summary.remaining == Decimal("0")

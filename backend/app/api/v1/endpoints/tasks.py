@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,7 +14,6 @@ from app.schemas.task import (
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 
-# ── lists ──────────────────────────────────────────────────
 
 @router.get("/lists", response_model=list[TaskListResponse])
 async def list_lists(
@@ -23,7 +21,7 @@ async def list_lists(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).list_lists(family_group_id)
+    return await TaskService(db).list_lists(current_user.id, family_group_id)
 
 
 @router.post("/lists", response_model=TaskListResponse, status_code=201)
@@ -41,7 +39,8 @@ async def get_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).get_list(list_id)
+    lst = await TaskService(db)._ensure_list_access(current_user.id, list_id)
+    return lst
 
 
 @router.patch("/lists/{list_id}", response_model=TaskListResponse)
@@ -51,7 +50,7 @@ async def update_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).update_list(list_id, data)
+    return await TaskService(db).update_list(current_user.id, list_id, data)
 
 
 @router.delete("/lists/{list_id}", status_code=204)
@@ -60,9 +59,8 @@ async def delete_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await TaskService(db).delete_list(list_id)
+    await TaskService(db).delete_list(current_user.id, list_id)
 
-# ── items ──────────────────────────────────────────────────
 
 @router.get("/lists/{list_id}/items", response_model=list[TaskItemResponse])
 async def list_items(
@@ -71,7 +69,7 @@ async def list_items(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).list_items(list_id, include_done=include_done)
+    return await TaskService(db).list_items(current_user.id, list_id, include_done=include_done)
 
 
 @router.post("/lists/{list_id}/items", response_model=TaskItemResponse, status_code=201)
@@ -81,7 +79,7 @@ async def create_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).create_item(list_id, data)
+    return await TaskService(db).create_item(current_user.id, list_id, data)
 
 
 @router.patch("/items/{item_id}", response_model=TaskItemResponse)
@@ -91,7 +89,7 @@ async def update_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await TaskService(db).update_item(item_id, data)
+    return await TaskService(db).update_item(current_user.id, item_id, data)
 
 
 @router.post("/items/{item_id}/toggle", response_model=TaskItemResponse)
@@ -109,4 +107,4 @@ async def delete_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await TaskService(db).delete_item(item_id)
+    await TaskService(db).delete_item(current_user.id, item_id)

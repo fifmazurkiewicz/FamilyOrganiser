@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_current_app_admin
+from app.core.config import settings
 from app.db.base import get_db
 from app.models.user import User
 from app.schemas.auth import (
@@ -19,8 +20,17 @@ from app.services.auth import AuthService
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+def _require_legacy_auth() -> None:
+    if not settings.legacy_auth_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="Legacy email/password auth is disabled. Use Supabase login.",
+        )
+
+
 @router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db)):
+    _require_legacy_auth()
     svc = AuthService(db)
     access, refresh = await svc.register(
         email=payload.email,
@@ -35,6 +45,7 @@ async def register(payload: RegisterRequest, db: AsyncSession = Depends(get_db))
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
+    _require_legacy_auth()
     svc = AuthService(db)
     access, refresh = await svc.login(payload.email, payload.password)
     return TokenResponse(access_token=access, refresh_token=refresh)
@@ -42,6 +53,7 @@ async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
+    _require_legacy_auth()
     svc = AuthService(db)
     access, new_refresh = await svc.refresh(payload.refresh_token)
     return TokenResponse(access_token=access, refresh_token=new_refresh)
@@ -49,6 +61,7 @@ async def refresh(payload: RefreshRequest, db: AsyncSession = Depends(get_db)):
 
 @router.get("/security-question", response_model=SecurityQuestionResponse)
 async def get_security_question(email: str, db: AsyncSession = Depends(get_db)):
+    _require_legacy_auth()
     svc = AuthService(db)
     question = await svc.get_security_question(email)
     return SecurityQuestionResponse(question=question)
@@ -58,6 +71,7 @@ async def get_security_question(email: str, db: AsyncSession = Depends(get_db)):
 async def reset_via_security_question(
     payload: SecurityQuestionResetRequest, db: AsyncSession = Depends(get_db)
 ):
+    _require_legacy_auth()
     svc = AuthService(db)
     await svc.reset_password_via_security_question(
         payload.email, payload.answer, payload.new_password
@@ -71,6 +85,7 @@ async def change_password(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    _require_legacy_auth()
     svc = AuthService(db)
     await svc.change_password(current_user, payload.current_password, payload.new_password)
     return {"message": "Password changed successfully"}
@@ -82,6 +97,7 @@ async def admin_reset_password(
     admin: User = Depends(get_current_app_admin),
     db: AsyncSession = Depends(get_db),
 ):
+    _require_legacy_auth()
     svc = AuthService(db)
     await svc.admin_reset_password(admin, payload.user_id, payload.new_password)
     return {"message": "Password reset successfully"}

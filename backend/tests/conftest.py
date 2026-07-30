@@ -107,20 +107,36 @@ async def test_user2(db_session: AsyncSession) -> User:
 
 
 @pytest_asyncio.fixture
-async def family_group(db_session: AsyncSession) -> FamilyGroup:
-    """Create and return a test family group."""
+async def family_group(db_session: AsyncSession, test_user: User) -> FamilyGroup:
+    """Create and return a test family group with test_user as admin member."""
     group = FamilyGroup(name="Test Family")
     db_session.add(group)
+    await db_session.flush()
+    db_session.add(
+        FamilyMembership(
+            user_id=test_user.id,
+            family_group_id=group.id,
+            role=FamilyRole.ADMIN,
+        )
+    )
     await db_session.flush()
     await db_session.refresh(group)
     return group
 
 
 @pytest_asyncio.fixture
-async def family_group2(db_session: AsyncSession) -> FamilyGroup:
-    """A second family group (for isolation tests)."""
+async def family_group2(db_session: AsyncSession, test_user2: User) -> FamilyGroup:
+    """A second family group (for isolation tests) with test_user2 as admin."""
     group = FamilyGroup(name="Second Family")
     db_session.add(group)
+    await db_session.flush()
+    db_session.add(
+        FamilyMembership(
+            user_id=test_user2.id,
+            family_group_id=group.id,
+            role=FamilyRole.ADMIN,
+        )
+    )
     await db_session.flush()
     await db_session.refresh(group)
     return group

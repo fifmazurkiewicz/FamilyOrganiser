@@ -3,15 +3,20 @@ import uuid
 from datetime import date
 from decimal import Decimal
 from typing import List
+
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.exceptions import NotFoundError
-from app.models.simple_investment import SimpleInvestment, DurationUnit, InterestPeriod
+from app.models.simple_investment import DurationUnit, InterestPeriod, SimpleInvestment
 from app.schemas.simple_investment import (
-    SimpleInvestmentCreate, SimpleInvestmentUpdate,
-    SimpleInvestmentResponse, InvestmentSummaryResponse,
+    InvestmentSummaryResponse,
+    SimpleInvestmentCreate,
+    SimpleInvestmentResponse,
+    SimpleInvestmentUpdate,
 )
+from app.services.group_access import require_family_member
 
 
 def _calculate_end_date(start_date: date, duration_value: int, duration_unit: DurationUnit) -> date:
@@ -26,7 +31,6 @@ def _calculate_profit(
     principal: Decimal, rate: Decimal, period: InterestPeriod,
     duration_value: int, duration_unit: DurationUnit,
 ) -> Decimal:
-    # Simple interest: principal × rate × years
     if duration_unit == DurationUnit.MONTHS:
         years = Decimal(duration_value) / Decimal(12)
     elif duration_unit == DurationUnit.QUARTERS:
@@ -34,23 +38,17 @@ def _calculate_profit(
     else:
         years = Decimal(duration_value)
 
-    periods: Decimal
-    if period == InterestPeriod.MONTHLY:
-        periods = years * Decimal(12)
-    elif period == InterestPeriod.QUARTERLY:
-        periods = years * Decimal(4)
-    else:
-        periods = years * Decimal(1)
-
-    period_rate = rate / (Decimal(12) if period == InterestPeriod.MONTHLY else Decimal(4) if period == InterestPeriod.QUARTERLY else Decimal(1))
-    return principal * rate * years  # simple interest (matches tests)
+    return principal * rate * years
 
 
 class SimpleInvestmentService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create_investment(self, user_id: uuid.UUID, data: SimpleInvestmentCreate) -> SimpleInvestmentResponse:
+    async def create_investment(
+        self, user_id: uuid.UUID, data: SimpleInvestmentCreate
+    ) -> SimpleInvestmentResponse:
+        await require_family_member(self._session, user_id, data.family_group_id)
         end_date = _calculate_end_date(data.start_date, data.duration_value, data.duration_unit)
         profit = _calculate_profit(
             data.principal_amount, data.interest_rate,
@@ -79,7 +77,10 @@ class SimpleInvestmentService:
         await self._session.refresh(investment)
         return SimpleInvestmentResponse.model_validate(investment)
 
-    async def list_investments(self, family_group_id: uuid.UUID) -> List[SimpleInvestmentResponse]:
+    async def list_investments(
+        self, user_id: uuid.UUID, family_group_id: uuid.UUID
+    ) -> List[SimpleInvestmentResponse]:
+        await require_family_member(self._session, user_id, family_group_id)
         result = await self._session.execute(
             select(SimpleInvestment)
             .where(SimpleInvestment.family_group_id == family_group_id)
@@ -87,16 +88,22 @@ class SimpleInvestmentService:
         )
         return [SimpleInvestmentResponse.model_validate(inv) for inv in result.scalars().all()]
 
-    async def get_investment(self, investment_id: uuid.UUID) -> SimpleInvestmentResponse:
+    async def get_investment(
+        self, user_id: uuid.UUID, investment_id: uuid.UUID
+    ) -> SimpleInvestmentResponse:
         investment = await self._session.get(SimpleInvestment, investment_id)
         if not investment:
             raise NotFoundError(f"SimpleInvestment {investment_id} not found")
+        await require_family_member(self._session, user_id, investment.family_group_id)
         return SimpleInvestmentResponse.model_validate(investment)
 
-    async def update_investment(self, investment_id: uuid.UUID, data: SimpleInvestmentUpdate) -> SimpleInvestmentResponse:
+    async def update_investment(
+        self, user_id: uuid.UUID, investment_id: uuid.UUID, data: SimpleInvestmentUpdate
+    ) -> SimpleInvestmentResponse:
         investment = await self._session.get(SimpleInvestment, investment_id)
         if not investment:
             raise NotFoundError(f"SimpleInvestment {investment_id} not found")
+        await require_family_member(self._session, user_id, investment.family_group_id)
 
         update_dict = data.model_dump(exclude_none=True)
         for field, value in update_dict.items():
@@ -115,14 +122,18 @@ class SimpleInvestmentService:
         await self._session.refresh(investment)
         return SimpleInvestmentResponse.model_validate(investment)
 
-    async def delete_investment(self, investment_id: uuid.UUID) -> None:
+    async def delete_investment(self, user_id: uuid.UUID, investment_id: uuid.UUID) -> None:
         investment = await self._session.get(SimpleInvestment, investment_id)
         if not investment:
             raise NotFoundError(f"SimpleInvestment {investment_id} not found")
+        await require_family_member(self._session, user_id, investment.family_group_id)
         await self._session.delete(investment)
         await self._session.commit()
 
-    async def get_summary(self, family_group_id: uuid.UUID) -> InvestmentSummaryResponse:
+    async def get_summary(
+        self, user_id: uuid.UUID, family_group_id: uuid.UUID
+    ) -> InvestmentSummaryResponse:
+        await require_family_member(self._session, user_id, family_group_id)
         investments = await self._session.execute(
             select(SimpleInvestment)
             .where(SimpleInvestment.family_group_id == family_group_id)

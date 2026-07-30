@@ -15,7 +15,6 @@ from app.schemas.shopping import (
 
 router = APIRouter(prefix="/shopping", tags=["Shopping"])
 
-# ── lists ──────────────────────────────────────────────────
 
 @router.get("/lists", response_model=list[ShoppingListResponse])
 async def list_lists(
@@ -23,7 +22,7 @@ async def list_lists(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ShoppingService(db).list_lists(family_group_id)
+    return await ShoppingService(db).list_lists(current_user.id, family_group_id)
 
 
 @router.post("/lists", response_model=ShoppingListResponse, status_code=201)
@@ -41,7 +40,7 @@ async def get_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ShoppingService(db).get_list(list_id)
+    return await ShoppingService(db).get_list_for_user(current_user.id, list_id)
 
 
 @router.patch("/lists/{list_id}", response_model=ShoppingListResponse)
@@ -51,7 +50,7 @@ async def update_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ShoppingService(db).update_list(list_id, data)
+    return await ShoppingService(db).update_list(current_user.id, list_id, data)
 
 
 @router.delete("/lists/{list_id}", status_code=204)
@@ -60,9 +59,8 @@ async def delete_list(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ShoppingService(db).delete_list(list_id)
+    await ShoppingService(db).delete_list(current_user.id, list_id)
 
-# ── items ──────────────────────────────────────────────────
 
 @router.get("/lists/{list_id}/items", response_model=list[ShoppingItemResponse])
 async def list_items(
@@ -71,7 +69,7 @@ async def list_items(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ShoppingService(db).list_items(list_id, include_done=include_done)
+    return await ShoppingService(db).list_items(current_user.id, list_id, include_done=include_done)
 
 
 @router.post("/lists/{list_id}/items", response_model=ShoppingItemResponse, status_code=201)
@@ -91,7 +89,7 @@ async def update_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ShoppingService(db).update_item(item_id, data)
+    return await ShoppingService(db).update_item(current_user.id, item_id, data)
 
 
 @router.post("/items/{item_id}/toggle", response_model=ShoppingItemResponse)
@@ -109,4 +107,4 @@ async def delete_item(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await ShoppingService(db).delete_item(item_id)
+    await ShoppingService(db).delete_item(current_user.id, item_id)

@@ -76,6 +76,24 @@ class Settings(BaseSettings):
     MAX_SECURITY_QUESTION_ATTEMPTS: int = 5
     EXCHANGE_RATE_FETCH_HOUR: int = 6
 
+    # Dev-only: create_all + seed on startup (prod uses Alembic only)
+    DEV_BOOTSTRAP: bool = False
+
+    # Legacy email/password auth (disable on prod when using Supabase)
+    LEGACY_AUTH_ENABLED: bool = True
+
+    @property
+    def legacy_auth_enabled(self) -> bool:
+        if not self.LEGACY_AUTH_ENABLED:
+            return False
+        if self.supabase_auth_enabled and not self.DEBUG:
+            return False
+        return True
+
+    @property
+    def require_postgres(self) -> bool:
+        return self.supabase_auth_enabled or "postgresql" in self.DATABASE_URL
+
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def _normalize_database_url(cls, value: str) -> str:

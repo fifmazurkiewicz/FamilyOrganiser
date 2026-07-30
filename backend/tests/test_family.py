@@ -52,7 +52,10 @@ class TestInvitations:
         assert link.single_use is True
         assert link.is_active is True
         assert link.used is False
-        assert link.expires_at > datetime.now(timezone.utc)
+        expires_at = link.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        assert expires_at > datetime.now(timezone.utc)
 
     async def test_create_invitation_requires_admin(
         self, db_session: AsyncSession, test_user, test_user2

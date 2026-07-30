@@ -38,7 +38,7 @@ class TestTaskListCRUD:
             test_user.id, TaskListCreate(name="Weekly", family_group_id=family_group.id)
         )
 
-        lists = await svc.list_lists(family_group.id)
+        lists = await svc.list_lists(test_user.id, family_group.id)
         assert len(lists) == 2
         names = {l.name for l in lists}
         assert names == {"Daily", "Weekly"}
@@ -56,7 +56,7 @@ class TestTaskListCRUD:
         created = await svc.create_list(
             test_user.id, TaskListCreate(name="Old", family_group_id=family_group.id)
         )
-        updated = await svc.update_list(created.id, TaskListUpdate(name="Renamed"))
+        updated = await svc.update_list(test_user.id, created.id, TaskListUpdate(name="Renamed"))
         assert updated.name == "Renamed"
 
     async def test_delete_list(self, db_session: AsyncSession, test_user, family_group):
@@ -64,7 +64,7 @@ class TestTaskListCRUD:
         created = await svc.create_list(
             test_user.id, TaskListCreate(name="Temp", family_group_id=family_group.id)
         )
-        await svc.delete_list(created.id)
+        await svc.delete_list(test_user.id, created.id)
 
         with pytest.raises(NotFoundError):
             await svc.get_list(created.id)
@@ -76,8 +76,8 @@ class TestTaskListCRUD:
         lst = await svc.create_list(
             test_user.id, TaskListCreate(name="Cascade", family_group_id=family_group.id)
         )
-        item = await svc.create_item(lst.id, TaskItemCreate(title="Task 1"))
-        await svc.delete_list(lst.id)
+        item = await svc.create_item(test_user.id, lst.id, TaskItemCreate(title="Task 1"))
+        await svc.delete_list(test_user.id, lst.id)
 
         # Verify item is also gone by trying to fetch it through a new service
         with pytest.raises(NotFoundError):
@@ -125,7 +125,7 @@ class TestTaskItemCRUD:
         await svc.create_item(task_list.id, TaskItemCreate(title="A"))
         await svc.create_item(task_list.id, TaskItemCreate(title="B"))
 
-        items = await svc.list_items(task_list.id)
+        items = await svc.list_items(test_user.id, task_list.id)
         assert len(items) == 2
 
     async def test_update_item(
@@ -133,8 +133,7 @@ class TestTaskItemCRUD:
     ):
         svc = TaskService(db_session)
         created = await svc.create_item(task_list.id, TaskItemCreate(title="Old Title"))
-        updated = await svc.update_item(
-            created.id, TaskItemUpdate(title="New Title")
+        updated = await svc.update_item(test_user.id, created.id, TaskItemUpdate(title="New Title")
         )
         assert updated.title == "New Title"
 
@@ -168,7 +167,7 @@ class TestTaskItemCRUD:
     ):
         svc = TaskService(db_session)
         item = await svc.create_item(task_list.id, TaskItemCreate(title="Delete me"))
-        await svc.delete_item(item.id)
+        await svc.delete_item(test_user.id, item.id)
 
-        items = await svc.list_items(task_list.id)
+        items = await svc.list_items(test_user.id, task_list.id)
         assert len(items) == 0

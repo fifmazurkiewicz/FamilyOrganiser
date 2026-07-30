@@ -21,7 +21,7 @@ async def list_investments(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await SimpleInvestmentService(db).list_investments(family_group_id)
+    return await SimpleInvestmentService(db).list_investments(current_user.id, family_group_id)
 
 
 @router.post("/", response_model=SimpleInvestmentResponse, status_code=201)
@@ -39,7 +39,7 @@ async def get_summary(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await SimpleInvestmentService(db).get_summary(family_group_id)
+    return await SimpleInvestmentService(db).get_summary(current_user.id, family_group_id)
 
 
 @router.get("/{investment_id}", response_model=SimpleInvestmentResponse)
@@ -48,7 +48,7 @@ async def get_investment(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await SimpleInvestmentService(db).get_investment(investment_id)
+    return await SimpleInvestmentService(db).get_investment(current_user.id, investment_id)
 
 
 @router.patch("/{investment_id}", response_model=SimpleInvestmentResponse)
@@ -58,7 +58,7 @@ async def update_investment(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await SimpleInvestmentService(db).update_investment(investment_id, data)
+    return await SimpleInvestmentService(db).update_investment(current_user.id, investment_id, data)
 
 
 @router.delete("/{investment_id}", status_code=204)
@@ -67,4 +67,4 @@ async def delete_investment(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await SimpleInvestmentService(db).delete_investment(investment_id)
+    await SimpleInvestmentService(db).delete_investment(current_user.id, investment_id)

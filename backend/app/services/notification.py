@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.models.notification import Notification, NotificationType
+from app.services.family import FamilyService
 
 
 class NotificationService:
@@ -82,3 +83,26 @@ class NotificationService:
         await self._session.refresh(notif)
         await self._session.commit()
         return notif
+
+    async def notify_group_members_except(
+        self,
+        family_group_id: UUID,
+        actor_id: UUID,
+        notification_type: NotificationType,
+        title: str,
+        body: str,
+        *,
+        data: Optional[dict] = None,
+    ) -> None:
+        """Notify all group members except the actor."""
+        members = await FamilyService(self._session).list_members(family_group_id)
+        for membership in members:
+            if membership.user_id == actor_id:
+                continue
+            await self.create(
+                membership.user_id,
+                notification_type,
+                title,
+                body,
+                data=data,
+            )

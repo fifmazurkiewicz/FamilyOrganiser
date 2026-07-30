@@ -143,7 +143,7 @@ class TestSimpleInvestmentAPI:
         )
         assert resp.status_code == 200
         data = resp.json()
-        assert data["principal_amount"] == "20000"
+        assert float(data["principal_amount"]) == 20000.00
         assert data["end_date"] == "2028-01-01"
         assert float(data["projected_profit"]) == 4000.00
 

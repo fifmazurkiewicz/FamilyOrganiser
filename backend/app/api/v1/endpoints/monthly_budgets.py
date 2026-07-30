@@ -38,7 +38,7 @@ async def get_budget_for_month(
     db: AsyncSession = Depends(get_db),
 ):
     svc = MonthlyBudgetService(db)
-    budget = await svc.get_budget_for_month(family_group_id, year, month)
+    budget = await svc.get_budget_for_month(current_user.id, family_group_id, year, month)
     if budget is None:
         # Create it
         data = MonthlyBudgetCreate(family_group_id=family_group_id, year=year, month=month)
@@ -52,7 +52,7 @@ async def get_budget(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await MonthlyBudgetService(db).get_budget(budget_id)
+    return await MonthlyBudgetService(db).get_budget_for_user(current_user.id, budget_id)
 
 
 @router.get("/{budget_id}/summary", response_model=BudgetSummaryResponse)
@@ -61,7 +61,7 @@ async def get_summary(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await MonthlyBudgetService(db).get_summary(budget_id)
+    return await MonthlyBudgetService(db).get_summary(current_user.id, budget_id)
 
 
 @router.get("/{budget_id}/export")
@@ -71,7 +71,7 @@ async def export_budget(
     db: AsyncSession = Depends(get_db),
 ):
     """Export monthly budget to Excel (.xlsx) file."""
-    budget = await MonthlyBudgetService(db).get_budget(budget_id)
+    budget = await MonthlyBudgetService(db).get_budget_for_user(current_user.id, budget_id)
 
     wb = Workbook()
     ws = wb.active
@@ -201,7 +201,7 @@ async def update_entry(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    return await MonthlyBudgetService(db).update_entry_partial(entry_id, data)
+    return await MonthlyBudgetService(db).update_entry_partial(current_user.id, entry_id, data)
 
 
 @router.delete("/entries/{entry_id}", status_code=204)
@@ -210,4 +210,4 @@ async def remove_entry(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    await MonthlyBudgetService(db).remove_entry(entry_id)
+    await MonthlyBudgetService(db).remove_entry(current_user.id, entry_id)

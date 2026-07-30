@@ -153,11 +153,11 @@ class TestSimpleInvestmentCRUD:
             ),
         )
 
-        investments = await svc.list_investments(family_group.id)
+        investments = await svc.list_investments(test_user.id, family_group.id)
         assert len(investments) == 2
 
     async def test_list_investments_family_isolation(
-        self, db_session: AsyncSession, test_user, family_group, family_group2
+        self, db_session: AsyncSession, test_user, test_user2, family_group, family_group2
     ):
         svc = SimpleInvestmentService(db_session)
         await svc.create_investment(
@@ -174,7 +174,7 @@ class TestSimpleInvestmentCRUD:
             ),
         )
         await svc.create_investment(
-            test_user.id,
+            test_user2.id,
             SimpleInvestmentCreate(
                 family_group_id=family_group2.id,
                 name="F2 Only",
@@ -187,8 +187,8 @@ class TestSimpleInvestmentCRUD:
             ),
         )
 
-        f1 = await svc.list_investments(family_group.id)
-        f2 = await svc.list_investments(family_group2.id)
+        f1 = await svc.list_investments(test_user.id, family_group.id)
+        f2 = await svc.list_investments(test_user2.id, family_group2.id)
 
         assert len(f1) == 1
         assert f1[0].name == "F1 Only"
@@ -212,7 +212,7 @@ class TestSimpleInvestmentCRUD:
                 duration_unit=DurationUnit.YEARS,
             ),
         )
-        fetched = await svc.get_investment(created.id)
+        fetched = await svc.get_investment(test_user.id, created.id)
         assert fetched.id == created.id
         assert fetched.name == "Get Me"
 
@@ -221,7 +221,7 @@ class TestSimpleInvestmentCRUD:
     ):
         svc = SimpleInvestmentService(db_session)
         with pytest.raises(NotFoundError):
-            await svc.get_investment(uuid.uuid4())
+            await svc.get_investment(test_user.id, uuid.uuid4())
 
     async def test_update_investment_recalculates(
         self, db_session: AsyncSession, test_user, family_group
@@ -241,8 +241,7 @@ class TestSimpleInvestmentCRUD:
             ),
         )
 
-        updated = await svc.update_investment(
-            created.id,
+        updated = await svc.update_investment(test_user.id, created.id,
             SimpleInvestmentUpdate(
                 principal_amount=Decimal("20000"),
                 interest_rate=Decimal("0.10"),
@@ -274,17 +273,17 @@ class TestSimpleInvestmentCRUD:
                 duration_unit=DurationUnit.MONTHS,
             ),
         )
-        await svc.delete_investment(created.id)
+        await svc.delete_investment(test_user.id, created.id)
 
         with pytest.raises(NotFoundError):
-            await svc.get_investment(created.id)
+            await svc.get_investment(test_user.id, created.id)
 
     async def test_delete_investment_not_found(
         self, db_session: AsyncSession, test_user, family_group
     ):
         svc = SimpleInvestmentService(db_session)
         with pytest.raises(NotFoundError):
-            await svc.delete_investment(uuid.uuid4())
+            await svc.delete_investment(test_user.id, uuid.uuid4())
 
 
 # ── Summary ────────────────────────────────────────────────────
@@ -321,7 +320,7 @@ class TestInvestmentSummary:
             ),
         )
 
-        summary = await svc.get_summary(family_group.id)
+        summary = await svc.get_summary(test_user.id, family_group.id)
 
         assert summary.total_principal == Decimal("6000.00")
         # Inv 1: 1000 * 0.10 * 1 = 100, Inv 2: 5000 * 0.15 * 2 = 1500
@@ -331,7 +330,7 @@ class TestInvestmentSummary:
 
     async def test_summary_empty(self, db_session: AsyncSession, test_user, family_group):
         svc = SimpleInvestmentService(db_session)
-        summary = await svc.get_summary(family_group.id)
+        summary = await svc.get_summary(test_user.id, family_group.id)
         assert summary.total_principal == Decimal("0")
         assert summary.total_projected_profit == Decimal("0")
         assert summary.total_projected_value == Decimal("0")

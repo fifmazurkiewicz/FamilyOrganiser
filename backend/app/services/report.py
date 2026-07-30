@@ -11,13 +11,19 @@ from sqlalchemy.orm import selectinload
 from app.models.family import FamilyMembership
 from app.models.monthly_budget import BudgetEntry, BudgetEntryType, MonthlyBudget
 from app.models.simple_investment import SimpleInvestment
+from app.services.group_access import require_family_member
 
 
 class ReportService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def _user_group_ids(self, user_id: UUID) -> list[UUID]:
+    async def _resolve_group_ids(
+        self, user_id: UUID, family_group_id: Optional[UUID] = None
+    ) -> list[UUID]:
+        if family_group_id is not None:
+            await require_family_member(self._session, user_id, family_group_id)
+            return [family_group_id]
         result = await self._session.execute(
             select(FamilyMembership.family_group_id).where(
                 FamilyMembership.user_id == user_id
@@ -52,9 +58,11 @@ class ReportService:
                     total += entry.amount
         return total
 
-    async def dashboard(self, user_id: UUID) -> dict[str, Any]:
+    async def dashboard(
+        self, user_id: UUID, family_group_id: Optional[UUID] = None
+    ) -> dict[str, Any]:
         today = date.today()
-        group_ids = await self._user_group_ids(user_id)
+        group_ids = await self._resolve_group_ids(user_id, family_group_id)
         budgets = await self._budgets_for_month(group_ids, today.year, today.month)
 
         month_income = self._sum_entries(budgets, BudgetEntryType.INCOME)
@@ -73,7 +81,9 @@ class ReportService:
             investments_total = Decimal(str(inv_result.scalar() or 0))
 
         net_worth = float(month_income - month_expenses + investments_total)
-        top_expenses = await self.expenses_by_category(user_id, today.year, today.month)
+        top_expenses = await self.expenses_by_category(
+            user_id, today.year, today.month, family_group_id=family_group_id
+        )
 
         return {
             "total_assets": float(investments_total),
@@ -88,9 +98,14 @@ class ReportService:
         }
 
     async def expenses_by_category(
-        self, user_id: UUID, year: int, month: Optional[int] = None
+        self,
+        user_id: UUID,
+        year: int,
+        month: Optional[int] = None,
+        *,
+        family_group_id: Optional[UUID] = None,
     ) -> List[dict]:
-        group_ids = await self._user_group_ids(user_id)
+        group_ids = await self._resolve_group_ids(user_id, family_group_id)
         if not group_ids:
             return []
 
@@ -117,9 +132,11 @@ class ReportService:
             for row in result.all()
         ]
 
-    async def monthly_trend(self, user_id: UUID, months: int = 12) -> List[dict]:
+    async def monthly_trend(
+        self, user_id: UUID, months: int = 12, *, family_group_id: Optional[UUID] = None
+    ) -> List[dict]:
         today = date.today()
-        group_ids = await self._user_group_ids(user_id)
+        group_ids = await self._resolve_group_ids(user_id, family_group_id)
         result = []
 
         for i in range(months - 1, -1, -1):

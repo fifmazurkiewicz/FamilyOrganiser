@@ -111,7 +111,7 @@ class TestMonthlyBudgetAPI:
         )
         entry_id = entry_resp.json()["id"]
 
-        resp = await client.put(
+        resp = await client.patch(
             f"/monthly-budgets/entries/{entry_id}",
             json={
                 "entry_type": "expense",
