@@ -58,18 +58,18 @@ export default function AdminPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Shield className="h-8 w-8 text-primary" />
           Panel administratora
         </h1>
-        <p className="text-gray-500 mt-1">Zarządzaj użytkownikami i grupami rodzinnymi</p>
+        <p className="text-muted-foreground mt-1">Zarządzaj użytkownikami i grupami rodzinnymi</p>
       </div>
 
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-border">
         <button
           onClick={() => setTab("users")}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-            tab === "users" ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+            tab === "users" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           Użytkownicy
@@ -77,7 +77,7 @@ export default function AdminPage() {
         <button
           onClick={() => setTab("families")}
           className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px ${
-            tab === "families" ? "border-primary text-primary" : "border-transparent text-gray-500 hover:text-gray-700"
+            tab === "families" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           Grupy rodzinne
@@ -93,14 +93,14 @@ export default function AdminPage() {
             {usersLoading ? (
               <Spinner />
             ) : !users || users.length === 0 ? (
-              <p className="text-sm text-gray-500">Brak użytkowników</p>
+              <p className="text-sm text-muted-foreground">Brak użytkowników</p>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border">
                 {users.map((u) => (
                   <div key={u.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <p className="font-medium truncate">{u.full_name}</p>
-                      <p className="text-sm text-gray-500 truncate">{u.email}</p>
+                      <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {u.is_app_admin && <Badge variant="info">Admin</Badge>}
                         {u.is_locked && <Badge variant="danger">Zablokowany</Badge>}
@@ -128,7 +128,7 @@ export default function AdminPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-destructive hover:bg-red-50"
+                        className="text-destructive hover:bg-destructive-muted"
                         onClick={() => deleteUser.mutate(u.id)}
                         disabled={u.is_app_admin}
                       >
@@ -152,19 +152,19 @@ export default function AdminPage() {
             {groupsLoading ? (
               <Spinner />
             ) : !groups || groups.length === 0 ? (
-              <p className="text-sm text-gray-500">Brak grup</p>
+              <p className="text-sm text-muted-foreground">Brak grup</p>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-border">
                 {groups.map((g) => (
                   <div key={g.id} className="flex items-center justify-between py-3">
                     <div>
                       <p className="font-medium">{g.name}</p>
-                      <p className="text-sm text-gray-500">{g.member_count} członków</p>
+                      <p className="text-sm text-muted-foreground">{g.member_count} członków</p>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-destructive hover:bg-red-50"
+                      className="text-destructive hover:bg-destructive-muted"
                       onClick={() => {
                         if (window.confirm(`Czy na pewno usunąć grupę "${g.name}"?`)) {
                           deleteGroup.mutate(g.id);
@@ -184,7 +184,7 @@ export default function AdminPage() {
       <Modal open={!!resetPwdUser} onClose={() => { setResetPwdUser(null); setNewPassword(""); }} title="Reset hasła">
         {resetPwdUser && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">Nowe hasło dla: {resetPwdUser.email}</p>
+            <p className="text-sm text-muted-foreground">Nowe hasło dla: {resetPwdUser.email}</p>
             <Input
               label="Nowe hasło"
               type="password"
