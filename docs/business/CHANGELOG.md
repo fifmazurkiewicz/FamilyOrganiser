@@ -1,53 +1,70 @@
 # Lista zmian (CHANGELOG)
 
-## [2.1] — w trakcie
+## [2.2] — 2026-07-30 — Produkcja
 
-### 🔄 W realizacji
-- 🧪 **Testy** — unit + integration dla 5 modułów
-- 📦 **lib/api** — brakujące pliki API dla frontendu
-- 📊 **Eksport Excel** — wydatki i budżet do .xlsx
-- 📚 **Archiwum list** — historia odhaczonych zakupów i zadań
-- 🔔 **Powiadomienia** — alerty przy dodawaniu/kupowaniu/wykonywaniu
+### 🚀 Wdrożenie produkcyjne
+
+- **Frontend live:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) (Vercel)
+- **API live:** [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev) (Hetzner + Caddy)
+- **Auth:** Supabase (Google OAuth + magic link)
+- **Auto-deploy:** GitHub Actions → Hetzner; Vercel na push
+- **Dokumentacja:** handover, audyt bezpieczeństwa, zaktualizowany README i architektura
+
+### Frontend
+
+- `AuthProvider` — sesja Supabase, timeout ładowania
+- `vercel.json` — SPA rewrite + proxy `/api` (fallback)
+- `DashboardSummary` — dashboard z raportami, komunikat przy błędzie API
+- Env produkcyjne: `VITE_API_URL`, `VITE_SUPABASE_*`
+
+### Backend
+
+- Provisioning użytkownika z Google (`user_metadata.email`)
+- Migracja `initial_schema` + moduły rodzinne na Supabase Postgres
+- Session pooler Supabase `:5432`
+
+### Infrastruktura
+
+- Fly.io przeniesiony do `archive/fly/` (nie produkcja)
+- Usunięty duplikat `backend/requirements.txt` (Poetry = źródło prawdy)
+
+---
+
+## [2.1] — planowane
+
+- 🧪 Testy — rozszerzenie coverage modułów rodzinnych
+- 📊 Eksport Excel — wydatki i budżet do .xlsx
+- 📚 Archiwum list — historia odhaczonych zakupów i zadań
+- 🔔 Powiadomienia — rozszerzone alerty
+
+---
 
 ## [2.0] — 2026-07-26
 
 ### Nowe moduły rodzinne
 
-- 🛒 **Lista zakupów** — wspólna checklista per grupa rodzinna, z podglądem kto dodał i kto kupił
-- ✅ **Zadania domowe** — lista zadań z przypisaniem do osoby i terminem wykonania
-- 🧾 **Wydatki** — prosty dziennik wydatków (kwota + opis + data), sumy miesięczne
-- 🥧 **Budżet miesięczny** — dochody i wydatki z flagą "stałe", live balance, kalkulator oszczędności
-- 📈 **Inwestycje** — lokaty/obligacje/akcje z auto-obliczaniem daty końca i prognozy zysku
-
-### Backend
-
-- 25 nowych plików: modele SQLAlchemy, schematy Pydantic, serwisy, repozytoria, endpointy REST
-- Migracja Alembic dla 8 nowych tabel
-- Wszystkie endpointy zabezpieczone JWT
+- 🛒 **Lista zakupów** — wspólna checklista per grupa rodzinna
+- ✅ **Zadania domowe** — przypisanie, termin
+- 🥧 **Budżet miesięczny** — dochody/wydatki, stałe wpisy, live balance
+- 📈 **Inwestycje** — lokaty z prognozą zysku
+- 👥 **Grupy rodzinne** — zaproszenia, role
 
 ### Frontend
 
-- 10 nowych plików: 5 feature komponentów + 5 stron
-- 5 nowych pozycji w sidebarze z ikonami
-- Routing: `/app/shopping`, `/app/tasks`, `/app/expenses`, `/app/budget-monthly`, `/app/investments`
+- Routing: `/app/shopping`, `/app/tasks`, `/app/budget-monthly`, `/app/investments`, `/app/reports`, `/app/groups`
 - Przekierowanie `/app/budget` → `/app/budget-monthly`
+- Sidebar, layout mobile
+
+### Backend
+
+- Modele, serwisy, endpointy REST `/api/v1/*`
+- Migracje Alembic
+- JWT (legacy) / później Supabase w 2.2
 
 ---
 
 ## [1.0] — 2026-07-26
 
-### UI/UX Redesign
-
-- Nowa paleta kolorów (ciepła zieleń zamiast niebieskiego)
-- Landing page dla niezalogowanych
-- Zwijany sidebar na mobile (hamburger)
-- Toast notifications
-- Loading skeletons
-- Login/Register z podziałem na panel brandingu i formularza
-- Wskaźnik siły hasła przy rejestracji
-- Poprawione komponenty UI (Card, Button, Input, EmptyState)
-
-### Routing
-
-- `/` → Landing page (niezalogowani) / przekierowanie do `/app` (zalogowani)
-- `/app` → Dashboard i podstrony
+- UI/UX redesign (zieleń, landing, sidebar mobile)
+- Toast, skeletons, login/register
+- Routing `/` → landing lub `/app`

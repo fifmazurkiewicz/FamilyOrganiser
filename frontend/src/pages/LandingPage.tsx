@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import {
   Users, PiggyBank, TrendingUp, BarChart2,
   Shield, ArrowRight, Home, CreditCard, Sparkles
@@ -39,23 +40,24 @@ const features = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-primary-light/30">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary-light/30">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/60">
+      <nav className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center group-hover:bg-primary-dark transition-colors shadow-sm shadow-primary/20">
                 <Home className="h-4 w-4 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900 tracking-tight">
+              <span className="text-xl font-bold text-foreground tracking-tight">
                 Family<span className="text-primary">Organiser</span>
               </span>
             </Link>
             <div className="flex items-center gap-3">
+              <ThemeToggle variant="compact" />
               <Link
                 to="/login"
-                className="px-4 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors"
+                className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
               >
                 Zaloguj się
               </Link>
@@ -84,10 +86,10 @@ export default function LandingPage() {
               <Sparkles className="h-4 w-4" />
               Nowa wersja już dostępna
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-3 duration-700">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground tracking-tight leading-tight animate-in fade-in slide-in-from-bottom-3 duration-700">
               Finanse rodzinne <span className="text-primary">pod kontrolą</span>
             </h1>
-            <p className="mt-6 text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <p className="mt-6 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
               Wspólny budżet, cele oszczędnościowe, śledzenie inwestycji i inteligentne raporty — wszystko w jednym, bezpiecznym miejscu. Dla Ciebie i Twojej rodziny.
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
@@ -100,7 +102,7 @@ export default function LandingPage() {
               </Link>
               <Link
                 to="/login"
-                className="px-8 py-3.5 text-base font-semibold text-gray-700 bg-white hover:bg-gray-50 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300"
+                className="px-8 py-3.5 text-base font-semibold text-foreground bg-card hover:bg-muted rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-300"
               >
                 Zaloguj się
               </Link>
@@ -110,13 +112,13 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-20 sm:py-28 bg-white/50 backdrop-blur-sm">
+      <section className="py-20 sm:py-28 bg-muted/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight">
               Wszystko czego potrzebujesz
             </h2>
-            <p className="mt-4 text-gray-500 max-w-xl mx-auto">
+            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
               Kompleksowe narzędzie do zarządzania finansami rodziny, zaprojektowane z myślą o prostocie i bezpieczeństwie.
             </p>
           </div>
@@ -125,13 +127,13 @@ export default function LandingPage() {
             {features.map((f, i) => (
               <div
                 key={f.title}
-                className="group p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 hover:-translate-y-1"
+                className="group p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="w-12 h-12 rounded-xl bg-primary-light flex items-center justify-center mb-4 group-hover:bg-primary group-hover:text-white transition-all duration-300">
                   <f.icon className="h-6 w-6 text-primary group-hover:text-white transition-colors" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{f.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{f.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
               </div>
             ))}
           </div>
@@ -166,18 +168,18 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200/60 py-8">
+      <footer className="border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                 <Home className="h-3.5 w-3.5 text-white" />
               </div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-foreground">
                 Family<span className="text-primary">Organiser</span>
               </span>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               © 2025 FamilyOrganiser. Wszelkie prawa zastrzeżone.
             </p>
           </div>

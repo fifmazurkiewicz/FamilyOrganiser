@@ -15,7 +15,7 @@
 - Monorepo: `frontend/` (Vite + React) and `backend/` (FastAPI + Poetry); Poetry/`pyproject.toml` live under `backend/`, not the repo root.
 - Production domain is `fmazurkiewicz.dev` (Cloudflare DNS): `family` → Vercel frontend, `api-family` → Hetzner API (often DNS-only so Caddy can get Let’s Encrypt); frontend Root Directory is `frontend`.
 - Production API is `api-family.fmazurkiewicz.dev` on Hetzner via `docker-compose.prod.yml` + Caddy (port 8080); Coolify is not the production path; deploy is GitHub Actions → SSH → `scripts/deploy.sh` (pull, compose build, alembic, health).
-- Fly.io (`fly.toml`, historical all-in-one image) is archive/PoC only — not the production hosting direction.
+- Fly.io (`archive/fly/`, historical all-in-one image) is archive/PoC only — not the production hosting direction.
 - Auth and DB target Supabase managed (Postgres + Auth: magic link and Google OAuth); frontend uses `@supabase/supabase-js`; backend does not use `supabase-py` — SQLAlchemy/Alembic to Postgres and verifies Supabase JWT (JWKS / JWT secret), provisioning `users` (including `supabase_auth_id`).
 - Vercel frontend env: `VITE_API_URL` (backend URL, e.g. `https://api-family.fmazurkiewicz.dev`), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (anon/publishable only — never `service_role`).
 - App routes for authenticated UI are under `/app/...` (e.g. `/app/shopping`, `/app/tasks`, `/app/budget-monthly`, `/app/profile`, `/app/admin`); sidebar links must use that prefix.

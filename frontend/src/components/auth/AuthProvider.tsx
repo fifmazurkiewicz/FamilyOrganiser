@@ -32,12 +32,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      void syncProfile(data.session).finally(() => {
-        if (mounted) setReady(true);
+    const markReady = () => {
+      if (mounted) setReady(true);
+    };
+
+    const sessionTimeout = window.setTimeout(markReady, 8000);
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        void syncProfile(data.session).finally(markReady);
+      })
+      .catch(() => {
+        markReady();
       });
-    });
 
     const {
       data: { subscription },
@@ -57,13 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      window.clearTimeout(sessionTimeout);
       subscription.unsubscribe();
     };
   }, []);
 
   if (!ready) {
     return (
-      <div className="min-h-dvh flex items-center justify-center text-sm text-gray-500">
+      <div className="min-h-dvh flex items-center justify-center text-sm text-muted-foreground bg-background">
         Ładowanie…
       </div>
     );

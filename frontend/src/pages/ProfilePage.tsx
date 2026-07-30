@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -51,14 +52,22 @@ export default function ProfilePage() {
 
   return (
     <div className="p-6 max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Profil użytkownika</h1>
+      <h1 className="text-2xl font-bold text-foreground">Profil użytkownika</h1>
 
       {!user?.id && (
-        <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-900">
+        <div className="p-3 rounded-lg bg-warning-muted border border-warning/30 text-sm text-warning-foreground dark:text-warning">
           Profil nie został jeszcze zsynchronizowany z API. Zapis może nie działać, dopóki backend
           nie rozpozna konta Supabase.
         </div>
       )}
+
+      <Card>
+        <CardHeader><CardTitle>Wygląd</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Motyw interfejsu — jasny, ciemny lub zgodny z systemem.</p>
+          <ThemeToggle />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Dane profilu</CardTitle></CardHeader>
@@ -66,12 +75,12 @@ export default function ProfilePage() {
           <Input label="Imię i nazwisko" value={name} onChange={(e) => setName(e.target.value)} />
           <Input label="Email" value={displayEmail} disabled />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">Domyślna waluta</label>
-            <select className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" value={currency} onChange={(e) => setCurrency(e.target.value)}>
+            <label className="block text-sm font-medium text-foreground">Domyślna waluta</label>
+            <select className="block w-full rounded-lg border border-input bg-background text-foreground px-3 py-2 text-sm" value={currency} onChange={(e) => setCurrency(e.target.value)}>
               {["PLN", "EUR", "USD", "GBP", "CHF", "CZK"].map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Logowanie przez Supabase (magic link / Google). Zarządzanie sesją w panelu konta Google lub linku z maila.
           </p>
           {error && (
@@ -81,7 +90,7 @@ export default function ProfilePage() {
           )}
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} loading={saving}>Zapisz</Button>
-            {saved && <span className="text-sm text-emerald-600">Zapisano!</span>}
+            {saved && <span className="text-sm text-success">Zapisano!</span>}
           </div>
         </CardContent>
       </Card>

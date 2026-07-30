@@ -1,35 +1,69 @@
 # FamilyOrganiser — Dokumentacja
 
-**Wersja:** 2.0  
+**Wersja produkcyjna:** 2.2  
 **Ostatnia aktualizacja:** 2026-07-30  
-**Domena produkcyjna:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) (FE) · [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev) (API) — Cloudflare + Vercel / Hetzner+Caddy / Supabase — zob. [architektura platformy](deployment/platform-architecture.md)
+**Status:** ✅ oddane na produkcję
 
-## Spis treści
+| Adres | Rola |
+|-------|------|
+| [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) | Aplikacja (Vercel) |
+| [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev/api/health) | API (Hetzner) |
 
-### 📋 Biznesowa
-- [Opis funkcji](business/features.md) — co aplikacja robi, dla kogo
-- [Lista zmian](business/CHANGELOG.md) — co nowego w każdej wersji
+---
 
-### 🔧 Techniczna
-- [Architektura](technical/architecture.md) — diagramy, warstwy, decyzje
-- [API Reference](technical/api.md) — endpointy, autoryzacja, przykłady
-- [Model danych](technical/data-model.md) — ERD, encje, relacje
+## Dla Ciebie (właściciel) — zacznij tutaj
 
-### 🚀 Deploy
-- [**Architektura platformy (decyzja)**](deployment/platform-architecture.md) — Vercel + Hetzner + GH Actions; **instrukcja krok po kroku**
-- [Najtańszy hosting](deployment/cheap-hosting.md) — VPS vs free tier, Compose, HTTPS, checklista
-- [Fly.io (PoC)](deployment/fly-io.md) — wcześniejszy wariant; nie jest kierunkiem produkcyjnym
+- [**Co zostało zrobione — prosto**](business/production-handover.md) — opis „jak dla 5-latka” + checklista
+- [Opis funkcji](business/features.md) — co robi aplikacja
+- [Lista zmian](business/CHANGELOG.md) — historia wersji
+- [Audyt bezpieczeństwa](security/production-audit.md) — czy jest bezpiecznie na prod
 
-### 📊 Dla zarządu
+---
+
+## Biznesowa
+
+| Dokument | Treść |
+|----------|--------|
+| [Opis funkcji](business/features.md) | Moduły, flow użytkownika |
+| [Handover produkcyjny](business/production-handover.md) | Prosty opis + co gdzie kliknąć |
+| [CHANGELOG](business/CHANGELOG.md) | Wersje i zmiany |
+| [Wymagania v1 (archiwum)](../BUSINESS_REQUIREMENTS.md) | Pełna wizja 2026-03 — część poza zakresem v2 |
+
+---
+
+## Techniczna
+
+| Dokument | Treść |
+|----------|--------|
+| [Architektura](technical/architecture.md) | Diagramy, warstwy, ADR, auth Supabase |
+| [API Reference](technical/api.md) | Endpointy REST |
+| [Model danych](technical/data-model.md) | ERD, tabele |
+| [ADR-005 faza 3](technical/adr-005-phase3.md) | Plan: testy, Excel, archiwum |
+
+---
+
+## Deploy i infrastruktura
+
+| Dokument | Treść |
+|----------|--------|
+| [**Architektura platformy**](deployment/platform-architecture.md) | **Kanoniczny** opis prod + krok po kroku |
+| [Porównanie hostingu](deployment/cheap-hosting.md) | Koszty VPS vs PaaS (referencja) |
+| [Fly.io PoC](deployment/fly-io.md) | Archiwum — nie produkcja |
+
+---
+
+## Dla zarządu
+
 - [Executive Summary](executive/summary.html) — dashboard HTML (otwórz w przeglądarce)
 
-## Szybki start
+---
+
+## Szybki start (dev)
 
 ```bash
-# Uruchom lokalnie
 docker compose up -d
-
 # Frontend: http://localhost:3000
-# Backend API: http://localhost:8000/api/v1
-# Dokumentacja API: http://localhost:8000/docs
+# API:      http://localhost:8000/docs
 ```
+
+Bez Dockera: `poetry` w `backend/`, `npm run dev` w `frontend/` — szczegóły w [README](../README.md).

@@ -1,192 +1,149 @@
 # FamilyOrganiser
 
-Aplikacja do zarządzania finansami rodzinnymi. Backend (FastAPI + PostgreSQL + Redis) i frontend (React + TypeScript + Vite + Tailwind).
+Aplikacja webowa do organizacji życia rodzinnego: wspólne listy zakupów, zadania, budżet miesięczny, inwestycje i raporty.
 
-## Wymagania
+**Produkcja (live):**
 
-- **Docker** + **Docker Compose** (zalecane)
-- Lub lokalnie: **Python 3.12+**, **Poetry**, **Node.js 20+**, **PostgreSQL 16+**, **Redis 7+**
+| Co | Gdzie |
+|----|--------|
+| Aplikacja | [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) |
+| API | [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev/api/health) |
+| Auth + baza | Supabase (managed Postgres + Auth) |
 
-## Szybki start (Docker Compose)
+Pełna dokumentacja: [`docs/README.md`](docs/README.md) · handover: [`docs/business/production-handover.md`](docs/business/production-handover.md)
+
+---
+
+## Stack
+
+| Warstwa | Technologia |
+|---------|-------------|
+| Frontend | React 18, TypeScript, Vite, Tailwind — **Vercel** |
+| Backend | FastAPI, SQLAlchemy 2.0 (async), Alembic — **Hetzner (Docker + Caddy)** |
+| Baza | PostgreSQL (Supabase) |
+| Auth | Supabase (magic link + Google OAuth) → JWT weryfikowany przez API |
+| Deploy API | GitHub Actions → SSH → `scripts/deploy.sh` |
+
+**Nie używamy:** Redis, Fly.io (archiwum w `archive/fly/`), Coolify na produkcji.
+
+---
+
+## Szybki start lokalny
+
+### Docker Compose (zalecane)
 
 ```bash
-# 1. Sklonuj repozytorium
 git clone <repo-url>
 cd FamilyOrganiser
-
-# 2. Skopiuj plik konfiguracyjny i dostosuj wartości
 cp .env.example .env
-
-# 3. Uruchom wszystkie usługi
 docker compose up --build
 ```
 
-Aplikacja będzie dostępna pod:
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:8000
-- **API docs (Swagger):** http://localhost:8000/docs
-- **Proxy (nginx):** http://localhost:80
+- Frontend: http://localhost:3000  
+- Backend: http://localhost:8000  
+- Swagger: http://localhost:8000/docs  
 
-## Uruchomienie lokalne (dev)
+### Bez Dockera (Poetry + npm)
 
-### Backend
+**Backend** (`backend/`):
 
 ```bash
 cd backend
-
-# Zainstaluj Poetry (jeśli nie masz)
-pip install poetry
-
-# Zainstaluj zależności
 poetry install
-
-# Skopiuj .env do katalogu backend (lub ustaw zmienne środowiskowe)
-cp ../.env.example .env
-# Edytuj .env — ustaw DATABASE_URL na lokalny PostgreSQL:
-# DATABASE_URL=postgresql+asyncpg://familyorg:familyorg@localhost:5432/familyorg
-
-# Uruchom migracje (jeśli istnieją)
+cp ../.env.example .env   # ustaw DATABASE_URL na lokalny Postgres lub Supabase
 poetry run alembic upgrade head
-
-# Uruchom serwer deweloperski
 poetry run uvicorn app.main:app --reload --port 8000
 ```
 
-### Frontend
-
-**Wymagania:** Node.js 20+ (zalecane LTS), npm lub pnpm
+**Frontend** (`frontend/`):
 
 ```bash
 cd frontend
-
-# Zainstaluj zależności
 npm install
-
-# Uruchom serwer deweloperski
-npm run dev
+cp .env.example .env      # opcjonalnie Supabase — do logowania
+npm run dev               # http://localhost:3000, proxy /api → :8000
 ```
 
-Frontend uruchomi się na **http://localhost:3000**. Vite proxy'uje `/api` na backend (domyślnie `http://localhost:8000`).
-
-**Uwaga:** Backend musi być uruchomiony przed frontendem (np. w osobnym terminalu), aby logowanie i API działały poprawnie.
-
-**Dostępne skrypty:**
-
-| Skrypt | Opis |
-|--------|------|
-| `npm run dev` | Serwer deweloperski z hot-reload |
-| `npm run build` | Produkcyjny build (wynik w `dist/`) |
-| `npm run preview` | Podgląd buildu produkcyjnego |
-
-**Zmienna środowiskowa dla frontendu:**
-
-Vite wczytuje zmienne z pliku `frontend/.env` lub `frontend/.env.local`. Skopiuj szablon:
-
-```bash
-cp frontend/.env.example frontend/.env
-```
-
-Domyślnie proxy kieruje `/api` na `http://localhost:8000`. Przy Docker Compose (frontend w kontenerze) ustaw np. `VITE_API_URL=http://localhost:80`.
-
-## Baza danych
-
-Przy pierwszym uruchomieniu backend automatycznie tworzy tabele w PostgreSQL, seeduje domyślne kategorie transakcji oraz konto administratora:
-
-- **Email:** `admin@admin.com`
-- **Hasło:** `admin`
-
-Aby wygenerować nową migrację Alembic:
-
-```bash
-cd backend
-poetry run alembic revision --autogenerate -m "opis zmiany"
-poetry run alembic upgrade head
-```
-
-## Struktura projektu
-
-```
-FamilyOrganiser/
-├── backend/                 # FastAPI REST API
-│   ├── app/
-│   │   ├── api/             # Endpointy HTTP (v1)
-│   │   ├── core/            # Konfiguracja, bezpieczeństwo, wyjątki
-│   │   ├── db/              # Silnik SQLAlchemy, sesja
-│   │   ├── middleware/      # Middleware logowania
-│   │   ├── models/          # Modele ORM (SQLAlchemy)
-│   │   ├── repositories/    # Wzorzec repozytorium (dostęp do danych)
-│   │   ├── schemas/         # Schematy Pydantic (walidacja)
-│   │   ├── services/        # Logika biznesowa
-│   │   └── tasks/           # Zadania cykliczne (APScheduler)
-│   ├── alembic/             # Migracje bazy danych
-│   ├── pyproject.toml       # Konfiguracja Poetry
-│   └── Dockerfile
-├── frontend/                # React + TypeScript + Vite
-│   ├── src/
-│   │   ├── api/             # Klient HTTP (Axios)
-│   │   ├── components/      # Komponenty UI (layout, ui)
-│   │   ├── features/        # Moduły funkcjonalne
-│   │   ├── hooks/           # Custom hooks (React Query)
-│   │   ├── lib/api/         # Serwisy API per moduł
-│   │   ├── pages/           # Strony routingu
-│   │   ├── router/          # React Router
-│   │   ├── stores/          # Stan globalny (Zustand)
-│   │   ├── types/           # Typy TypeScript
-│   │   └── utils/           # Narzędzia pomocnicze
-│   ├── package.json
-│   └── Dockerfile
-├── docker/                  # Konfiguracja nginx
-├── docker-compose.yml
-└── .env.example
-```
-
-## Architektura
-
-### Backend — Clean Architecture
-
-```
-HTTP Request → API Endpoint → Service → Repository → Database
-                   ↓              ↓
-              Pydantic Schema   SQLAlchemy Model
-```
-
-- **API Endpoints** — obsługa HTTP, walidacja wejścia, autoryzacja (JWT)
-- **Services** — logika biznesowa, orkiestracja operacji
-- **Repositories** — generyczny wzorzec dostępu do danych (CRUD)
-- **Models** — definicje tabel (SQLAlchemy ORM)
-- **Schemas** — walidacja i serializacja danych (Pydantic)
-
-### Frontend — Feature-based Architecture
-
-```
-Page → Feature Component → Custom Hook → API Service → HTTP Client
-                              ↓
-                         Zustand Store (stan globalny)
-```
-
-- **Pages** — strony routingu (cienka warstwa)
-- **Features** — komponenty per moduł (listy, formularze, panele)
-- **Hooks** — React Query hooks (cache, mutacje)
-- **lib/api/** — typowane serwisy API per domena
-- **Stores** — Zustand (auth, aktywna grupa)
+---
 
 ## Zmienne środowiskowe
 
-Plik `.env.example` zawiera wszystkie wymagane zmienne. Skopiuj go do `.env` i dostosuj wartości:
+### Frontend (`frontend/.env` lub Vercel)
 
-| Zmienna | Opis | Domyślna |
-|---------|------|----------|
-| `POSTGRES_USER` | Użytkownik PostgreSQL | `familyorg` |
-| `POSTGRES_PASSWORD` | Hasło PostgreSQL | `changeme` |
-| `POSTGRES_DB` | Nazwa bazy danych | `familyorg` |
-| `DATABASE_URL` | Pełny URL do bazy (async) | `postgresql+asyncpg://...` |
-| `REDIS_URL` | URL do Redis | `redis://localhost:6379/0` |
-| `SECRET_KEY` | Klucz do JWT | (zmień w produkcji!) |
-| `CORS_ORIGINS_STR` | Dozwolone originy CORS (po przecinku) | `http://localhost:3000,http://localhost:80` |
-| `VITE_API_URL` | URL backendu dla frontendu | `http://localhost:8000` |
+| Zmienna | Lokalnie | Produkcja (Vercel) |
+|---------|----------|---------------------|
+| `VITE_API_URL` | puste (proxy Vite) | `https://api-family.fmazurkiewicz.dev` |
+| `VITE_SUPABASE_URL` | URL projektu Supabase | j.w. |
+| `VITE_SUPABASE_ANON_KEY` | klucz **anon** (publiczny) | j.w. |
 
-## Technologie
+Po zmianie env na Vercel: **Redeploy** (zmienne `VITE_*` wchodzą tylko przy buildzie).
 
-**Backend:** FastAPI, SQLAlchemy 2.0 (async), PostgreSQL, Redis, Alembic, APScheduler, Pydantic v2, Poetry
+### Backend (`.env` na VPS / GitHub Secrets)
 
-**Frontend:** React 18, TypeScript, Vite, Tailwind CSS, Radix UI, React Query, Zustand, React Router, Recharts
+Szablon: `.env.example`. Produkcja: GitHub Actions zapisuje `.env` na Hetznerze — nie commituj sekretów.
+
+Kluczowe: `DATABASE_URL` (session pooler Supabase `:5432`), `SUPABASE_URL`, `SUPABASE_JWT_SECRET`, `CORS_ORIGINS_STR`, `ADMIN_EMAIL`.
+
+Szczegóły: [`docs/deployment/platform-architecture.md`](docs/deployment/platform-architecture.md)
+
+---
+
+## Struktura monorepo
+
+```
+FamilyOrganiser/
+├── frontend/          # React SPA → Vercel (Root Directory: frontend)
+├── backend/           # FastAPI → Docker na Hetzner
+├── docker/            # Caddyfile, nginx (dev), entrypoint
+├── scripts/deploy.sh  # Deploy API na VPS
+├── .github/workflows/ # CI/CD backendu
+├── docs/              # Dokumentacja biznes + tech + deploy
+└── archive/fly/       # PoC Fly.io (nie produkcja)
+```
+
+---
+
+## Trasy aplikacji (zalogowany użytkownik)
+
+Wszystkie pod prefiksem `/app/`:
+
+| Ścieżka | Moduł |
+|---------|--------|
+| `/app` | Dashboard |
+| `/app/shopping` | Lista zakupów |
+| `/app/tasks` | Zadania |
+| `/app/budget-monthly` | Budżet miesięczny |
+| `/app/investments` | Inwestycje |
+| `/app/reports` | Raporty |
+| `/app/groups` | Grupy rodzinne |
+| `/app/profile` | Profil |
+| `/app/admin` | Panel admina (tylko `is_app_admin`) |
+
+Logowanie: `/login` → Supabase (Google / magic link) → `/auth/callback` → `/app`.
+
+---
+
+## Dev vs produkcja
+
+| | Lokalnie | Produkcja |
+|---|----------|-----------|
+| Auth | Supabase (jeśli `VITE_SUPABASE_*`) lub legacy email/hasło | Supabase |
+| Admin | `ADMIN_EMAIL` w `.env` | ten sam email po OAuth → `is_app_admin` |
+| Legacy hasło | Działa bez Supabase (dev) | Wyłączone gdy `SUPABASE_*` ustawione |
+
+Domyślne konto seed (tylko dev bez Supabase): `admin@admin.com` / `admin` — **nie używać na produkcji**.
+
+---
+
+## Deploy
+
+- **Frontend:** push na `main` → Vercel buduje automatycznie (`frontend/`).
+- **Backend:** push na `main` (ścieżki `backend/**`, Docker, workflow) → GitHub Actions → Hetzner.
+
+Ręcznie: GitHub → Actions → **Deploy API (Hetzner)** → Run workflow.
+
+---
+
+## Licencja / właściciel
+
+Prywatny projekt rodzinny — repozytorium prywatne.

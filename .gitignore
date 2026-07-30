@@ -221,3 +221,6 @@ docker/certs/
 
 # Local learning notes (learning-tutor subagent) — never commit
 learning/
+
+# Cursor hook state (local machine paths, transcript IDs)
+.cursor/hooks/state/

@@ -34,7 +34,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
         className={cn(
-          "relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-xl bg-white p-6 shadow-xl",
+          "relative z-10 w-full max-w-lg rounded-t-2xl sm:rounded-xl bg-card text-card-foreground p-6 shadow-xl border border-border",
           "max-h-[min(90dvh,90vh)] overflow-y-auto",
           "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
           className
@@ -42,10 +42,10 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       >
         {title && (
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <X className="h-5 w-5" />
             </button>

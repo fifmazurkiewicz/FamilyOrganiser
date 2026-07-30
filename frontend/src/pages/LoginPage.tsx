@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { LoginForm } from "@/features/auth/LoginForm";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Home, Users, TrendingUp, Shield } from "lucide-react";
 
 const features = [
@@ -59,27 +60,30 @@ export default function LoginPage() {
       </div>
 
       {/* Right — form */}
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-gray-50 via-white to-primary-light/20 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))]">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-background via-background to-primary-light/20 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] relative">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <ThemeToggle variant="compact" />
+        </div>
         <div className="w-full max-w-md">
           {/* Mobile logo (visible only on small screens) */}
           <div className="lg:hidden text-center mb-6">
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center mx-auto mb-3">
               <Home className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
               Family<span className="text-primary">Organiser</span>
             </h1>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 p-5 sm:p-8">
+          <div className="bg-card/80 backdrop-blur-sm rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/20 border border-border p-5 sm:p-8">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900">Witaj ponownie</h2>
-              <p className="mt-1 text-sm text-gray-500">
+              <h2 className="text-2xl font-bold text-foreground">Witaj ponownie</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
                 Zaloguj się magic linkiem albo przez Google
               </p>
             </div>
             <LoginForm />
-            <p className="mt-8 text-center text-sm text-gray-500">
+            <p className="mt-8 text-center text-sm text-muted-foreground">
               Nie masz konta?{" "}
               <Link to="/register" className="text-primary font-semibold hover:text-primary-dark transition-colors">
                 Zarejestruj się →

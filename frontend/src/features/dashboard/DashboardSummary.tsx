@@ -25,9 +25,9 @@ function StatCard({
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div className="space-y-1.5">
-            <p className="text-sm font-medium text-gray-500">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 tracking-tight">{value}</p>
-            {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold text-foreground tracking-tight">{value}</p>
+            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
             {trend && (
               <div className={cn("flex items-center gap-1 text-xs font-medium", trendUp ? "text-success" : "text-destructive")}>
                 {trendUp ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
@@ -49,7 +49,13 @@ export function DashboardSummary() {
   const { data: trend } = useMonthlyTrend(6);
 
   if (isLoading) return <DashboardSkeleton />;
-  if (!dash) return null;
+  if (!dash) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-muted/50 p-8 text-center text-sm text-muted-foreground">
+        Nie udało się załadować danych dashboardu. Odśwież stronę lub sprawdź połączenie z API.
+      </div>
+    );
+  }
 
   const netWorth = dash.net_worth ?? dash.total_balance ?? 0;
   const monthlyIncome = dash.monthly_income ?? dash.month_income ?? 0;
@@ -97,7 +103,7 @@ export function DashboardSummary() {
         <Card className="overflow-hidden">
           <CardHeader className="pb-3">
             <CardTitle>Trend przychodów i wydatków</CardTitle>
-            <p className="text-xs text-gray-400 mt-0.5">Ostatnie {trend.length} miesięcy</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Ostatnie {trend.length} miesięcy</p>
           </CardHeader>
           <CardContent className="pt-0">
             <ResponsiveContainer width="100%" height={260}>
@@ -141,18 +147,18 @@ export function DashboardSummary() {
           <CardContent>
             {topExpenses.length === 0 ? (
               <div className="py-8 text-center">
-                <Receipt className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Brak danych o wydatkach</p>
+                <Receipt className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Brak danych o wydatkach</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {topExpenses.map((e: { category: string; amount: number; percent?: number }, i: number) => (
                   <div key={e.category} className="flex items-center justify-between gap-3 group">
                     <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <span className="text-xs font-semibold text-gray-400 w-5">{i + 1}.</span>
+                      <span className="text-xs font-semibold text-muted-foreground w-5">{i + 1}.</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-700 truncate">{e.category}</p>
-                        <div className="mt-1 h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                        <p className="text-sm font-medium text-foreground truncate">{e.category}</p>
+                        <div className="mt-1 h-1.5 w-full rounded-full bg-muted overflow-hidden">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-primary to-emerald-400 transition-all duration-500"
                             style={{ width: `${e.percent ?? Math.min(100, (e.amount / (topExpenses[0]?.amount || 1)) * 100)}%` }}
@@ -160,7 +166,7 @@ export function DashboardSummary() {
                         </div>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900 shrink-0">{formatCurrency(e.amount)}</span>
+                    <span className="text-sm font-semibold text-foreground shrink-0">{formatCurrency(e.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -176,16 +182,16 @@ export function DashboardSummary() {
           <CardContent>
             {recentTransactions.length === 0 ? (
               <div className="py-8 text-center">
-                <Receipt className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-400">Brak transakcji</p>
+                <Receipt className="h-8 w-8 text-muted-foreground/40 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">Brak transakcji</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-border">
                 {recentTransactions.slice(0, 5).map((t: { id: string; description?: string; merchant?: string; transaction_date?: string; transaction_type: string; amount: number }) => (
-                  <div key={t.id} className="flex items-center justify-between gap-3 py-2.5 group hover:bg-gray-50/50 -mx-2 px-2 rounded-lg transition-colors">
+                  <div key={t.id} className="flex items-center justify-between gap-3 py-2.5 group hover:bg-muted/50 -mx-2 px-2 rounded-lg transition-colors">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-700 truncate">{t.description || t.merchant || "Transakcja"}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-sm font-medium text-foreground truncate">{t.description || t.merchant || "Transakcja"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {t.transaction_date ? format(new Date(t.transaction_date), "dd.MM.yyyy") : ""}
                       </p>
                     </div>

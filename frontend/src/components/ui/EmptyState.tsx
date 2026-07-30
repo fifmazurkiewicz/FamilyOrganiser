@@ -16,8 +16,8 @@ export function EmptyState({ icon: Icon, title, description, action, className }
       <div className="mb-5 rounded-2xl bg-gradient-to-br from-primary-light to-accent p-4 ring-1 ring-primary/10">
         <Icon className="h-10 w-10 text-primary" />
       </div>
-      <h3 className="mb-1.5 text-lg font-semibold text-gray-900">{title}</h3>
-      {description && <p className="mb-5 text-sm text-gray-500 max-w-xs">{description}</p>}
+      <h3 className="mb-1.5 text-lg font-semibold text-foreground">{title}</h3>
+      {description && <p className="mb-5 text-sm text-muted-foreground max-w-xs">{description}</p>}
       {action && (
         <Button onClick={action.onClick} size="md">
           {action.label}

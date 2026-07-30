@@ -1,7 +1,11 @@
 # FamilyOrganiser — Wymagania Biznesowe
 
-**Wersja:** 1.0
-**Data:** 2026-03-07
+> **⚠️ Dokument archiwalny (v1.0, 2026-03-07)**  
+> Opisuje pełny system finansowy (konta, transakcje, mobile, Redis).  
+> **Aktualny produkt v2.2** jest prostszy — zob. [docs/business/features.md](docs/business/features.md) i [production-handover.md](docs/business/production-handover.md).
+
+**Wersja:** 1.0  
+**Data:** 2026-03-07  
 **Właściciel produktu:** fifmazurkiewicz
 
 ---

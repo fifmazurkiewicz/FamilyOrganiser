@@ -102,6 +102,8 @@
     --chart-8: 84 81% 50%;
     --sidebar-bg: 224 40% 8%;
     --sidebar-border: 224 30% 18%;
+    --glass-bg: 224 40% 8% / 0.9;
+    --glass-border: 224 30% 18% / 0.5;
   }
 }
 

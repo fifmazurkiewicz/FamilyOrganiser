@@ -12,8 +12,8 @@ Zob. [platform-architecture.md](platform-architecture.md).
 | Plik | Rola |
 |------|------|
 | `Dockerfile` (root) | API-only, port 8080 |
-| `fly.toml` | Region, volume, healthcheck |
-| `docker/entrypoint-fly.sh` | Alias `entrypoint.sh` |
+| `archive/fly/fly.toml` | Region, volume, healthcheck (PoC) |
+| `docker/entrypoint.sh` | Start uvicorn w kontenerze |
 | `.dockerignore` | Mniejszy kontekst builda |
 
 ## Wymagania
@@ -25,7 +25,7 @@ Zob. [platform-architecture.md](platform-architecture.md).
 
 ```bash
 # Z katalogu głównego repo
-fly apps create familyorganiser   # jeśli nazwa zajęta — zmień app w fly.toml
+fly apps create familyorganiser   # jeśli nazwa zajęta — zmień app w archive/fly/fly.toml
 
 fly volumes create familyorg_data --region waw --size 1
 
@@ -66,6 +66,6 @@ Otwórz http://localhost:8080
 
 - **SQLite + auto_stop:** maszyna może się wyłączać (`min_machines_running = 0`) — OK dla hobby; przy większym ruchu ustaw `min_machines_running = 1`.
 - **Backup:** volume nie jest magiczny — okresowo `fly ssh console` + skopiuj `/data/familyorg.db` albo przejdź na Fly Postgres.
-- **Nazwa app / region:** edytuj `fly.toml` (`app`, `primary_region`). Volume musi być w tym samym regionie.
+- **Nazwa app / region:** edytuj `archive/fly/fly.toml` (`app`, `primary_region`). Volume musi być w tym samym regionie.
 - **CORS:** ustaw `CORS_ORIGINS_STR` na dokładny URL aplikacji (i custom domenę, jeśli dodasz).
 - Dev lokalnie bez `STATIC_DIR` działa jak dotychczas (tylko API).

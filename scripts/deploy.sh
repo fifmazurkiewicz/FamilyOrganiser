@@ -96,7 +96,7 @@ if host.startswith("db.") and host.endswith(".supabase.co"):
     print(
         "UWAGA: direct connection (db.*.supabase.co) często pada na VPS bez IPv6.",
         "Użyj poolera w GitHub Secret DATABASE_URL, np.",
-        "postgresql+asyncpg://postgres.<ref>:<haslo>@aws-0-<region>.pooler.supabase.com:6543/postgres",
+        "postgresql+asyncpg://postgres.<ref>:<haslo>@aws-0-<region>.pooler.supabase.com:5432/postgres",
         sep="\n",
         file=sys.stderr,
     )

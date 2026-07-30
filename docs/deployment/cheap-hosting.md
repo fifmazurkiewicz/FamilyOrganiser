@@ -1,9 +1,10 @@
 # Najtańszy deploy FamilyOrganiser
 
-**Ostatnia aktualizacja:** 2026-07-28  
-**Cel:** uruchomić aplikację (FastAPI + React + PostgreSQL) tanio, stabilnie i z HTTPS.
+**Ostatnia aktualizacja:** 2026-07-30  
+**Cel:** porównanie kosztów hostingu (referencja).
 
-> Obecny `docker-compose.yml` jest pod **development** (`--reload`, `npm run dev`, montowane volume). Na serwer produkcyjny potrzebujesz wariantu produkcyjnego (build frontendu do plików statycznych + uvicorn bez `--reload`). Poniżej jest opis ścieżki i checklist — pliki produkcyjne warto dodać przed pierwszym deployem.
+> **Produkcja FamilyOrganiser** nie jest „wszystko na jednym VPS”. Aktualny stack: **Vercel + Hetzner + Supabase** — zob. [**platform-architecture.md**](platform-architecture.md).  
+> Ten dokument zostaje jako porównanie opcji i ścieżka „monolit na VPS” (historyczna / alternatywa).
 
 ---
 
@@ -30,7 +31,7 @@ Ceny orientacyjne (EU, bez VAT, stan ~połowa 2026). Sprawdź aktualny cennik pr
 | **Oracle Cloud Always Free** (VM Ampere) | **0 €** | Eksperyment / hobby | Darmowe 4 OCPU / 24 GB (w limicie Always Free) | Kapryśna rejestracja, limity, więcej roboty z ARM |
 | **Hetzner Cloud** (np. CX22 / CX23) | **~4–6 €** | **Rekomendowane** | Prosto, stabilnie, dużo transferu, EU (DE/FI) | Płatne (ale nadal bardzo tanio) |
 | Contabo / podobne VPS | ~4–8 € | Budget | Dużo dysku | Często wolniejszy I/O, gorszy support |
-| Railway / Render / **Fly.io** | ~0–10 €+ | Szybki PoC | Mało DevOps; w repo jest gotowy `Dockerfile` + `fly.toml` (SQLite na volume) — zob. [fly-io.md](fly-io.md) | Maszyna może „zasypiać”; SQLite na volume ≠ pełny Postgres |
+| Railway / Render / **Fly.io** | ~0–10 €+ | Szybki PoC | PoC w `archive/fly/` — zob. [fly-io.md](fly-io.md) | Nie produkcja |
 | VPS PL (np. home.pl, OVH Start) | zwykle drożej | Preferencja lokalnego billing | Faktura PL | Często drożej przy tych samych parametrach |
 
 ### Rekomendacja
@@ -198,7 +199,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./docker/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./docker/certs:/etc/nginx/certs:ro
     depends_on:
       - backend
@@ -314,7 +315,7 @@ Te rzeczy jeszcze nie są „produkcyjne” w obecnym stanie projektu:
 
 1. `docker-compose.prod.yml` — bez hot-reload i bez exposu Postgresa.
 2. `frontend/Dockerfile` multi-stage: `npm run build` → `nginx:alpine` z `dist`.
-3. `docker/nginx.prod.conf` — static + `/api` + SSL.
+3. `docker/Caddyfile` (prod) lub `docker/nginx.conf` (dev) — static + `/api` + SSL.
 4. `.env.example` — checklista sekretów (lokalnie i produkcja).
 5. Skrypt `scripts/backup.sh` + krótka instrukcja restore.
 

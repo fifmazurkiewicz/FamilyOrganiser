@@ -55,7 +55,7 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
 | Baza / auth / pliki | **Supabase** (managed) | Postgres + Auth (magic link, Google) + pgvector |
 
 **Bez Coolify** — świadomie: Compose + Caddy na VPS.  
-**Bez Fly.io** w produkcji — `fly.toml` / PoC zostają jako archiwum.
+**Bez Fly.io** w produkcji — PoC w `archive/fly/` (nie używać).
 
 ### Dlaczego Supabase managed
 
@@ -96,6 +96,22 @@ Supabase Dashboard → Authentication → URL Configuration:
 | `VITE_API_URL` | `https://api-family.fmazurkiewicz.dev` |
 | `VITE_SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `VITE_SUPABASE_ANON_KEY` | anon / publishable key (publiczny) |
+
+**Po zmianie env:** Redeploy na Vercel (zmienne `VITE_*` wchodzą tylko przy buildzie).
+
+### `frontend/vercel.json`
+
+```json
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://api-family.fmazurkiewicz.dev/api/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
+```
+
+- **SPA fallback** — React Router (`/app/*`, `/auth/callback`).
+- **Proxy `/api`** — opcjonalny fallback gdy `VITE_API_URL` puste; **kanonicznie** ustaw `VITE_API_URL` na Vercel.
 
 ### Env backendu (źródło: GitHub Secrets → `.env` na VPS)
 
@@ -216,7 +232,7 @@ Authentication → URL Configuration:
 1. Jedna apka = jedna subdomena FE (+ osobna subdomena API gdy własny backend).
 2. Max ~5 osób na projekt.
 3. Sekrety tylko w env Vercel / VPS / GitHub Actions secrets — nie w git.
-4. Fly.io (`fly.toml`) pozostaje historycznym PoC — nie używamy w produkcji.
+4. Fly.io (`archive/fly/`) — historyczny PoC — nie używamy w produkcji.
 
 ---
 

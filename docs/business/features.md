@@ -32,13 +32,12 @@ Dla 2–6 osobowej rodziny, która chce mieć wspólny podgląd na:
 
 **Flow:** Wejdź w "Zadania" → "Nowa lista" → dodaj zadanie → przypisz osobę → odhacz
 
-### 🧾 Wydatki
-- Prosty dziennik wydatków: kwota + na co + kiedy
-- Każdy członek rodziny widzi wszystkie wydatki
-- Suma miesięczna na górze
-- Żadnych kategorii — po prostu wpisujesz
+### 🧾 Wydatki i raporty
+- Wpisy w **budżecie miesięcznym** (wpływy i wydatki)
+- **Dashboard** i **Raporty** — podsumowania, trendy, wydatki wg kategorii (z danych budżetu)
+- Osobna strona `/app/expenses` **nie istnieje** w v2.2 — wydatki = wpisy w budżecie
 
-**Flow:** Wejdź w "Wydatki" → "Dodaj" → kwota + opis → zapisz
+**Flow:** Wejdź w „Budżet miesięczny” → dodaj wydatek → zobacz sumę na dashboardzie / w raportach
 
 ### 🥧 Budżet miesięczny
 - Wpływy (pensja, dodatkowe) + wydatki
