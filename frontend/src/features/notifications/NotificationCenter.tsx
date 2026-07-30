@@ -1,5 +1,5 @@
 import { Bell, CheckCheck } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Spinner } from "@/components/ui/Spinner";
@@ -20,7 +20,7 @@ export function NotificationCenter() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-semibold text-foreground">
           Powiadomienia {unread > 0 && <Badge variant="danger">{unread}</Badge>}
         </h2>
         {unread > 0 && (
@@ -34,27 +34,27 @@ export function NotificationCenter() {
         {!notifications || notifications.length === 0 ? (
           <EmptyState icon={Bell} title="Brak powiadomień" description="Nie masz nowych powiadomień." />
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-border">
             {notifications.map((n) => (
               <div
                 key={n.id}
-                className={`flex gap-3 px-6 py-4 ${!n.is_read ? "bg-blue-50/50" : ""}`}
+                className={`flex gap-3 px-6 py-4 ${!n.is_read ? "bg-primary/5" : ""}`}
               >
                 <div className="mt-0.5">
                   {!n.is_read && (
-                    <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+                    <span className="inline-block h-2 w-2 rounded-full bg-primary" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">{n.title}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">{n.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-sm font-medium text-foreground">{n.title}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{n.message}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
                     {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: pl })}
                   </p>
                 </div>
                 {!n.is_read && (
                   <button
-                    className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+                    className="text-xs text-primary hover:underline whitespace-nowrap"
                     onClick={() => markRead.mutate(n.id)}
                   >
                     Przeczytane

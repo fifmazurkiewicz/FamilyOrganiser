@@ -20,28 +20,16 @@ import { Progress } from "@/components/ui/Progress";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
-import { api } from "@/api/client";
+import {
+  budgetApi,
+  isIncomeEntry,
+  type BudgetEntry,
+  type BudgetEntryType,
+  type MonthlyBudget,
+} from "@/lib/api/budget";
 import { formatCurrency } from "@/utils/currency";
 import { useGroupStore } from "@/stores/groupStore";
 import { cn } from "@/utils/cn";
-
-// ── Types ──
-
-interface BudgetEntry {
-  id: string;
-  amount: number;
-  currency: string;
-  label: string;
-  is_income: boolean;
-  is_recurring: boolean;
-}
-
-interface MonthlyBudget {
-  id: string;
-  year: number;
-  month: number;
-  entries: BudgetEntry[];
-}
 
 // ── Components ──
 
@@ -73,11 +61,11 @@ function SummaryBar({
       : 0;
 
   return (
-    <Card className="bg-gradient-to-br from-gray-50 to-white">
+    <Card className="bg-gradient-to-br from-muted/50 to-card">
       <CardContent className="py-4">
         <div className="grid gap-3 mb-4 sm:grid-cols-4">
           <div className="text-center sm:text-left">
-            <p className="text-xs text-gray-500 flex items-center gap-1 justify-center sm:justify-start">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center sm:justify-start">
               <ArrowUpRight className="h-3 w-3 text-emerald-500" /> Przychody
             </p>
             <p className="text-lg font-bold text-emerald-600">
@@ -85,7 +73,7 @@ function SummaryBar({
             </p>
           </div>
           <div className="text-center sm:text-left">
-            <p className="text-xs text-gray-500 flex items-center gap-1 justify-center sm:justify-start">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center sm:justify-start">
               <ArrowDownRight className="h-3 w-3 text-red-500" /> Wydatki
             </p>
             <p className="text-lg font-bold text-red-600">
@@ -93,7 +81,7 @@ function SummaryBar({
             </p>
           </div>
           <div className="text-center sm:text-left">
-            <p className="text-xs text-gray-500 flex items-center gap-1 justify-center sm:justify-start">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center sm:justify-start">
               <Wallet className="h-3 w-3 text-primary" /> Pozostało
             </p>
             <p
@@ -106,7 +94,7 @@ function SummaryBar({
             </p>
           </div>
           <div className="text-center sm:text-left">
-            <p className="text-xs text-gray-500 flex items-center gap-1 justify-center sm:justify-start">
+            <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center sm:justify-start">
               <PiggyBank className="h-3 w-3 text-amber-500" /> Dzienny budżet
             </p>
             <p
@@ -142,9 +130,8 @@ function SummaryBar({
             </span>
           </div>
 
-          {/* Savings goal input */}
           <div className="flex items-center gap-2 pt-1">
-            <label className="text-xs text-gray-500 whitespace-nowrap">
+            <label className="text-xs text-muted-foreground whitespace-nowrap">
               Cel oszczędnościowy:
             </label>
             <Input
@@ -157,7 +144,7 @@ function SummaryBar({
               className="h-7 text-xs w-32"
             />
             {savingsGoal > 0 && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 Po odłożeniu: {formatCurrency(afterSavings)}
               </span>
             )}
@@ -177,16 +164,18 @@ function EntryRow({
   onToggleRecurring: (id: string, recurring: boolean) => void;
   onDelete: (id: string) => void;
 }) {
+  const income = isIncomeEntry(entry);
+
   return (
-    <div className="flex items-center justify-between py-2.5 group border-b border-gray-50 last:border-0">
+    <div className="flex items-center justify-between py-2.5 group border-b border-border/50 last:border-0">
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <div
           className={cn(
             "w-2 h-2 rounded-full shrink-0",
-            entry.is_income ? "bg-emerald-500" : "bg-red-500"
+            income ? "bg-emerald-500" : "bg-red-500"
           )}
         />
-        <span className="text-sm text-gray-900 truncate">{entry.label}</span>
+        <span className="text-sm text-foreground truncate">{entry.name}</span>
         {entry.is_recurring && (
           <Badge variant="info" className="text-[10px] px-1.5 py-0">
             <RefreshCw className="h-2.5 w-2.5 mr-0.5" /> cykliczne
@@ -197,7 +186,7 @@ function EntryRow({
         <span
           className={cn(
             "text-sm font-semibold",
-            entry.is_income ? "text-emerald-600" : "text-red-600"
+            income ? "text-emerald-600" : "text-red-600"
           )}
         >
           {formatCurrency(entry.amount, entry.currency)}
@@ -206,7 +195,7 @@ function EntryRow({
           <Button
             variant="ghost"
             size="sm"
-            className="text-gray-400 hover:text-primary text-[10px] px-1 h-6"
+            className="text-muted-foreground hover:text-primary text-[10px] px-1 h-6"
             onClick={() => onToggleRecurring(entry.id, !entry.is_recurring)}
             title={entry.is_recurring ? "Wyłącz cykliczne" : "Włącz cykliczne"}
           >
@@ -238,28 +227,26 @@ export function BudgetPanel() {
   const [addOpen, setAddOpen] = useState(false);
   const [savingsGoal, setSavingsGoal] = useState(0);
   const [form, setForm] = useState({
-    label: "",
+    name: "",
     amount: "",
-    is_income: false,
+    entry_type: "expense" as BudgetEntryType,
     is_recurring: false,
   });
 
   const { data: budget, isLoading } = useQuery<MonthlyBudget>({
-    queryKey: ["monthly-budget", year, month],
-    queryFn: () =>
-      api
-        .get("/v1/monthly-budgets/by-month", { params: { year, month, family_group_id: activeGroup?.id } })
-        .then((r) => r.data),
+    queryKey: ["monthly-budget", year, month, activeGroup?.id],
+    queryFn: () => budgetApi.getByMonth(year, month, activeGroup!.id),
+    enabled: !!activeGroup?.id,
   });
 
   const addEntry = useMutation({
     mutationFn: (data: {
-      label: string;
+      name: string;
       amount: number;
-      is_income: boolean;
+      entry_type: BudgetEntryType;
       is_recurring: boolean;
     }) =>
-      api.post(`/v1/monthly-budgets/${budget?.id}/entries`, {
+      budgetApi.addEntry(budget!.id, {
         ...data,
         year,
         month,
@@ -268,7 +255,7 @@ export function BudgetPanel() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monthly-budget"] });
       setAddOpen(false);
-      setForm({ label: "", amount: "", is_income: false, is_recurring: false });
+      setForm({ name: "", amount: "", entry_type: "expense", is_recurring: false });
       toast("success", "Dodano", "Pozycja została dodana do budżetu.");
     },
     onError: () =>
@@ -276,7 +263,7 @@ export function BudgetPanel() {
   });
 
   const deleteEntry = useMutation({
-    mutationFn: (id: string) => api.delete(`/v1/monthly-budgets/entries/${id}`),
+    mutationFn: (id: string) => budgetApi.deleteEntry(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["monthly-budget"] });
       toast("success", "Usunięto", "Pozycja została usunięta.");
@@ -285,23 +272,23 @@ export function BudgetPanel() {
 
   const toggleRecurring = useMutation({
     mutationFn: ({ id, is_recurring }: { id: string; is_recurring: boolean }) =>
-      api.patch(`/v1/monthly-budgets/entries/${id}`, { is_recurring }),
+      budgetApi.updateEntry(id, { is_recurring }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["monthly-budget"] }),
   });
 
   const entries = budget?.entries ?? [];
-  const incomeEntries = entries.filter((e) => e.is_income);
-  const expenseEntries = entries.filter((e) => !e.is_income);
-  const totalIncome = incomeEntries.reduce((s, e) => s + e.amount, 0);
-  const totalExpenses = expenseEntries.reduce((s, e) => s + e.amount, 0);
+  const incomeEntries = entries.filter(isIncomeEntry);
+  const expenseEntries = entries.filter((e) => !isIncomeEntry(e));
+  const totalIncome = incomeEntries.reduce((s, e) => s + Number(e.amount), 0);
+  const totalExpenses = expenseEntries.reduce((s, e) => s + Number(e.amount), 0);
 
   const handleAdd = () => {
     const amt = parseFloat(form.amount);
     if (!amt || amt <= 0) return;
     addEntry.mutate({
-      label: form.label,
+      name: form.name,
       amount: amt,
-      is_income: form.is_income,
+      entry_type: form.entry_type,
       is_recurring: form.is_recurring,
     });
   };
@@ -310,6 +297,16 @@ export function BudgetPanel() {
     "Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec",
     "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopad", "Grudzień",
   ];
+
+  if (!activeGroup) {
+    return (
+      <EmptyState
+        icon={Wallet}
+        title="Wybierz grupę rodzinną"
+        description="Aby korzystać z budżetu miesięcznego, wybierz aktywną grupę w menu."
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -323,7 +320,6 @@ export function BudgetPanel() {
 
   return (
     <div className="space-y-4">
-      {/* Month/Year selector */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Button
@@ -340,7 +336,7 @@ export function BudgetPanel() {
           >
             ←
           </Button>
-          <h2 className="text-lg font-semibold text-gray-900 min-w-[160px] text-center">
+          <h2 className="text-lg font-semibold text-foreground min-w-[160px] text-center">
             {monthNames[month - 1]} {year}
           </h2>
           <Button
@@ -363,7 +359,6 @@ export function BudgetPanel() {
         </Button>
       </div>
 
-      {/* Summary bar */}
       <SummaryBar
         totalIncome={totalIncome}
         totalExpenses={totalExpenses}
@@ -371,9 +366,7 @@ export function BudgetPanel() {
         onSavingsGoalChange={setSavingsGoal}
       />
 
-      {/* Income + Expense sections */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Income section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -383,7 +376,7 @@ export function BudgetPanel() {
           </CardHeader>
           <CardContent>
             {incomeEntries.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Brak przychodów w tym miesiącu.
               </p>
             ) : (
@@ -401,7 +394,6 @@ export function BudgetPanel() {
           </CardContent>
         </Card>
 
-        {/* Expense section */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -411,7 +403,7 @@ export function BudgetPanel() {
           </CardHeader>
           <CardContent>
             {expenseEntries.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Brak wydatków w tym miesiącu.
               </p>
             ) : (
@@ -430,7 +422,6 @@ export function BudgetPanel() {
         </Card>
       </div>
 
-      {/* Add entry modal */}
       <Modal
         open={addOpen}
         onClose={() => setAddOpen(false)}
@@ -439,8 +430,8 @@ export function BudgetPanel() {
         <div className="space-y-4">
           <Input
             label="Nazwa"
-            value={form.label}
-            onChange={(e) => setForm({ ...form, label: e.target.value })}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="np. Wynagrodzenie, Czynsz"
           />
           <div className="grid grid-cols-2 gap-3">
@@ -453,12 +444,12 @@ export function BudgetPanel() {
               placeholder="0.00"
             />
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-gray-700">Typ</label>
+              <label className="block text-sm font-medium text-foreground">Typ</label>
               <select
-                className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
-                value={form.is_income ? "income" : "expense"}
+                className="block w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+                value={form.entry_type}
                 onChange={(e) =>
-                  setForm({ ...form, is_income: e.target.value === "income" })
+                  setForm({ ...form, entry_type: e.target.value as BudgetEntryType })
                 }
               >
                 <option value="income">Przychód</option>
@@ -466,16 +457,16 @@ export function BudgetPanel() {
               </select>
             </div>
           </div>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
             <input
               type="checkbox"
               checked={form.is_recurring}
               onChange={(e) =>
                 setForm({ ...form, is_recurring: e.target.checked })
               }
-              className="rounded border-gray-300 text-primary focus:ring-primary"
+              className="rounded border-border text-primary focus:ring-primary"
             />
-            <RefreshCw className="h-3.5 w-3.5 text-gray-400" />
+            <RefreshCw className="h-3.5 w-3.5 text-muted-foreground" />
             Pozycja cykliczna (co miesiąc)
           </label>
           <div className="flex justify-end gap-3 pt-2">
@@ -485,7 +476,7 @@ export function BudgetPanel() {
             <Button
               onClick={handleAdd}
               loading={addEntry.isPending}
-              disabled={!form.label.trim() || !form.amount || parseFloat(form.amount) <= 0}
+              disabled={!form.name.trim() || !form.amount || parseFloat(form.amount) <= 0}
             >
               Dodaj
             </Button>

@@ -54,8 +54,8 @@ function ShoppingListCard({
     >
       <CardContent className="flex items-center justify-between py-3 px-4">
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 truncate">{list.name}</p>
-          <p className="text-xs text-gray-500">
+          <p className="font-medium text-foreground truncate">{list.name}</p>
+          <p className="text-xs text-muted-foreground">
             {boughtCount}/{list.items.length} kupionych
           </p>
         </div>
@@ -154,7 +154,7 @@ function ShoppingItemsView({
         </Button>
       </form>
       {sortedItems.length === 0 ? (
-        <p className="text-center text-sm text-gray-400 py-6">
+        <p className="text-center text-sm text-muted-foreground py-6">
           Lista jest pusta. Dodaj pierwszy produkt.
         </p>
       ) : (
@@ -168,7 +168,7 @@ function ShoppingItemsView({
                   "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors",
                   item.is_bought
                     ? "bg-emerald-500 border-emerald-500 text-white"
-                    : "border-gray-300 hover:border-primary"
+                    : "border-border hover:border-primary"
                 )}
               >
                 {item.is_bought && <Check className="h-3 w-3" />}
@@ -176,21 +176,21 @@ function ShoppingItemsView({
               <div className="flex-1 min-w-0">
                 <p
                   className={cn(
-                    "text-sm text-gray-900",
-                    item.is_bought && "line-through text-gray-400"
+                    "text-sm text-foreground",
+                    item.is_bought && "line-through text-muted-foreground"
                   )}
                 >
                   {item.name}
                 </p>
                 {item.is_bought && item.bought_by && (
-                  <p className="text-xs text-gray-400">Kupione przez: {item.bought_by}</p>
+                  <p className="text-xs text-muted-foreground">Kupione przez: {item.bought_by}</p>
                 )}
               </div>
               {item.is_bought ? (
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-400 hover:text-primary opacity-0 group-hover:opacity-100"
+                  className="text-muted-foreground hover:text-primary opacity-0 group-hover:opacity-100"
                   onClick={() => toggleItem.mutate(item.id)}
                   title="Cofnij kupienie"
                 >
@@ -301,7 +301,7 @@ export function ShoppingList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Listy zakupów</h2>
+        <h2 className="text-lg font-semibold text-foreground">Listy zakupów</h2>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
           <Plus className="h-4 w-4" /> Nowa lista
         </Button>
@@ -343,7 +343,7 @@ export function ShoppingList() {
                         "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-all",
                         showHistory
                           ? "bg-primary/10 border-primary/30 text-primary"
-                          : "border-gray-200 text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                          : "border-border text-muted-foreground hover:text-foreground hover:border-border"
                       )}
                     >
                       <History className="h-3.5 w-3.5" />
@@ -360,8 +360,8 @@ export function ShoppingList() {
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex items-center justify-center h-48 border-2 border-dashed border-gray-200 rounded-xl">
-                <p className="text-sm text-gray-400">Wybierz listę z lewej strony</p>
+              <div className="flex items-center justify-center h-48 border-2 border-dashed border-border rounded-xl">
+                <p className="text-sm text-muted-foreground">Wybierz listę z lewej strony</p>
               </div>
             )}
           </div>

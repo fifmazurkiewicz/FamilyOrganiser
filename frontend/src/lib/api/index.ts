@@ -3,3 +3,8 @@ export { usersApi } from "./users";
 export { reportsApi } from "./reports";
 export { notificationsApi } from "./notifications";
 export { familyApi } from "./family";
+export { shoppingApi } from "./shopping";
+export { tasksApi } from "./tasks";
+export { budgetApi, isIncomeEntry } from "./budget";
+export type { BudgetEntry, BudgetEntryType, MonthlyBudget } from "./budget";
+export { investmentsApi } from "./investments";

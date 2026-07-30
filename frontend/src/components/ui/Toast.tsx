@@ -59,17 +59,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               className={cn(
                 "pointer-events-auto flex items-start gap-3 p-4 rounded-xl border shadow-lg backdrop-blur-sm animate-in slide-in-from-right-full fade-in duration-300",
                 styles[t.type],
-                "bg-white/95"
+                "bg-card/95 border border-border"
               )}
             >
               <Icon className="h-5 w-5 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900">{t.title}</p>
-                {t.message && <p className="text-xs text-gray-500 mt-0.5">{t.message}</p>}
+                <p className="text-sm font-semibold text-foreground">{t.title}</p>
+                {t.message && <p className="text-xs text-muted-foreground mt-0.5">{t.message}</p>}
               </div>
               <button
                 onClick={() => removeToast(t.id)}
-                className="shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X className="h-4 w-4" />
               </button>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import {
-  Users, PiggyBank, TrendingUp, BarChart2,
-  Shield, ArrowRight, Home, CreditCard, Sparkles
+  Users, TrendingUp, BarChart2,
+  Shield, ArrowRight, Home, Sparkles, ShoppingCart, CheckSquare
 } from "lucide-react";
 
 const features = [
@@ -11,19 +11,19 @@ const features = [
     description: "Twórz wspólne grupy i zarządzaj finansami całej rodziny w jednym miejscu.",
   },
   {
-    icon: PiggyBank,
-    title: "Cele oszczędnościowe",
-    description: "Wyznaczaj cele, śledź postępy i motywuj się do oszczędzania z rodziną.",
+    icon: ShoppingCart,
+    title: "Listy zakupów",
+    description: "Wspólne listy zakupów z oznaczaniem kupionych produktów przez całą rodzinę.",
+  },
+  {
+    icon: CheckSquare,
+    title: "Zadania",
+    description: "Organizuj obowiązki domowe i przypisuj zadania członkom grupy.",
   },
   {
     icon: BarChart2,
-    title: "Inteligentny budżet",
-    description: "Planuj miesięczne budżety i otrzymuj alerty gdy zbliżasz się do limitu.",
-  },
-  {
-    icon: CreditCard,
-    title: "Wszystkie konta",
-    description: "Połącz wszystkie konta bankowe, karty kredytowe i portfele w jednym panelu.",
+    title: "Budżet miesięczny",
+    description: "Planuj przychody i wydatki miesięczne oraz śledź pozostałą kwotę.",
   },
   {
     icon: TrendingUp,
@@ -33,7 +33,7 @@ const features = [
   {
     icon: Shield,
     title: "Bezpieczeństwo",
-    description: "Szyfrowane dane, pytania bezpieczeństwa i bezpieczne logowanie JWT.",
+    description: "Logowanie przez Supabase (magic link / Google) i weryfikacja JWT.",
   },
 ];
 
@@ -88,7 +88,7 @@ export default function LandingPage() {
               Finanse rodzinne <span className="text-primary">pod kontrolą</span>
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-              Wspólny budżet, cele oszczędnościowe, śledzenie inwestycji i inteligentne raporty — wszystko w jednym, bezpiecznym miejscu. Dla Ciebie i Twojej rodziny.
+              Wspólny budżet, listy zakupów, zadania, inwestycje i raporty — wszystko w jednym, bezpiecznym miejscu. Dla Ciebie i Twojej rodziny.
             </p>
             <div className="mt-10 flex items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
               <Link

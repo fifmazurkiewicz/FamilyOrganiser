@@ -62,7 +62,7 @@ export default function AuthCallbackPage() {
   }
 
   return (
-    <div className="min-h-dvh flex items-center justify-center text-sm text-gray-500">
+    <div className="min-h-dvh flex items-center justify-center text-sm text-muted-foreground bg-background">
       Finalizowanie logowania…
     </div>
   );

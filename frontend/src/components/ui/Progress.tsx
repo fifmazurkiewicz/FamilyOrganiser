@@ -22,7 +22,7 @@ export function Progress({ value, max = 100, className, indicatorClassName, show
         style={{ width: `${percent}%` }}
       />
       {showLabel && (
-        <span className="absolute right-0 top-3 text-xs text-gray-500">{Math.round(percent)}%</span>
+        <span className="absolute right-0 top-3 text-xs text-muted-foreground">{Math.round(percent)}%</span>
       )}
     </div>
   );

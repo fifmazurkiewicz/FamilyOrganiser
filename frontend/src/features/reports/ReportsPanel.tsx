@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { reportsApi } from "@/lib/api/reports";
+import { useGroupStore } from "@/stores/groupStore";
 import { formatCurrency } from "@/utils/currency";
 import { CHART_COLORS } from "@/utils/colors";
 import {
@@ -11,27 +12,30 @@ import {
 } from "recharts";
 
 export function ReportsPanel() {
+  const { activeGroup } = useGroupStore();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
 
   const { data: categories, isLoading: catsLoading } = useQuery({
-    queryKey: ["expenses-by-category", year, month],
-    queryFn: () => reportsApi.expensesByCategory(year, month),
+    queryKey: ["expenses-by-category", year, month, activeGroup?.id],
+    queryFn: () => reportsApi.expensesByCategory(year, month, activeGroup!.id),
+    enabled: !!activeGroup?.id,
   });
 
   const { data: trend, isLoading: trendLoading } = useQuery({
-    queryKey: ["monthly-trend", 12],
-    queryFn: () => reportsApi.monthlyTrend(12),
+    queryKey: ["monthly-trend", 12, activeGroup?.id],
+    queryFn: () => reportsApi.monthlyTrend(12, activeGroup!.id),
+    enabled: !!activeGroup?.id,
   });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-gray-900">Raporty finansowe</h2>
+        <h2 className="text-lg font-semibold text-foreground">Raporty finansowe</h2>
         <div className="flex items-center gap-2">
           <select
-            className="rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            className="rounded-lg border border-border bg-card px-2 py-1 text-sm"
             value={month}
             onChange={(e) => setMonth(parseInt(e.target.value))}
           >
@@ -41,13 +45,13 @@ export function ReportsPanel() {
           </select>
           <input
             type="number"
-            className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+            className="w-20 rounded-lg border border-border bg-card px-2 py-1 text-sm"
             value={year}
             onChange={(e) => setYear(parseInt(e.target.value))}
           />
         </div>
       </div>
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-muted-foreground">
         Dane z budżetów miesięcznych Twoich grup. Eksport Excel jest dostępny w module Budżet miesięczny.
       </p>
 
@@ -56,7 +60,7 @@ export function ReportsPanel() {
           <CardHeader><CardTitle>Wydatki wg kategorii</CardTitle></CardHeader>
           <CardContent>
             {catsLoading ? <Spinner /> : !categories || categories.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-8">Brak danych</p>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
@@ -86,7 +90,7 @@ export function ReportsPanel() {
           <CardHeader><CardTitle>Trend miesięczny (12 mies.)</CardTitle></CardHeader>
           <CardContent>
             {trendLoading ? <Spinner /> : !trend || trend.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-8">Brak danych</p>
+              <p className="text-sm text-muted-foreground text-center py-8">Brak danych</p>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={trend}>

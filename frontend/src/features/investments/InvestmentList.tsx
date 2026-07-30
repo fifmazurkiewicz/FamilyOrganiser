@@ -195,15 +195,15 @@ export function InvestmentList() {
           <CardContent className="py-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="text-center">
-                <p className="text-xs text-gray-500 flex items-center gap-1 justify-center">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
                   <Banknote className="h-3.5 w-3.5" /> Zainwestowano
                 </p>
-                <p className="text-xl font-bold text-gray-900">
+                <p className="text-xl font-bold text-foreground">
                   {formatCurrency(totals.totalInvested)}
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-gray-500 flex items-center gap-1 justify-center">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
                   <TrendingUp className="h-3.5 w-3.5" /> Projekcja zysku
                 </p>
                 <p className="text-xl font-bold text-emerald-600">
@@ -211,7 +211,7 @@ export function InvestmentList() {
                 </p>
               </div>
               <div className="text-center">
-                <p className="text-xs text-gray-500 flex items-center gap-1 justify-center">
+                <p className="text-xs text-muted-foreground flex items-center gap-1 justify-center">
                   <PiggyBank className="h-3.5 w-3.5" /> Projekcja łącznie
                 </p>
                 <p className="text-xl font-bold text-primary">
@@ -225,7 +225,7 @@ export function InvestmentList() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Inwestycje</h2>
+        <h2 className="text-lg font-semibold text-foreground">Inwestycje</h2>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4" /> Dodaj inwestycję
         </Button>
@@ -257,7 +257,7 @@ export function InvestmentList() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle>{inv.name}</CardTitle>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         {typeLabels[inv.investment_type] || inv.investment_type}
                       </p>
                     </div>
@@ -271,14 +271,14 @@ export function InvestmentList() {
                 <CardContent className="space-y-3">
                   {/* Amount */}
                   <div>
-                    <p className="text-xs text-gray-500">Kwota</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-xs text-muted-foreground">Kwota</p>
+                    <p className="text-lg font-bold text-foreground">
                       {formatCurrency(inv.principal_amount)}
                     </p>
                   </div>
 
                   {/* Details row */}
-                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Percent className="h-3 w-3" />
                       {inv.interest_rate}%
@@ -301,7 +301,7 @@ export function InvestmentList() {
                   {/* Progress bar */}
                   <div className="space-y-1">
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400">Zysk</span>
+                      <span className="text-muted-foreground">Zysk</span>
                       <span className="text-emerald-600 font-semibold">
                         +{formatCurrency(inv.projected_profit)} ({profitPercent.toFixed(1)}%)
                       </span>
@@ -352,11 +352,11 @@ export function InvestmentList() {
             placeholder="np. Lokata 6-miesięczna"
           />
           <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-foreground">
               Typ inwestycji
             </label>
             <select
-              className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2.5 text-sm"
               value={form.investment_type}
               onChange={(e) =>
                 setForm({ ...form, investment_type: e.target.value })

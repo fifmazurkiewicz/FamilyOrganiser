@@ -11,6 +11,8 @@ import { usersApi } from "@/lib/api/users";
 import { familyApi } from "@/lib/api/family";
 import { authApi } from "@/lib/api/auth";
 
+const isSupabaseAuth = Boolean(import.meta.env.VITE_SUPABASE_URL);
+
 export default function AdminPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"users" | "families">("users");
@@ -117,14 +119,16 @@ export default function AdminPage() {
                           <Lock className="h-4 w-4" /> Zablokuj
                         </Button>
                       )}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setResetPwdUser({ id: u.id, email: u.email })}
-                        disabled={!u.is_active}
-                      >
-                        <Key className="h-4 w-4" /> Reset hasła
-                      </Button>
+                      {!isSupabaseAuth && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setResetPwdUser({ id: u.id, email: u.email })}
+                          disabled={!u.is_active}
+                        >
+                          <Key className="h-4 w-4" /> Reset hasła
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -181,6 +185,7 @@ export default function AdminPage() {
         </Card>
       )}
 
+      {!isSupabaseAuth && (
       <Modal open={!!resetPwdUser} onClose={() => { setResetPwdUser(null); setNewPassword(""); }} title="Reset hasła">
         {resetPwdUser && (
           <div className="space-y-4">
@@ -204,6 +209,7 @@ export default function AdminPage() {
           </div>
         )}
       </Modal>
+      )}
     </div>
   );
 }

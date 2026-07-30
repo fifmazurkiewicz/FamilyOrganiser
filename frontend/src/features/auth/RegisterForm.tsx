@@ -32,7 +32,7 @@ function PasswordStrength({ password }: { password: string }) {
           <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= score ? colors[score] : "bg-gray-200"}`} />
         ))}
       </div>
-      <p className="text-xs text-gray-500">{labels[score]} hasło</p>
+      <p className="text-xs text-muted-foreground">{labels[score]} hasło</p>
     </div>
   );
 }
@@ -101,7 +101,7 @@ export function RegisterForm() {
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-[34px] text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-[34px] text-muted-foreground hover:text-foreground transition-colors"
             tabIndex={-1}
           >
             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -110,9 +110,9 @@ export function RegisterForm() {
         <PasswordStrength password={form.password} />
       </div>
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700">Pytanie bezpieczeństwa</label>
+        <label className="block text-sm font-medium text-foreground">Pytanie bezpieczeństwa</label>
         <select
-          className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm bg-white shadow-sm
+          className="block w-full rounded-lg border border-border bg-card shadow-sm
             focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           value={form.security_question}
           onChange={(e) => setForm({ ...form, security_question: e.target.value })}
