@@ -1,0 +1,10 @@
+root: ./docs/
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+redirects:
+  architecture: technical/architecture.md
+  api: technical/api.md
+  deploy: deployment/platform-architecture.md

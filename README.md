@@ -24,7 +24,7 @@ Pełna dokumentacja: [`docs/README.md`](docs/README.md) · handover: [`docs/busi
 | Auth | Supabase (magic link + Google OAuth) → JWT weryfikowany przez API |
 | Deploy API | GitHub Actions → SSH → `scripts/deploy.sh` |
 
-**Nie używamy:** Redis, Fly.io (archiwum w `archive/fly/`), Coolify na produkcji.
+**Nie używamy:** Redis, Fly.io (historyczny PoC — zob. docs), Coolify na produkcji.
 
 ---
 
@@ -96,9 +96,8 @@ FamilyOrganiser/
 ├── backend/           # FastAPI → Docker na Hetzner
 ├── docker/            # Caddyfile, nginx (dev), entrypoint
 ├── scripts/deploy.sh  # Deploy API na VPS
-├── .github/workflows/ # CI/CD backendu
-├── docs/              # Dokumentacja biznes + tech + deploy
-└── archive/fly/       # PoC Fly.io (nie produkcja)
+├── .github/workflows/ # CI, deploy API, backup Supabase
+├── docs/              # Dokumentacja (+ GitBook: .gitbook.yaml)
 ```
 
 ---

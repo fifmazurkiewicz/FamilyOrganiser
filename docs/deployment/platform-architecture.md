@@ -55,7 +55,7 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
 | Baza / auth / pliki | **Supabase** (managed) | Postgres + Auth (magic link, Google) + pgvector |
 
 **Bez Coolify** — świadomie: Compose + Caddy na VPS.  
-**Bez Fly.io** w produkcji — PoC w `archive/fly/` (nie używać).
+**Bez Fly.io** w produkcji — historyczny PoC opisany w [fly-io.md](fly-io.md) (katalog `archive/fly/` usunięty z repo).
 
 ### Dlaczego Supabase managed
 
@@ -214,6 +214,16 @@ Authentication → URL Configuration:
 
 `deploy.sh`: pull → zapis `.env` z Secrets → `compose up --build` → `alembic upgrade` → health. Caddy → `:8080`, `restart: unless-stopped`.
 
+### CI i backup bazy
+
+| Workflow | Plik | Kiedy |
+|----------|------|--------|
+| **CI** | `.github/workflows/ci.yml` | push/PR na `main` — pytest + `npm run build` |
+| **Backup Supabase** | `.github/workflows/backup-supabase.yml` | codziennie 03:00 UTC + ręcznie; artefakt 30 dni |
+| Skrypt lokalny | `scripts/backup-supabase.sh` | ten sam `pg_dump` co w Actions |
+
+Szczegóły restore: [backup-restore.md](backup-restore.md).
+
 ### Diagnostyka
 
 | Objaw | Sprawdź |
@@ -232,12 +242,13 @@ Authentication → URL Configuration:
 1. Jedna apka = jedna subdomena FE (+ osobna subdomena API gdy własny backend).
 2. Max ~5 osób na projekt.
 3. Sekrety tylko w env Vercel / VPS / GitHub Actions secrets — nie w git.
-4. Fly.io (`archive/fly/`) — historyczny PoC — nie używamy w produkcji.
+4. Fly.io — historyczny PoC (usunięty z repo) — nie używamy w produkcji.
 
 ---
 
 ## Powiązane dokumenty
 
 - [Najtańszy hosting (VPS / porównanie)](cheap-hosting.md)
-- [Fly.io (PoC)](fly-io.md)
+- [Backup i restore](backup-restore.md)
+- [GitBook — podłączenie](gitbook-setup.md)
 - [Architektura aplikacji](../technical/architecture.md)
