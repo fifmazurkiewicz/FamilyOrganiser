@@ -243,9 +243,13 @@ docker compose -f docker-compose.prod.yml exec backend alembic upgrade head
 
 ### 9. Backup (obowiązkowy nawet „na tanio”)
 
+**Produkcja (Supabase):** automatyczny backup przez GitHub Actions — **1. dnia miesiąca** (~co 30 dni). Szczegóły: [backup-restore.md](backup-restore.md), skrypt `scripts/backup-supabase.sh`.
+
+**VPS z własnym Postgres (referencja):**
+
 ```bash
-# przykład cron codziennie 3:00
-0 3 * * * docker compose -f /opt/familyorganiser/docker-compose.prod.yml exec -T db \
+# przykład cron co 30 dni (1. dzień miesiąca, 3:00)
+0 3 1 * * docker compose -f /opt/familyorganiser/docker-compose.prod.yml exec -T db \
   pg_dump -U familyorg familyorg | gzip > /opt/backups/familyorg-$(date +\%F).sql.gz
 ```
 
@@ -317,7 +321,7 @@ Te rzeczy jeszcze nie są „produkcyjne” w obecnym stanie projektu:
 2. `frontend/Dockerfile` multi-stage: `npm run build` → `nginx:alpine` z `dist`.
 3. `docker/Caddyfile` (prod) lub `docker/nginx.conf` (dev) — static + `/api` + SSL.
 4. `.env.example` — checklista sekretów (lokalnie i produkcja).
-5. Skrypt `scripts/backup.sh` + krótka instrukcja restore.
+5. Skrypt `scripts/backup-supabase.sh` + [backup-restore.md](backup-restore.md).
 
 Gdy będziesz gotowy, można to wdrożyć w repo jako kolejny krok (bez zmiany logiki biznesowej).
 

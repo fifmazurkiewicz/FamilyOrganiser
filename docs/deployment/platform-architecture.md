@@ -60,7 +60,7 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
 ### Dlaczego Supabase managed
 
 - Rozdzielenie bazy od compute.
-- Auth (magic link + Google OAuth) + automatyczne backupy.
+- Auth (magic link + Google OAuth) + automatyczne backupy Postgres (~co 30 dni).
 - Backend łączy się connection stringiem (`DATABASE_URL`); JWT weryfikuje lokalnie (JWKS / JWT secret).
 
 ---
@@ -219,7 +219,7 @@ Authentication → URL Configuration:
 | Workflow | Plik | Kiedy |
 |----------|------|--------|
 | **CI** | `.github/workflows/ci.yml` | push/PR na `main` — pytest + `npm run build` |
-| **Backup Supabase** | `.github/workflows/backup-supabase.yml` | codziennie 03:00 UTC + ręcznie; artefakt 30 dni |
+| **Backup Supabase** | `.github/workflows/backup-supabase.yml` | 1. dnia miesiąca 03:00 UTC + ręcznie; artefakt 90 dni |
 | Skrypt lokalny | `scripts/backup-supabase.sh` | ten sam `pg_dump` co w Actions |
 
 Szczegóły restore: [backup-restore.md](backup-restore.md).

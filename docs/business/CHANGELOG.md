@@ -2,6 +2,14 @@
 
 ## [2.2] — 2026-07-30 — Produkcja
 
+### 🔒 Bezpieczeństwo i jakość (sesja hardening)
+
+- **IDOR:** wymuszanie członkostwa w grupie we wszystkich modułach danych
+- **Powiadomienia:** eventy zakupów i zadań (bez reminderów cyklicznych)
+- **Legacy auth:** wyłączone na prod (Supabase JWT)
+- **CI:** pytest + build frontendu na push/PR
+- **Backup Supabase:** miesięczny pg_dump (1. dnia miesiąca, artefakt 90 dni)
+
 ### 🚀 Wdrożenie produkcyjne
 
 - **Frontend live:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) (Vercel)
@@ -25,7 +33,7 @@
 
 ### Infrastruktura
 
-- Fly.io przeniesiony do `archive/fly/` (nie produkcja)
+- Fly.io — usunięty z repo (historyczny PoC, nie produkcja)
 - Usunięty duplikat `backend/requirements.txt` (Poetry = źródło prawdy)
 
 ---

@@ -47,7 +47,7 @@
 | Dokument | Treść |
 |----------|--------|
 | [**Architektura platformy**](deployment/platform-architecture.md) | **Kanoniczny** opis prod + krok po kroku |
-| [Backup i restore](deployment/backup-restore.md) | Automatyczny pg_dump (GitHub Actions) |
+| [Backup i restore](deployment/backup-restore.md) | pg_dump co ~30 dni (GitHub Actions) + restore |
 | [GitBook](deployment/gitbook-setup.md) | Podłączenie docs do GitBook (Git Sync) |
 | [Porównanie hostingu](deployment/cheap-hosting.md) | Koszty VPS vs PaaS (referencja) |
 | [Fly.io PoC](deployment/fly-io.md) | Archiwum historyczne — nie produkcja |

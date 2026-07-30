@@ -1,10 +1,11 @@
-# Codzienny backup bazy Supabase (pg_dump) → artefakt GitHub (30 dni).
+# Miesięczny backup bazy Supabase (pg_dump) → artefakt GitHub (90 dni).
 # Sekret: DATABASE_URL (ten sam co deploy API).
 name: Backup Supabase
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    # 1. dzień miesiąca, 03:00 UTC (~co 30 dni)
+    - cron: "0 3 1 * *"
   workflow_dispatch:
 
 concurrency:
@@ -34,5 +35,5 @@ jobs:
         with:
           name: supabase-backup-${{ github.run_id }}
           path: backups/*.sql.gz
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: error

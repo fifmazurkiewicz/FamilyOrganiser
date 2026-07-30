@@ -10,10 +10,10 @@
 | Element | Wartość |
 |---------|---------|
 | Workflow | `.github/workflows/backup-supabase.yml` |
-| Harmonogram | codziennie o **03:00 UTC** |
+| Harmonogram | **1. dnia miesiąca** o **03:00 UTC** (~co 30 dni) |
 | Ręcznie | GitHub → Actions → *Backup Supabase* → *Run workflow* |
 | Sekret | `DATABASE_URL` (connection string Supabase, jak przy deploy API) |
-| Wynik | artefakt `supabase-backup-<run_id>.sql.gz` (retencja **30 dni**) |
+| Wynik | artefakt `supabase-backup-<run_id>.sql.gz` (retencja **90 dni**) |
 
 Skrypt: `scripts/backup-supabase.sh` — ten sam dump lokalnie:
 
@@ -42,5 +42,6 @@ Dla Supabase: użyj connection stringa z panelu (Session mode, port 5432) i `ssl
 ## Uwagi
 
 - Backup obejmuje **schemat + dane aplikacji** w Postgres — nie zastępuje backupów panelu Supabase (PITR na planie płatnym).
+- Przy harmonogramie miesięcznym retencja artefaktu (**90 dni**) pozwala trzymać kilka ostatnich kopii.
 - `DATABASE_URL` trzymaj wyłącznie w GitHub Secrets / managerze haseł — nigdy w repo.
 - Artefakty GitHub to wygodny fallback; dla długiej retencji rozważ okresowy upload do R2/S3 (poza zakresem v1).
