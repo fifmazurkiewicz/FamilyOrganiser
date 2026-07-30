@@ -1,0 +1,38 @@
+# Codzienny backup bazy Supabase (pg_dump) → artefakt GitHub (30 dni).
+# Sekret: DATABASE_URL (ten sam co deploy API).
+name: Backup Supabase
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: backup-supabase
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          chmod +x scripts/backup-supabase.sh
+          ./scripts/backup-supabase.sh backups
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_id }}
+          path: backups/*.sql.gz
+          retention-days: 30
+          if-no-files-found: error

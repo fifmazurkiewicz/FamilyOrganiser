@@ -219,8 +219,8 @@ docker/certs/
 .env.local
 .env.*.local
 
-# Local learning notes (learning-tutor subagent) — never commit
-learning/
+# Local database dumps (scripts/backup-supabase.sh)
+backups/
 
 # Cursor hook state (local machine paths, transcript IDs)
 .cursor/hooks/state/
