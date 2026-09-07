@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_app_admin, get_current_user
+from app.api.deps import get_current_app_admin, get_current_user, require_approved
 from app.db.base import get_db
 from app.models.family import FamilyMembership, FamilyRole
 from app.models.user import User
@@ -21,7 +21,7 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @router.patch("/me", response_model=UserResponse)
 async def update_me(
     payload: UserUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_approved),
     db: AsyncSession = Depends(get_db),
 ):
     if payload.full_name is not None:
@@ -37,7 +37,7 @@ async def update_me(
 
 @router.delete("/me", status_code=204)
 async def delete_account(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_approved),
     db: AsyncSession = Depends(get_db),
 ):
     from app.core.exceptions import BusinessLogicError
@@ -113,3 +113,37 @@ async def admin_delete_user(
         raise NotFoundError("User not found")
     user.is_active = False
     await db.commit()
+
+
+@router.post("/{user_id}/approve", tags=["Admin"])
+async def approve_user(
+    user_id: uuid.UUID,
+    admin: User = Depends(get_current_app_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.core.exceptions import NotFoundError
+
+    user = await db.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found")
+    user.is_approved = True
+    await db.commit()
+    return {"message": "User approved"}
+
+
+@router.post("/{user_id}/revoke", tags=["Admin"])
+async def revoke_user(
+    user_id: uuid.UUID,
+    admin: User = Depends(get_current_app_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.core.exceptions import BusinessLogicError, NotFoundError
+
+    if user_id == admin.id:
+        raise BusinessLogicError("Cannot revoke your own access")
+    user = await db.get(User, user_id)
+    if not user:
+        raise NotFoundError("User not found")
+    user.is_approved = False
+    await db.commit()
+    return {"message": "User access revoked"}

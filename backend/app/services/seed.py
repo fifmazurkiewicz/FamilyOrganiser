@@ -38,6 +38,7 @@ async def seed_admin_user(db: AsyncSession) -> None:
             is_app_admin=True,
             is_active=True,
             is_locked=False,
+            is_approved=True,
         )
         db.add(admin)
         await db.flush()

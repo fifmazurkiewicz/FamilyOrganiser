@@ -1,5 +1,14 @@
 # Lista zmian (CHANGELOG)
 
+## [2.3] — 2026-09-07 — Approval gate
+
+- Nowa flaga `users.is_approved` (osobno od `is_active` / `is_locked`)
+- Nowe konta czekają na akceptację; istniejące grandfathered
+- `ADMIN_EMAIL` auto-approved tylko przy insercie
+- Feature API: 403 `account_pending_approval`; `/users/me` działa bez akceptacji
+- Admin: Akceptuj / Cofnij dostęp (bez self-revoke, bez powiadomień)
+- Frontend: ekran oczekiwania, bez chrome `/app/*`
+
 ## [2.2] — 2026-07-30 — Produkcja
 
 ### 🔒 Bezpieczeństwo i jakość (sesja hardening)

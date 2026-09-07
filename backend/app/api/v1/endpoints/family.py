@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_current_app_admin
+from app.api.deps import get_current_app_admin, get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.schemas.family import (
@@ -18,7 +18,11 @@ from app.schemas.family import (
 )
 from app.services.family import FamilyService
 
-router = APIRouter(prefix="/groups", tags=["Family Groups"])
+router = APIRouter(
+    prefix="/groups",
+    tags=["Family Groups"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.post("/", response_model=FamilyGroupResponse, status_code=201)

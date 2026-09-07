@@ -119,3 +119,11 @@ erDiagram
 | projected_profit | NUMERIC(12,2) | Prognozowany zysk |
 | projected_total | NUMERIC(12,2) | Kapitał końcowy |
 | notes | TEXT (nullable) | Notatki |
+
+## ADDED — users.is_approved (2026-09-07)
+
+`users` already has `is_active`, `is_locked`, `is_app_admin`. Approval is a **separate** boolean.
+
+| Kolumna | Typ | Opis |
+|---------|-----|------|
+| is_approved | BOOLEAN | `false` for new signups; existing rows grandfathered `true`. Allowlist `ADMIN_EMAIL` auto-approved on **insert only**. Not a lock/inactive flag. |

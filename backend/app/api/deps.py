@@ -52,7 +52,16 @@ async def get_current_user(
     return user
 
 
-async def get_current_app_admin(current_user: User = Depends(get_current_user)) -> User:
+async def require_approved(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="account_pending_approval",
+        )
+    return current_user
+
+
+async def get_current_app_admin(current_user: User = Depends(require_approved)) -> User:
     if not current_user.is_app_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="App admin required")
     return current_user
@@ -60,7 +69,7 @@ async def get_current_app_admin(current_user: User = Depends(get_current_user)) 
 
 async def get_family_admin(
     group_id: uuid.UUID,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_approved),
     db: AsyncSession = Depends(get_db),
 ) -> tuple[User, FamilyMembership]:
     result = await db.execute(

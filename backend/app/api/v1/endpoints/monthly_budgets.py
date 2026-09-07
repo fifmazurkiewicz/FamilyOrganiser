@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.services.monthly_budget import MonthlyBudgetService
@@ -17,7 +17,11 @@ from app.schemas.monthly_budget import (
     BudgetSummaryResponse,
 )
 
-router = APIRouter(prefix="/monthly-budgets", tags=["Monthly Budgets"])
+router = APIRouter(
+    prefix="/monthly-budgets",
+    tags=["Monthly Budgets"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.post("/", response_model=MonthlyBudgetResponse, status_code=201)

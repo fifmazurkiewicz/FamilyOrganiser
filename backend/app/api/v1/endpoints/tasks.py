@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.services.task import TaskService
@@ -12,7 +12,11 @@ from app.schemas.task import (
     TaskItemCreate, TaskItemUpdate, TaskItemResponse,
 )
 
-router = APIRouter(prefix="/tasks", tags=["Tasks"])
+router = APIRouter(
+    prefix="/tasks",
+    tags=["Tasks"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.get("/lists", response_model=list[TaskListResponse])

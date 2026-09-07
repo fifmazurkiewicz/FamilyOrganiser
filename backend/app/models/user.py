@@ -23,6 +23,9 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_app_admin: Mapped[bool] = mapped_column(Boolean, default=False)
     is_locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_approved: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default="false"
+    )
     security_question_attempts: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)

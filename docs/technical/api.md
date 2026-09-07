@@ -6,6 +6,26 @@
 
 ---
 
+## Users and approval
+
+### Current user (allowed while pending)
+```
+GET /api/v1/users/me
+Response: { id, email, full_name, is_active, is_app_admin, is_locked, is_approved, ... }
+```
+
+Unapproved users receive **403** `{ "detail": "account_pending_approval" }` on feature APIs (groups, shopping, tasks, budgets, investments, reports, notifications, exchange rates, profile mutations, admin mutations).
+
+### Admin approve / revoke
+```
+POST /api/v1/users/{user_id}/approve
+POST /api/v1/users/{user_id}/revoke
+```
+
+Revoking yourself returns **400**. No quota fields.
+
+---
+
 ## 🛒 Shopping Lists
 
 ### Lista list zakupowych

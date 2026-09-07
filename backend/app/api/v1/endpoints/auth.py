@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user, get_current_app_admin
+from app.api.deps import get_current_app_admin, require_approved
 from app.core.config import settings
 from app.db.base import get_db
 from app.models.user import User
@@ -82,7 +82,7 @@ async def reset_via_security_question(
 @router.post("/change-password")
 async def change_password(
     payload: PasswordChangeRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_approved),
     db: AsyncSession = Depends(get_db),
 ):
     _require_legacy_auth()

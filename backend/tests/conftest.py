@@ -85,6 +85,7 @@ async def test_user(db_session: AsyncSession) -> User:
         email="test@example.com",
         hashed_password="hashed",
         full_name="Test User",
+        is_approved=True,
     )
     db_session.add(user)
     await db_session.flush()
@@ -99,6 +100,7 @@ async def test_user2(db_session: AsyncSession) -> User:
         email="test2@example.com",
         hashed_password="hashed",
         full_name="Test User 2",
+        is_approved=True,
     )
     db_session.add(user)
     await db_session.flush()
@@ -150,6 +152,7 @@ async def admin_user(db_session: AsyncSession) -> User:
         hashed_password="hashed",
         full_name="Admin User",
         is_app_admin=True,
+        is_approved=True,
     )
     db_session.add(user)
     await db_session.flush()

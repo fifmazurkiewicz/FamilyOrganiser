@@ -8,6 +8,7 @@ interface User {
   default_currency: string;
   avatar_url?: string;
   is_app_admin: boolean;
+  is_approved: boolean;
 }
 
 interface AuthState {

@@ -69,7 +69,7 @@ graph TB
 ## Warstwy backendu
 
 ```
-HTTP Request → API Endpoint (deps: JWT user)
+HTTP Request → API Endpoint (deps: JWT user, then require_approved except GET /users/me)
     ↓
 Service (logika biznesowa, reguły grup)
     ↓

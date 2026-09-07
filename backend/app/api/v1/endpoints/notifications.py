@@ -3,13 +3,17 @@ import uuid
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.schemas.notification import NotificationResponse
 from app.services.notification import NotificationService
 
-router = APIRouter(prefix="/notifications", tags=["Notifications"])
+router = APIRouter(
+    prefix="/notifications",
+    tags=["Notifications"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.get("/", response_model=list[NotificationResponse])

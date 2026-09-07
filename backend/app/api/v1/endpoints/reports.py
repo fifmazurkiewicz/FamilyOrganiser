@@ -5,12 +5,16 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.services.report import ReportService
 
-router = APIRouter(prefix="/reports", tags=["Reports"])
+router = APIRouter(
+    prefix="/reports",
+    tags=["Reports"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.get("/dashboard")

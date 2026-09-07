@@ -7,6 +7,7 @@ export interface AdminUser {
   is_app_admin: boolean;
   is_locked: boolean;
   is_active: boolean;
+  is_approved: boolean;
 }
 
 export const usersApi = {
@@ -22,6 +23,12 @@ export const usersApi = {
 
   unlockUser: (userId: string) =>
     api.post(`/v1/users/${userId}/unlock`).then((r) => r.data),
+
+  approveUser: (userId: string) =>
+    api.post(`/v1/users/${userId}/approve`).then((r) => r.data),
+
+  revokeUser: (userId: string) =>
+    api.post(`/v1/users/${userId}/revoke`).then((r) => r.data),
 
   deleteUser: (userId: string) =>
     api.delete(`/v1/users/${userId}`).then((r) => r.data),

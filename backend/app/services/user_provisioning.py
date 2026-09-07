@@ -10,6 +10,10 @@ from app.core.config import settings
 from app.models.user import User
 
 
+def _is_admin_allowlist(email: str) -> bool:
+    return bool(email) and email.strip().lower() == settings.ADMIN_EMAIL.lower()
+
+
 async def get_or_create_user_from_claims(
     db: AsyncSession, claims: dict
 ) -> User | None:
@@ -69,13 +73,15 @@ async def get_or_create_user_from_claims(
     if not email:
         return None
 
+    allowlist = _is_admin_allowlist(email)
     user = User(
         email=email,
         hashed_password=None,
         full_name=full_name,
         supabase_auth_id=auth_id,
         default_currency="PLN",
-        is_app_admin=email == settings.ADMIN_EMAIL.lower(),
+        is_app_admin=allowlist,
+        is_approved=allowlist,
         is_active=True,
         is_locked=False,
     )

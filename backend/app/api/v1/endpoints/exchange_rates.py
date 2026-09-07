@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.services.exchange_rate import ExchangeRateService
 
-router = APIRouter(prefix="/exchange-rates", tags=["Exchange Rates"])
+router = APIRouter(
+    prefix="/exchange-rates",
+    tags=["Exchange Rates"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.get("/")

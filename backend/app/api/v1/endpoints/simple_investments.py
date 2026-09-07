@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_approved
 from app.db.base import get_db
 from app.models.user import User
 from app.services.simple_investment import SimpleInvestmentService
@@ -12,7 +12,11 @@ from app.schemas.simple_investment import (
     SimpleInvestmentResponse, InvestmentSummaryResponse,
 )
 
-router = APIRouter(prefix="/simple-investments", tags=["Simple Investments"])
+router = APIRouter(
+    prefix="/simple-investments",
+    tags=["Simple Investments"],
+    dependencies=[Depends(require_approved)],
+)
 
 
 @router.get("/", response_model=list[SimpleInvestmentResponse])

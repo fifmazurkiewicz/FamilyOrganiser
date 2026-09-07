@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Users, Trash2, Lock, Unlock, Key } from "lucide-react";
+import { Shield, Trash2, Lock, Unlock, Key, Check, Ban } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -10,11 +10,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { usersApi } from "@/lib/api/users";
 import { familyApi } from "@/lib/api/family";
 import { authApi } from "@/lib/api/auth";
+import { useAuthStore } from "@/stores/authStore";
 
 const isSupabaseAuth = Boolean(import.meta.env.VITE_SUPABASE_URL);
 
 export default function AdminPage() {
   const qc = useQueryClient();
+  const meId = useAuthStore((s) => s.user?.id);
   const [tab, setTab] = useState<"users" | "families">("users");
   const [resetPwdUser, setResetPwdUser] = useState<{ id: string; email: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -39,6 +41,14 @@ export default function AdminPage() {
   });
   const deleteUser = useMutation({
     mutationFn: usersApi.deleteUser,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
+  });
+  const approveUser = useMutation({
+    mutationFn: usersApi.approveUser,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
+  });
+  const revokeUser = useMutation({
+    mutationFn: usersApi.revokeUser,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
   const deleteGroup = useMutation({
@@ -105,11 +115,37 @@ export default function AdminPage() {
                       <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                       <div className="flex flex-wrap gap-2 mt-1">
                         {u.is_app_admin && <Badge variant="info">Admin</Badge>}
+                        {u.is_approved ? (
+                          <Badge variant="success">Zaakceptowany</Badge>
+                        ) : (
+                          <Badge variant="warning">Oczekuje</Badge>
+                        )}
                         {u.is_locked && <Badge variant="danger">Zablokowany</Badge>}
                         {!u.is_active && <Badge variant="default">Nieaktywny</Badge>}
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 shrink-0">
+                      {u.is_approved ? (
+                        u.id !== meId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => revokeUser.mutate(u.id)}
+                            loading={revokeUser.isPending && revokeUser.variables === u.id}
+                          >
+                            <Ban className="h-4 w-4" /> Cofnij dostęp
+                          </Button>
+                        )
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => approveUser.mutate(u.id)}
+                          loading={approveUser.isPending && approveUser.variables === u.id}
+                        >
+                          <Check className="h-4 w-4" /> Akceptuj
+                        </Button>
+                      )}
                       {u.is_locked ? (
                         <Button variant="outline" size="sm" onClick={() => unlockUser.mutate(u.id)}>
                           <Unlock className="h-4 w-4" /> Odblokuj

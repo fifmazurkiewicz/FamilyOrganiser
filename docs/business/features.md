@@ -16,6 +16,12 @@ Dla 2–6 osobowej rodziny, która chce mieć wspólny podgląd na:
 
 ## Funkcje
 
+### Dostęp do aplikacji
+- Rejestracja publiczna (Supabase / legacy) zostaje
+- Nowe konto czeka na akceptację administratora (osobna flaga, nie blokada)
+- Do czasu akceptacji: jeden ekran oczekiwania, bez menu aplikacji
+- Administrator: Akceptuj / Cofnij dostęp (nie może cofnąć sobie)
+
 ### 🛒 Lista zakupów
 - Wspólna checklista dla całej rodziny
 - Dodajesz pozycję → każdy widzi

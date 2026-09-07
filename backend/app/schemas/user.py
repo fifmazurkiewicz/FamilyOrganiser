@@ -26,6 +26,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_app_admin: bool
     is_locked: bool
+    is_approved: bool
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -59,6 +59,7 @@ class AuthService:
             hashed_password=hash_password(password),
             full_name=full_name,
             default_currency=default_currency,
+            is_approved=False,
         )
         self._session.add(user)
         await self._session.flush()

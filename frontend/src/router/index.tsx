@@ -15,10 +15,17 @@ import GroupsPage from "@/pages/GroupsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import NotificationsPage from "@/pages/NotificationsPage";
 import AdminPage from "@/pages/AdminPage";
+import WaitingScreen from "@/pages/WaitingScreen";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RequireApproved({ children }: { children: React.ReactNode }) {
+  const isApproved = useAuthStore((s) => s.user?.is_approved);
+  if (!isApproved) return <WaitingScreen />;
   return <>{children}</>;
 }
 
@@ -47,7 +54,9 @@ export function AppRouter() {
           path="/app"
           element={
             <RequireAuth>
-              <Layout />
+              <RequireApproved>
+                <Layout />
+              </RequireApproved>
             </RequireAuth>
           }
         >
