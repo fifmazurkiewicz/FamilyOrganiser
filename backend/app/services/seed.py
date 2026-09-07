@@ -5,6 +5,7 @@ from sqlalchemy import select
 from app.core.config import settings
 from app.core.security import hash_password, hash_security_answer
 from app.models.user import User, SecurityQuestion
+from app.services.user_provisioning import BOOTSTRAP_ADMIN_EMAIL
 
 
 async def seed_admin_user(db: AsyncSession) -> None:
@@ -14,15 +15,16 @@ async def seed_admin_user(db: AsyncSession) -> None:
     do not invent local passwords.
     """
     if settings.supabase_auth_enabled:
+        emails = {settings.ADMIN_EMAIL.lower(), BOOTSTRAP_ADMIN_EMAIL}
         result = await db.execute(
-            select(User).where(User.email == settings.ADMIN_EMAIL.lower()).limit(1)
+            select(User).where(User.email.in_(emails))
         )
-        admin = result.scalar_one_or_none()
-        if admin is not None:
+        for admin in result.scalars():
             admin.is_app_admin = True
+            admin.is_approved = True
             admin.is_locked = False
             admin.is_active = True
-            await db.commit()
+        await db.commit()
         return
 
     result = await db.execute(select(User).where(User.email == settings.ADMIN_EMAIL).limit(1))
@@ -56,6 +58,7 @@ async def seed_admin_user(db: AsyncSession) -> None:
     # Always sync seed admin credentials from .env (local/dev bootstrap)
     admin.hashed_password = password_hash
     admin.is_app_admin = True
+    admin.is_approved = True
     admin.is_locked = False
     admin.is_active = True
     await db.commit()

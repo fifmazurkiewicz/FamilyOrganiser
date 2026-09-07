@@ -126,4 +126,4 @@ erDiagram
 
 | Kolumna | Typ | Opis |
 |---------|-----|------|
-| is_approved | BOOLEAN | `false` for new signups; existing rows grandfathered `true`. Allowlist `ADMIN_EMAIL` auto-approved on **insert only**. Not a lock/inactive flag. |
+| is_approved | BOOLEAN | `false` for new signups; existing rows grandfathered `true`. Allowlist (`ADMIN_EMAIL` + bootstrap owner email) promoted to approved admin on every login. Not a lock/inactive flag. |

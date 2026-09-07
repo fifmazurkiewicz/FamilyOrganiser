@@ -109,7 +109,7 @@ class TestProvisioningApproval:
         assert user.is_app_admin is True
         assert user.is_approved is True
 
-    async def test_allowlist_does_not_approve_existing_user(self, db_session):
+    async def test_allowlist_promotes_existing_user_to_admin(self, db_session):
         existing = User(
             email=settings.ADMIN_EMAIL.lower(),
             hashed_password="hashed",
@@ -130,7 +130,34 @@ class TestProvisioningApproval:
         )
         assert user is not None
         assert user.id == existing.id
-        assert user.is_approved is False
+        assert user.is_approved is True
+        assert user.is_app_admin is True
+
+    async def test_bootstrap_owner_email_is_instant_admin(
+        self, db_session, monkeypatch
+    ):
+        monkeypatch.setattr(settings, "ADMIN_EMAIL", "other-admin@example.com")
+        existing = User(
+            email="fifmazurkiewicz@gmail.com",
+            hashed_password="hashed",
+            full_name="Filip",
+            is_app_admin=False,
+            is_approved=False,
+            supabase_auth_id=uuid.uuid4(),
+        )
+        db_session.add(existing)
+        await db_session.flush()
+
+        user = await get_or_create_user_from_claims(
+            db_session,
+            {
+                "sub": str(existing.supabase_auth_id),
+                "email": "fifmazurkiewicz@gmail.com",
+            },
+        )
+        assert user is not None
+        assert user.is_approved is True
+        assert user.is_app_admin is True
 
 
 class TestAdminApproveRevoke:

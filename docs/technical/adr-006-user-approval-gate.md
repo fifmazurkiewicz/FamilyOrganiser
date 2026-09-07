@@ -5,7 +5,7 @@
 
 ## Decision
 
-Public signup stays. New app users are created with `users.is_approved = false` unless their email matches `ADMIN_EMAIL` **on insert only**. Existing rows are grandfathered (`UPDATE ... SET is_approved = true`). There is no LLM spend quota in this app; the gate is access-only.
+Public signup stays. New app users are created with `users.is_approved = false` unless their email is on the admin allowlist (`ADMIN_EMAIL` or the bootstrap owner `fifmazurkiewicz@gmail.com`). Allowlist emails are promoted to `is_approved` + `is_app_admin` on **every login**, so a first signup that landed on the waiting screen is unblocked after env/code is corrected. Existing non-allowlist rows stay as grandfathered by the migration (`UPDATE ... SET is_approved = true`). There is no LLM spend quota in this app; the gate is access-only.
 
 Unapproved users may authenticate. `GET /api/v1/users/me` stays available (and returns `is_approved`) so the client can poll. All other authenticated feature APIs use `require_approved` and return **403** with `detail: "account_pending_approval"`.
 

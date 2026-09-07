@@ -4,7 +4,7 @@
 
 - Nowa flaga `users.is_approved` (osobno od `is_active` / `is_locked`)
 - Nowe konta czekają na akceptację; istniejące grandfathered
-- `ADMIN_EMAIL` auto-approved tylko przy insercie
+- `ADMIN_EMAIL` + bootstrap owner `fifmazurkiewicz@gmail.com` → `is_approved` + `is_app_admin` przy każdym logowaniu
 - Feature API: 403 `account_pending_approval`; `/users/me` działa bez akceptacji
 - Admin: Akceptuj / Cofnij dostęp (bez self-revoke, bez powiadomień)
 - Frontend: ekran oczekiwania, bez chrome `/app/*`

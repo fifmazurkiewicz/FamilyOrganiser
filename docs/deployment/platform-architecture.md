@@ -121,7 +121,7 @@ Supabase Dashboard → Authentication → URL Configuration:
 | `SUPABASE_URL` | ten sam URL projektu |
 | `SUPABASE_JWT_SECRET` | JWT Secret z Settings → API |
 | `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
-| `ADMIN_EMAIL` | email admina (promocja `is_app_admin` po pierwszym logowaniu) |
+| `ADMIN_EMAIL` | email admina (promocja `is_app_admin` + `is_approved` przy logowaniu; bootstrap: `fifmazurkiewicz@gmail.com`) |
 | `PORT` | `8080` (domyślnie) |
 
 ---
@@ -184,7 +184,7 @@ Repo → **Settings** → **Secrets and variables** → **Actions** → **New re
 | `SUPABASE_JWT_SECRET` | Supabase → Settings → API → JWT Secret |
 | `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
 | `SECRET_KEY` | długi losowy string |
-| `ADMIN_EMAIL` | Twój email admina |
+| `ADMIN_EMAIL` | `fifmazurkiewicz@gmail.com` (bootstrap admin; also hardcoded in provisioning) |
 
 Opcjonalnie: `SUPABASE_JWT_AUDIENCE` = `authenticated`.
 

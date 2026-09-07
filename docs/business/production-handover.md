@@ -88,7 +88,7 @@ Szczegóły: [Audyt bezpieczeństwa](../security/production-audit.md)
 
 ### Dodajesz użytkownika admina
 
-Ustaw `ADMIN_EMAIL` w GitHub Secret → zaloguj się tym mailem przez Google/magic link → backend ustawi `is_app_admin`.
+Ustaw `ADMIN_EMAIL` w GitHub Secret (właściciel: `fifmazurkiewicz@gmail.com`) → zaloguj się tym mailem przez Google/magic link → backend ustawi `is_app_admin` i `is_approved`. Bootstrap Gmail jest też w kodzie, więc stary secret `admin@admin.com` nie blokuje właściciela.
 
 ### Coś nie działa — szybka diagnoza
 

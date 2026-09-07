@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:3001,http://localhost:80"
 
-    ADMIN_EMAIL: str = "admin@admin.com"
+    ADMIN_EMAIL: str = "fifmazurkiewicz@gmail.com"
     ADMIN_PASSWORD: str = "changeme"
 
     MAX_FAMILY_GROUP_MEMBERS: int = 20

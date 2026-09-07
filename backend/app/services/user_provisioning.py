@@ -9,9 +9,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.models.user import User
 
+BOOTSTRAP_ADMIN_EMAIL = "fifmazurkiewicz@gmail.com"
 
-def _is_admin_allowlist(email: str) -> bool:
-    return bool(email) and email.strip().lower() == settings.ADMIN_EMAIL.lower()
+
+def is_admin_allowlist(email: str) -> bool:
+    normalized = (email or "").strip().lower()
+    if not normalized:
+        return False
+    return normalized in {
+        BOOTSTRAP_ADMIN_EMAIL,
+        settings.ADMIN_EMAIL.strip().lower(),
+    }
+
+
+def apply_admin_allowlist(user: User, email: str) -> bool:
+    """Promote allowlist emails to approved app-admin on every login."""
+    if not is_admin_allowlist(email):
+        return False
+    changed = False
+    if not user.is_app_admin:
+        user.is_app_admin = True
+        changed = True
+    if not user.is_approved:
+        user.is_approved = True
+        changed = True
+    return changed
 
 
 async def get_or_create_user_from_claims(
@@ -49,8 +71,7 @@ async def get_or_create_user_from_claims(
         if full_name and user.full_name != full_name and user.full_name in ("", "Użytkownik"):
             user.full_name = full_name
             changed = True
-        if email and email == settings.ADMIN_EMAIL.lower() and not user.is_app_admin:
-            user.is_app_admin = True
+        if apply_admin_allowlist(user, email):
             changed = True
         if changed:
             await db.commit()
@@ -64,8 +85,7 @@ async def get_or_create_user_from_claims(
             user.supabase_auth_id = auth_id
             if not user.full_name and full_name:
                 user.full_name = full_name
-            if email == settings.ADMIN_EMAIL.lower():
-                user.is_app_admin = True
+            apply_admin_allowlist(user, email)
             await db.commit()
             await db.refresh(user)
             return user
@@ -73,7 +93,7 @@ async def get_or_create_user_from_claims(
     if not email:
         return None
 
-    allowlist = _is_admin_allowlist(email)
+    allowlist = is_admin_allowlist(email)
     user = User(
         email=email,
         hashed_password=None,

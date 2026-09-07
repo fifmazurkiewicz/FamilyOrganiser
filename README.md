@@ -127,7 +127,7 @@ Logowanie: `/login` → Supabase (Google / magic link) → `/auth/callback` → 
 | | Lokalnie | Produkcja |
 |---|----------|-----------|
 | Auth | Supabase (jeśli `VITE_SUPABASE_*`) lub legacy email/hasło | Supabase |
-| Admin | `ADMIN_EMAIL` w `.env` | ten sam email po OAuth → `is_app_admin` |
+| Admin | `ADMIN_EMAIL` / bootstrap owner email | ten sam email po OAuth → `is_app_admin` + `is_approved` |
 | Legacy hasło | Działa bez Supabase (dev) | Wyłączone gdy `SUPABASE_*` ustawione |
 
 Domyślne konto seed (tylko dev bez Supabase): `admin@admin.com` / `admin` — **nie używać na produkcji**.
