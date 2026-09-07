@@ -1,13 +1,13 @@
 # FamilyOrganiser — Dokumentacja
 
-**Wersja produkcyjna:** 2.2  
-**Ostatnia aktualizacja:** 2026-07-30  
+**Wersja produkcyjna:** 2.4  
+**Ostatnia aktualizacja:** 2026-09-07  
 **Status:** ✅ oddane na produkcję
 
 | Adres | Rola |
 |-------|------|
 | [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) | Aplikacja (Vercel) |
-| [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev/api/health) | API (Hetzner) |
+| [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev/api/health) | API (Render) |
 
 ---
 
@@ -38,6 +38,7 @@
 | [Architektura](technical/architecture.md) | Diagramy, warstwy, ADR, auth Supabase |
 | [API Reference](technical/api.md) | Endpointy REST |
 | [Model danych](technical/data-model.md) | ERD, tabele |
+| [Local setup](technical/local-setup.md) | Dev bez Dockera: Postgres/API/FE + smoke |
 | [ADR-005 faza 3](technical/adr-005-phase3.md) | Plan: testy, Excel, archiwum |
 
 ---
@@ -62,10 +63,6 @@
 
 ## Szybki start (dev)
 
-```bash
-docker compose up -d
-# Frontend: http://localhost:3000
-# API:      http://localhost:8000/docs
-```
+Domyślnie **bez Dockera:** `poetry` w `backend/`, `npm run dev` w `frontend/` — [local-setup.md](technical/local-setup.md) i [README](../README.md).
 
-Bez Dockera: `poetry` w `backend/`, `npm run dev` w `frontend/` — szczegóły w [README](../README.md).
+Opcjonalnie: `docker compose up -d` (FE :3000, API :8000).

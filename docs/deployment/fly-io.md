@@ -1,6 +1,6 @@
 # Deploy na Fly.io (archiwum historyczne)
 
-**Status:** nie jest kierunkiem produkcyjnym — produkcja: Vercel FE + Hetzner (Docker + Caddy).  
+**Status:** nie jest kierunkiem produkcyjnym — produkcja: Vercel FE + **Render** (Docker Web Service) + Supabase.  
 Katalog `archive/fly/` został **usunięty** z repo (2026-07-30). Ten dokument zostaje jako notatka historyczna.
 
 Zob. [platform-architecture.md](platform-architecture.md).

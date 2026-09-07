@@ -1,6 +1,5 @@
-# Produkcja na Hetzner: Caddy + backend.
-# Deploy: GitHub Actions → scripts/deploy.sh (sekrety z GH → .env na VPS).
-# Lokalnie na VPS: docker compose -f docker-compose.prod.yml --env-file .env up -d --build
+# Archived leftover: Hetzner + Caddy. Production API is Render (root Dockerfile).
+# Do not use this compose file for new deploys.
 #
 # Wymagane w .env / Secrets: DATABASE_URL, SUPABASE_URL, SUPABASE_JWT_SECRET,
 # CORS_ORIGINS_STR (= https://family.fmazurkiewicz.dev), SECRET_KEY, ADMIN_EMAIL

@@ -2,8 +2,10 @@
 
 **Status:** przyjęta  
 **Data:** 2026-07-28  
-**Ostatnia aktualizacja:** 2026-07-30  
-**Zastępuje:** podejście „jedna apka na Fly.io” (zostaje w docs jako archiwum / PoC)
+**Ostatnia aktualizacja:** 2026-09-07  
+**Zastępuje:** Hetzner VPS + Caddy (2026-07) oraz „jedna apka na Fly.io” (archiwum / PoC)
+
+Kanoniczny stack (constitution): **Vercel + Render + Supabase**. Zob. `.cursor/rules/deployment-standard.mdc`.
 
 ---
 
@@ -13,12 +15,14 @@
 |--------|---------|
 | Domena | **fmazurkiewicz.dev** (Cloudflare DNS) |
 | Frontend FamilyOrganiser | **family.fmazurkiewicz.dev** (Vercel, root `frontend/`) |
-| Backend API | **api-family.fmazurkiewicz.dev** (Hetzner VPS, Docker + Caddy) |
+| Backend API | **api-family.fmazurkiewicz.dev** (Render Docker Web Service) |
 | Supabase | managed Postgres + Auth (region wg projektu w panelu) |
 | Schema aplikacji | tabele w Postgres Supabase (SQLAlchemy / Alembic) |
 | Cloudflare Workers / D1 / R2 | nieużywane |
 
-Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, `assistant`.
+Subdomeny: `family` (FE), `api-family` (API).
+
+Render nadaje też hostname `*.onrender.com` (nazwa serwisu jest w panelu Render — nie commitujemy jej). Cloudflare **CNAME** `api-family` → ten hostname. Jeśli `GET /api/health` nie zwraca JSON `{"status":"ok",...}`, rekord DNS wskazuje zły origin.
 
 ---
 
@@ -35,7 +39,7 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
          ┌────────────────────┼────────────────────┐
          ▼                    ▼                    ▼
    www.…                  family.…            api-family.…
-   (Vercel, static)       (Vercel FE)         (Hetzner: Caddy → :8080)
+   (Vercel, static)       (Vercel FE)         (Render Web Service)
                                 │                    │
                                 └────────┬───────────┘
                                          ▼
@@ -50,12 +54,18 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
 | Warstwa | Wybór | Rola |
 |---------|--------|------|
 | Frontend | **Vercel** | SPA Vite; Root Directory = `frontend` |
-| Backend API | **Hetzner VPS + Docker Compose + Caddy** | FastAPI (obraz API-only, port 8080) |
+| Backend API | **Render** (Docker Web Service, Free na start) | FastAPI z root `Dockerfile`, port 8080 |
 | DNS / domena | **Cloudflare** | rejestrator + DNS |
 | Baza / auth / pliki | **Supabase** (managed) | Postgres + Auth (magic link, Google) + pgvector |
 
-**Bez Coolify** — świadomie: Compose + Caddy na VPS.  
-**Bez Fly.io** w produkcji — historyczny PoC opisany w [fly-io.md](fly-io.md) (katalog `archive/fly/` usunięty z repo).
+**Bez Hetzner / VPS, Coolify, Fly.io** w produkcji. Fly.io: historyczny PoC — [fly-io.md](fly-io.md). Hetzner: leftover w repo (`docker-compose.prod.yml`, Caddy, `scripts/deploy.sh`, archived workflow) — nie jest ścieżką prod.
+
+### Dlaczego ten stack
+
+- Niski, sporadyczny ruch — Render Free zamiast stałego VPS.
+- Baza i auth oddzielone od compute (Supabase).
+- Render obsługuje TLS i reverse proxy — obraz API **bez** Caddy w kontenerze.
+- Kompromis: cold start 30–60 s po ~15 min bezczynności (plan Free).
 
 ### Dlaczego Supabase managed
 
@@ -72,7 +82,7 @@ Subdomeny: `family` (FE), `api-family` (API); planowane: `www`, `tasks`, `rag`, 
 | Frontend | `@supabase/supabase-js` — `signInWithOtp`, `signInWithOAuth({ provider: 'google' })` |
 | Backend | Weryfikacja `Authorization: Bearer` (Supabase JWT) + mapowanie / provisioning wiersza `users` |
 | Env FE (Vercel) | `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (publishable) |
-| Env BE (VPS) | `DATABASE_URL`, `SUPABASE_URL`, opcjonalnie `SUPABASE_JWT_SECRET`, `CORS_ORIGINS_STR` |
+| Env BE (Render) | `DATABASE_URL`, `SUPABASE_URL`, opcjonalnie `SUPABASE_JWT_SECRET`, `CORS_ORIGINS_STR` |
 
 Supabase Dashboard → Authentication → URL Configuration:
 
@@ -87,7 +97,6 @@ Supabase Dashboard → Authentication → URL Configuration:
 |---------|----------|---------|------|
 | Landing | Vercel | Nie | — |
 | FamilyOrganiser | `family.fmazurkiewicz.dev` | `api-family.fmazurkiewicz.dev` | Supabase |
-| RAG / asystent (plan) | Vercel | Coolify lub ten sam VPS | Supabase + pgvector |
 
 ### Env frontendu (Vercel)
 
@@ -113,106 +122,78 @@ Supabase Dashboard → Authentication → URL Configuration:
 - **SPA fallback** — React Router (`/app/*`, `/auth/callback`).
 - **Proxy `/api`** — opcjonalny fallback gdy `VITE_API_URL` puste; **kanonicznie** ustaw `VITE_API_URL` na Vercel.
 
-### Env backendu (źródło: GitHub Secrets → `.env` na VPS)
+### Env backendu (źródło: panel Render → Environment)
 
 | Zmienna | Uwagi |
 |---------|--------|
-| `DATABASE_URL` | `postgresql+asyncpg://…` z Supabase |
+| `DATABASE_URL` | `postgresql+asyncpg://…` przez **Supavisor / pooler** (nie `db.<ref>.supabase.co` — IPv6) |
 | `SUPABASE_URL` | ten sam URL projektu |
 | `SUPABASE_JWT_SECRET` | JWT Secret z Settings → API |
-| `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
+| `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` (plus preview `*.vercel.app` gdy potrzeba) |
 | `ADMIN_EMAIL` | email admina (promocja `is_app_admin` + `is_approved` przy logowaniu; bootstrap: `fifmazurkiewicz@gmail.com`) |
-| `PORT` | `8080` (domyślnie) |
+| `PORT` | `8080` (root `Dockerfile` / Render) |
+
+Nie commituj `.env`. Render Free **nie ma** trwałego dysku — żadnego SQLite na produkcji.
 
 ---
 
-## Deploy backendu — instrukcja krok po kroku
+## Deploy backendu — Render
 
-Cel: **family** (Vercel) + **api-family** (Hetzner). Sekrety w **GitHub Actions Secrets** (i Vercel dla FE). Nie commituj `.env`.
+Cel: **family** (Vercel) + **api-family** (Render). Sekrety w **panelu Render** i **Vercel** (FE). Nie commituj `.env`.
 
-Pliki: `docker-compose.prod.yml`, `docker/Caddyfile`, `Dockerfile`, `scripts/deploy.sh`, `.github/workflows/deploy.yml`.
+Pliki: root `Dockerfile` (API-only, `ca-certificates`, health `GET /api/health`), `docker/entrypoint.sh`.
 
-### Krok 1 — DNS (Cloudflare)
+### Krok 1 — Serwis Render
 
-1. Wejdź w DNS domeny `fmazurkiewicz.dev`.
-2. Dodaj rekord **A**: nazwa `api-family`, wartość = publiczne IPv4 serwera Hetzner.
-3. Proxy: na start **DNS only** (szara chmura), żeby Caddy dostał Let’s Encrypt.
-4. Poczekaj, aż `api-family.fmazurkiewicz.dev` wskazuje na IP VPS.
+1. Render → New → **Web Service**, połącz repo GitHub `FamilyOrganiser`.
+2. Runtime: **Docker**, Dockerfile path: `/Dockerfile` (kontekst = root repo).
+3. Health check: `/api/health` (liveness, bez DB). Opcjonalnie `/api/health/ready` (ping DB).
+4. Auto-deploy z gałęzi `main`.
 
-### Krok 2 — Klucz SSH pod GitHub Actions
+### Krok 2 — DNS (Cloudflare)
 
-Na komputerze:
+1. DNS domeny `fmazurkiewicz.dev`.
+2. Rekord **CNAME**: nazwa `api-family`, target = hostname Render (`<service>.onrender.com`).
+3. Proxy Cloudflare wg potrzeby (Render i tak kończy TLS na swoim hostname).
 
-```bash
-ssh-keygen -t ed25519 -f hetzner_deploy -C "github-actions-familyorganiser" -N ""
-```
+### Krok 3 — Env w Render
 
-- `hetzner_deploy` — prywatny → GitHub Secret `HETZNER_SSH_KEY`
-- `hetzner_deploy.pub` — publiczny → VPS `authorized_keys`
-
-### Krok 3 — VPS (Hetzner, raz)
-
-1. Zainstaluj Docker, Compose plugin, `git`, `python3`, `curl`.
-2. Sklonuj repo (deploy key / SSH z dostępem do prywatnego GitHub):
-
-```bash
-mkdir -p /opt/apps
-cd /opt/apps
-git clone git@github.com:fifmazurkiewicz/FamilyOrganiser.git
-cd FamilyOrganiser
-git checkout main
-```
-
-3. Dodaj treść `hetzner_deploy.pub` do `~/.ssh/authorized_keys` użytkownika workflow (`root` lub `deploy`), `chmod 600`.
-4. User w grupie `docker` (albo root). Firewall: **22**, **80**, **443**.
-5. Ścieżka `/opt/apps/FamilyOrganiser` = secret `HETZNER_APP_DIR`.
-
-`.env` nie tworzysz ręcznie — powstanie przy pierwszym udanym deployu.
-
-### Krok 4 — Secrets w GitHub
-
-Repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**:
-
-| Secret | Skąd / co |
+| Zmienna | Skąd / co |
 |--------|-----------|
-| `HETZNER_HOST` | IPv4 VPS |
-| `HETZNER_USER` | user SSH (`root` / `deploy`) |
-| `HETZNER_SSH_KEY` | cały PEM z `hetzner_deploy` |
-| `HETZNER_APP_DIR` | `/opt/apps/FamilyOrganiser` |
-| `DATABASE_URL` | Supabase URI z driverem `postgresql+asyncpg://` (często pooler `:6543`) |
+| `DATABASE_URL` | Supabase URI z driverem `postgresql+asyncpg://` (pooler) |
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `SUPABASE_JWT_SECRET` | Supabase → Settings → API → JWT Secret |
 | `CORS_ORIGINS_STR` | `https://family.fmazurkiewicz.dev` |
 | `SECRET_KEY` | długi losowy string |
-| `ADMIN_EMAIL` | `fifmazurkiewicz@gmail.com` (bootstrap admin; also hardcoded in provisioning) |
+| `ADMIN_EMAIL` | `fifmazurkiewicz@gmail.com` |
+| `PORT` | `8080` |
 
 Opcjonalnie: `SUPABASE_JWT_AUDIENCE` = `authenticated`.
 
-### Krok 5 — Supabase Auth URLs
+### Krok 4 — Supabase Auth URLs
 
 Authentication → URL Configuration:
 
 - Site URL: `https://family.fmazurkiewicz.dev`
 - Redirect URLs: `https://family.fmazurkiewicz.dev/**`
 
-### Krok 6 — Vercel (frontend)
+### Krok 5 — Vercel (frontend)
 
 1. Root Directory = `frontend`, domena `family.fmazurkiewicz.dev`.
 2. Env: `VITE_API_URL=https://api-family.fmazurkiewicz.dev`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 3. Redeploy.
 
-### Krok 7 — Pierwszy deploy API
+### Krok 6 — Smoke
 
-1. GitHub → **Actions** → **Deploy API (Hetzner)** → **Run workflow** (`main`).
-2. Po sukcesie otwórz: `https://api-family.fmazurkiewicz.dev/api/health` → `{"status":"ok",...}`.
+1. Po deployu Render: `https://api-family.fmazurkiewicz.dev/api/health` → `{"status":"ok","service":"FamilyOrganiser API"}`.
+2. Frontend: logowanie Google / magic link → `/app`.
 
-### Krok 8 — Na co dzień
+### Krok 7 — Na co dzień
 
-- Push na `main` (backend/Docker) → auto-deploy.
-- Albo ręcznie: Run workflow.
+- Push na `main` (backend / Dockerfile) → Render auto-deploy.
 - Frontend: Vercel.
 
-`deploy.sh`: pull → zapis `.env` z Secrets → `compose up --build` → `alembic upgrade` → health. Caddy → `:8080`, `restart: unless-stopped`.
+Migracje: `docker/entrypoint.sh` obecnie tylko startuje uvicorn. Na Render ustaw start command albo rozszerz entrypoint o `alembic upgrade head` przed uvicorn — inaczej nowe migracje nie wejdą same.
 
 ### CI i backup bazy
 
@@ -221,6 +202,7 @@ Authentication → URL Configuration:
 | **CI** | `.github/workflows/ci.yml` | push/PR na `main` — pytest + `npm run build` |
 | **Backup Supabase** | `.github/workflows/backup-supabase.yml` | 1. dnia miesiąca 03:00 UTC + ręcznie; artefakt 90 dni |
 | Skrypt lokalny | `scripts/backup-supabase.sh` | ten sam `pg_dump` co w Actions |
+| **Deploy API (Hetzner)** | `.github/workflows/deploy.yml` | **archiwum** — tylko `workflow_dispatch`; produkcja = Render |
 
 Szczegóły restore: [backup-restore.md](backup-restore.md).
 
@@ -228,27 +210,34 @@ Szczegóły restore: [backup-restore.md](backup-restore.md).
 
 | Objaw | Sprawdź |
 |-------|---------|
-| SSH Permission denied | klucz, `authorized_keys`, user, port 22 |
-| cd: no such file | `HETZNER_APP_DIR` |
-| git pull failed | dostęp repo na VPS |
-| Brak HTTPS | DNS only, 80/443, logi Caddy |
-| CORS | `CORS_ORIGINS_STR` |
+| Health nie JSON / obcy serwis | Cloudflare CNAME `api-family` → ten serwis Render |
+| Cold start 30–60 s | Render Free po bezczynności; frontend powinien mieć ApiPulse (luka — jeszcze nie w kodzie) |
+| CORS | `CORS_ORIGINS_STR` w Render |
 | 401 API | `SUPABASE_JWT_SECRET` / URL |
+| SSL do bazy | `DATABASE_URL` przez pooler; obraz ma `ca-certificates` |
+| Migracje nie wchodzą | Alembic w start command / entrypoint |
+
+### Znane luki vs constitution
+
+- Frontend **nie** ma jeszcze wspólnego `ApiPulseProvider` / bannera „Waking up API…”.
+- Leftover Hetzner: `docker-compose.prod.yml`, `docker/Caddyfile`, `scripts/deploy.sh`.
 
 ---
 
 ## Założenia operacyjne
 
-1. Jedna apka = jedna subdomena FE (+ osobna subdomena API gdy własny backend).
+1. Jedna apka = jedna subdomena FE + subdomena API na Render.
 2. Max ~5 osób na projekt.
-3. Sekrety tylko w env Vercel / VPS / GitHub Actions secrets — nie w git.
-4. Fly.io — historyczny PoC (usunięty z repo) — nie używamy w produkcji.
+3. Sekrety tylko w env Vercel / Render — nie w git, nie na VPS.
+4. Fly.io i Hetzner — historyczne; nie używamy w produkcji.
+5. Lokalnie: bez Docker Desktop — [local-setup.md](../technical/local-setup.md).
 
 ---
 
 ## Powiązane dokumenty
 
-- [Najtańszy hosting (VPS / porównanie)](cheap-hosting.md)
+- [Local setup](../technical/local-setup.md)
+- [Najtańszy hosting (porównanie / archiwum VPS)](cheap-hosting.md)
 - [Backup i restore](backup-restore.md)
 - [GitBook — podłączenie](gitbook-setup.md)
 - [Architektura aplikacji](../technical/architecture.md)

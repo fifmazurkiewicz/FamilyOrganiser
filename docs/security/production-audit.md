@@ -1,14 +1,14 @@
 # Audyt bezpieczeństwa — produkcja
 
-**Data:** 2026-07-30  
-**Zakres:** monorepo FamilyOrganiser (frontend Vercel + API Hetzner + Supabase)  
+**Data:** 2026-07-30 (hosting zaktualizowany 2026-09-07)  
+**Zakres:** monorepo FamilyOrganiser (frontend Vercel + API Render + Supabase)  
 **Status ogólny:** ✅ **Akceptowalne dla prywatnej aplikacji rodzinnej** przy spełnieniu checklisty poniżej
 
 ---
 
 ## Podsumowanie w jednym akapicie
 
-Sekrety nie są w repozytorium. Produkcja opiera się na Supabase Auth (Google / magic link) i weryfikacji JWT po stronie API. Frontend widzi tylko publiczny klucz anon. CORS ogranicza API do domeny frontu. Deploy zapisuje `.env` na VPS z uprawnieniami `600`. Nie znaleziono krytycznych luk w kodzie aplikacji; główne ryzyka to **higiena sekretów** i **silne hasła w panelach** (GitHub, Supabase, VPS).
+Sekrety nie są w repozytorium. Produkcja opiera się na Supabase Auth (Google / magic link) i weryfikacji JWT po stronie API. Frontend widzi tylko publiczny klucz anon. CORS ogranicza API do domeny frontu. Env backendu jest w panelu **Render**. Nie znaleziono krytycznych luk w kodzie aplikacji; główne ryzyka to **higiena sekretów** i **silne hasła w panelach** (Render, Vercel, Supabase).
 
 ---
 
@@ -18,10 +18,10 @@ Sekrety nie są w repozytorium. Produkcja opiera się na Supabase Auth (Google /
 |---|--------|--------|
 | 1 | `.env` / hasła **nie** w git | ✅ w repo tylko `.env.example` |
 | 2 | Vercel: tylko `VITE_SUPABASE_ANON_KEY`, nie `service_role` | ⚠️ zweryfikuj w panelu |
-| 3 | GitHub Secrets: `DATABASE_URL`, JWT, `SECRET_KEY`, SSH | ⚠️ trzymaj silne wartości |
+| 3 | Render env: `DATABASE_URL`, JWT, `SECRET_KEY` | ⚠️ trzymaj silne wartości |
 | 4 | Supabase: Redirect URLs tylko Twoje domeny | ⚠️ bez `*` na cały internet |
 | 5 | `CORS_ORIGINS_STR` = `https://family.fmazurkiewicz.dev` | ⚠️ bez wildcard |
-| 6 | VPS: SSH kluczem, porty 22/80/443 | ⚠️ best practice |
+| 6 | Render: health `/api/health`; brak trwałego dysku (nie SQLite) | ⚠️ |
 | 7 | `ADMIN_EMAIL` = Twój rzeczywisty email | ⚠️ |
 | 8 | Po zmianie env Vercel → redeploy | ✅ procedura znana |
 
@@ -34,12 +34,12 @@ Sekrety nie są w repozytorium. Produkcja opiera się na Supabase Auth (Google /
 | **Info** | Repo | Brak `.env`, brak `service_role` w kodzie | Utrzymuj; `.gitignore` obejmuje `.cursor/hooks/state/` |
 | **Info** | Frontend | Token JWT w pamięci + localStorage (Zustand persist) | Standard SPA; wylogowanie czyści sesję |
 | **Low** | Dev seed | `admin@admin.com` / `admin` w seed | Tylko lokalnie bez Supabase; na prod auth = Supabase |
-| **Low** | Config defaults | `SECRET_KEY=changeme`, `ADMIN_PASSWORD=changeme` w `config.py` | Na prod wartości z GitHub Secrets, nie domyślne |
+| **Low** | Config defaults | `SECRET_KEY=changeme`, `ADMIN_PASSWORD=changeme` w `config.py` | Na prod wartości z Render env, nie domyślne |
 | **Low** | Legacy auth | Endpointy email/hasło nadal w API | Przy włączonym Supabase nie są główną ścieżką; OK |
 | **Low** | SSL DB | `CERT_NONE` dla poolera Supabase | Typowe dla managed pooler; akceptowalne |
 | **Low** | Client UI | Krótkie okno starego `is_app_admin` w localStorage | Backend i tak zwraca 403; bez wycieku danych |
-| **Info** | `vercel.json` | Rewrite `/api` → Hetzner | Stały URL, nie open proxy; OK |
-| **Info** | Deploy | `.env` na VPS `umask 077` | Dobre |
+| **Info** | `vercel.json` | Rewrite `/api` → `api-family` (Render) | Stały URL, nie open proxy; OK |
+| **Info** | Deploy | Env w panelu Render (nie `.env` na VPS) | Hetzner leftover jest archiwum |
 
 **Brak findings: Critical / High / Medium** w obecnym stanie kodu i konfiguracji repo.
 
@@ -66,11 +66,11 @@ Provisioning użytkownika w Postgres (supabase_auth_id)
 
 | Sekret | Gdzie | Nigdy |
 |--------|-------|-------|
-| `DATABASE_URL` | GitHub Secrets → VPS `.env` | git, frontend |
-| `SUPABASE_JWT_SECRET` | GitHub Secrets | git, frontend |
+| `DATABASE_URL` | Render Environment | git, frontend |
+| `SUPABASE_JWT_SECRET` | Render Environment | git, frontend |
 | `VITE_SUPABASE_ANON_KEY` | Vercel env | OK publicznie |
 | Supabase `service_role` | — | frontend, git |
-| `HETZNER_SSH_KEY` | GitHub Secrets | git |
+| SSH / Hetzner keys | — (archiwum) | git |
 
 ---
 

@@ -1,10 +1,10 @@
 # Najtańszy deploy FamilyOrganiser
 
-**Ostatnia aktualizacja:** 2026-07-30  
+**Ostatnia aktualizacja:** 2026-09-07  
 **Cel:** porównanie kosztów hostingu (referencja).
 
-> **Produkcja FamilyOrganiser** nie jest „wszystko na jednym VPS”. Aktualny stack: **Vercel + Hetzner + Supabase** — zob. [**platform-architecture.md**](platform-architecture.md).  
-> Ten dokument zostaje jako porównanie opcji i ścieżka „monolit na VPS” (historyczna / alternatywa).
+> **Produkcja FamilyOrganiser:** **Vercel + Render + Supabase** — zob. [**platform-architecture.md**](platform-architecture.md).  
+> Ten dokument zostaje jako porównanie opcji i ścieżka „monolit na VPS” (historyczna / alternatywa). Hetzner nie jest produkcją.
 
 ---
 
@@ -29,16 +29,16 @@ Ceny orientacyjne (EU, bez VAT, stan ~połowa 2026). Sprawdź aktualny cennik pr
 | Opcja | Koszt / mies. | Dla kogo | Plusy | Minusy |
 |-------|---------------|----------|-------|--------|
 | **Oracle Cloud Always Free** (VM Ampere) | **0 €** | Eksperyment / hobby | Darmowe 4 OCPU / 24 GB (w limicie Always Free) | Kapryśna rejestracja, limity, więcej roboty z ARM |
-| **Hetzner Cloud** (np. CX22 / CX23) | **~4–6 €** | **Rekomendowane** | Prosto, stabilnie, dużo transferu, EU (DE/FI) | Płatne (ale nadal bardzo tanio) |
+| **Hetzner Cloud** (np. CX22 / CX23) | **~4–6 €** | Historyczne (nie prod) | Prosto, stabilnie, dużo transferu, EU | Stały koszt przy sporadycznym ruchu |
 | Contabo / podobne VPS | ~4–8 € | Budget | Dużo dysku | Często wolniejszy I/O, gorszy support |
-| Railway / Render / **Fly.io** | ~0–10 €+ | Szybki PoC | Historyczny PoC — zob. [fly-io.md](fly-io.md) | Nie produkcja |
+| Railway / Render / **Fly.io** | ~0–10 €+ | Render = **produkcja API** (Free); Fly.io = archiwum | Render: pay-for-traffic; Fly: zob. [fly-io.md](fly-io.md) | Cold start na Render Free |
 | VPS PL (np. home.pl, OVH Start) | zwykle drożej | Preferencja lokalnego billing | Faktura PL | Często drożej przy tych samych parametrach |
 
 ### Rekomendacja
 
-1. **Na start / produkcja rodzinna:** jeden VPS **Hetzner** (~5 €/mies.) + Docker Compose + nginx + Let's Encrypt.  
-2. **Jeśli chcesz 0 zł i masz czas:** Oracle Always Free — ta sama architektura Compose, więcej walki z kontem i obrazami ARM.  
-3. **Unikaj na start:** osobnych managed Postgres + managed frontend + managed backend u PaaS — przy tym stacku szybko wychodzi drożej niż jeden mały VPS.
+1. **Produkcja rodzinna (aktualna):** Vercel (FE) + **Render Free** (API) + Supabase — [platform-architecture.md](platform-architecture.md).  
+2. **Jeśli chcesz 0 zł i masz czas na VPS:** Oracle Always Free — Compose, więcej walki z kontem i ARM (nie jest SoT).  
+3. **Nie wracaj na stały VPS** (Hetzner ~5 €/mies.) przy sporadycznym ruchu — constitution mówi Render.
 
 Domena produkcyjna: **fmazurkiewicz.dev** (Cloudflare). Szczegóły stacku: [platform-architecture.md](platform-architecture.md). Ten dokument zostaje jako porównanie kosztów / ścieżka „wszystko na jednym VPS”.
 
@@ -69,7 +69,7 @@ Internet
 
 ---
 
-## Ścieżka A — Hetzner (rekomendowana, ~5 €/mies.)
+## Ścieżka A — Hetzner (historyczna, nie produkcja, ~5 €/mies.)
 
 ### 1. Serwer
 
@@ -331,7 +331,7 @@ Gdy będziesz gotowy, można to wdrożyć w repo jako kolejny krok (bez zmiany l
 
 | Pytanie | Odpowiedź |
 |---------|-----------|
-| Chcę najtaniej i stabilnie? | **Hetzner + Docker Compose + nginx + Let's Encrypt** |
+| Chcę najtaniej i stabilnie przy sporadycznym ruchu? | **Vercel + Render Free + Supabase** |
 | Chcę 0 zł? | Oracle Always Free (więcej roboty) |
 | Chcę kliknąć i zapomnieć? | PaaS — drożej przy Postgresie |
 | Redis na start? | **Nie** — nie jest potrzebny |

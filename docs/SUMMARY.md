@@ -12,6 +12,7 @@
 * [Architektura](technical/architecture.md)
 * [API Reference](technical/api.md)
 * [Model danych](technical/data-model.md)
+* [Local setup](technical/local-setup.md)
 * [ADR-005 — faza 3](technical/adr-005-phase3.md)
 * [ADR-006 — user approval gate](technical/adr-006-user-approval-gate.md)
 

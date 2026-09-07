@@ -1,0 +1,9 @@
+---
+description: Short reminder — Graft before explore; product Taste dials
+alwaysApply: true
+---
+
+# Tooling reminders
+
+- **Graft:** before broad code exploration → `graft map` / `graft ask "<q>" --source` (or MCP). Wiring in this repo: `.cursor/rules/graft.mdc` + `.cursor/mcp.json`; cache `/graft/` gitignored. Prefer `npx -y @nanonets/graft`.
+- **Taste dials:** this repo has `.cursor/rules/taste-skill-dials.mdc` — use that overlay, not baseline 8/6/4.

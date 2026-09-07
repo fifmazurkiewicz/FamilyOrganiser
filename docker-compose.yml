@@ -1,7 +1,7 @@
 version: "3.9"
 
-# Lokalny development (Postgres + hot reload).
-# Produkcja VPS: docker-compose.prod.yml (Caddy + API).
+# Optional local development (Postgres + hot reload). Docker is not required — see docs/technical/local-setup.md.
+# Production API: Render. docker-compose.prod.yml is a Hetzner leftover (do not use).
 
 services:
   db:

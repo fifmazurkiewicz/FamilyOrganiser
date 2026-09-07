@@ -1,5 +1,13 @@
 # Lista zmian (CHANGELOG)
 
+## [2.4] — 2026-09-07 — Hosting Render + constitution
+
+- Produkcja API: **Render** (Docker Web Service), nie Hetzner/Caddy
+- Docs i `AGENTS.md` zgodne z `deployment-standard.mdc` (Vercel + Render + Supabase)
+- Cursor: Graft MCP, spec-driven docs, Taste dials, env-secrets, Superpowers w `.cursor/rules/`
+- Local setup bez Dockera: `docs/technical/local-setup.md`
+- Workflow Hetzner: archiwum (`workflow_dispatch` only)
+
 ## [2.3] — 2026-09-07 — Approval gate
 
 - Nowa flaga `users.is_approved` (osobno od `is_active` / `is_locked`)
@@ -22,9 +30,9 @@
 ### 🚀 Wdrożenie produkcyjne
 
 - **Frontend live:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev) (Vercel)
-- **API live:** [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev) (Hetzner + Caddy)
+- **API live:** [api-family.fmazurkiewicz.dev](https://api-family.fmazurkiewicz.dev) (wtedy Hetzner + Caddy; od 2026-09-07: Render)
 - **Auth:** Supabase (Google OAuth + magic link)
-- **Auto-deploy:** GitHub Actions → Hetzner; Vercel na push
+- **Auto-deploy:** wtedy GitHub Actions → Hetzner; Vercel na push (API: Render od 2.4)
 - **Dokumentacja:** handover, audyt bezpieczeństwa, zaktualizowany README i architektura
 
 ### Frontend

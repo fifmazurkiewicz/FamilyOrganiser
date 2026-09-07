@@ -1,6 +1,6 @@
 # Oddanie na produkcję — prosto i na serio
 
-**Data:** 2026-07-30  
+**Data:** 2026-07-30 (hosting: Render od 2026-09-07)  
 **Dla:** właściciel projektu (Ty)  
 **Aplikacja:** [family.fmazurkiewicz.dev](https://family.fmazurkiewicz.dev)
 
@@ -27,7 +27,7 @@ Ty w przeglądarce
        │
        ▼
 ┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  STRONA (Vercel) │────▶│  API (Hetzner)   │────▶│  BAZA (Supabase) │
+│  STRONA (Vercel) │────▶│  API (Render)    │────▶│  BAZA (Supabase) │
 │  family.fmazur…  │     │  api-family…     │     │  Postgres + Auth │
 └──────────────────┘     └──────────────────┘     └──────────────────┘
    wygląd, przyciski        logika, zapis            dane + logowanie
@@ -36,10 +36,10 @@ Ty w przeglądarce
 | Miejsce | Co to robi | Gdzie kliknąć jak coś zmieniasz |
 |---------|------------|----------------------------------|
 | **Vercel** | Pokazuje stronę użytkownikom | vercel.com → projekt → Settings → Env / Deployments |
-| **Hetzner (VPS)** | Trzyma backend (API) | GitHub → Actions → Deploy; sekrety w GitHub Secrets |
+| **Render** | Trzyma backend (API) | dashboard.render.com → serwis → Environment / Logs |
 | **Supabase** | Logowanie + baza danych | supabase.com → Authentication / Database |
-| **Cloudflare** | Domena `fmazurkiewicz.dev` | DNS rekordy `family` i `api-family` |
-| **GitHub** | Kod + auto-deploy API | repo FamilyOrganiser, Secrets, Actions |
+| **Cloudflare** | Domena `fmazurkiewicz.dev` | DNS: `family` → Vercel, `api-family` → CNAME Render |
+| **GitHub** | Kod + CI | repo FamilyOrganiser; Render i Vercel ciągną `main` |
 
 ---
 
@@ -48,9 +48,9 @@ Ty w przeglądarce
 ### Infrastruktura
 
 - [x] Domena `family.fmazurkiewicz.dev` → frontend na Vercel (HTTPS)
-- [x] Domena `api-family.fmazurkiewicz.dev` → API na Hetznerze (Docker + Caddy + Let’s Encrypt)
+- [x] Domena `api-family.fmazurkiewicz.dev` → API na Render (Docker Web Service)
 - [x] Baza Postgres + logowanie w Supabase (managed)
-- [x] Auto-deploy backendu: push na `main` → GitHub Actions → VPS
+- [x] Auto-deploy backendu: push na `main` → Render
 - [x] Auto-deploy frontendu: push na `main` → Vercel
 - [x] Health API: `GET /api/health` → `{"status":"ok"}`
 
@@ -63,7 +63,7 @@ Ty w przeglądarce
 
 ### Bezpieczeństwo (skrót)
 
-- [x] Sekrety **nie** w git — tylko GitHub Secrets / Vercel / Supabase panel
+- [x] Sekrety **nie** w git — tylko Vercel / Render / Supabase panel
 - [x] Frontend: tylko klucz **anon** Supabase (publiczny)
 - [x] API: weryfikacja tokenów Supabase (JWT)
 - [x] CORS: tylko Twoja domena frontu
@@ -82,13 +82,13 @@ Szczegóły: [Audyt bezpieczeństwa](../security/production-audit.md)
 
 ### Zmieniasz kod backendu / bazę
 
-1. Push na `main` (pliki w `backend/`, Docker, workflow)
-2. GitHub Actions sam deployuje na Hetzner
-3. Nowa migracja Alembic → idzie w `deploy.sh` (`alembic upgrade head`)
+1. Push na `main` (pliki w `backend/`, Dockerfile)
+2. Render sam zbuduje i wystawi API
+3. Nowa migracja Alembic — ustaw start command / entrypoint (`alembic upgrade head`); obecny `docker/entrypoint.sh` tylko startuje uvicorn
 
 ### Dodajesz użytkownika admina
 
-Ustaw `ADMIN_EMAIL` w GitHub Secret (właściciel: `fifmazurkiewicz@gmail.com`) → zaloguj się tym mailem przez Google/magic link → backend ustawi `is_app_admin` i `is_approved`. Bootstrap Gmail jest też w kodzie, więc stary secret `admin@admin.com` nie blokuje właściciela.
+Ustaw `ADMIN_EMAIL` w env Render (właściciel: `fifmazurkiewicz@gmail.com`) → zaloguj się tym mailem przez Google/magic link → backend ustawi `is_app_admin` i `is_approved`. Bootstrap Gmail jest też w kodzie, więc stary secret `admin@admin.com` nie blokuje właściciela.
 
 ### Coś nie działa — szybka diagnoza
 
@@ -97,8 +97,8 @@ Ustaw `ADMIN_EMAIL` w GitHub Secret (właściciel: `fifmazurkiewicz@gmail.com`) 
 | Biała strona po logowaniu | Vercel env `VITE_*` + redeploy; Supabase Redirect URLs |
 | 401 / brak profilu | `VITE_API_URL`, CORS na API, deploy backendu |
 | Google nie wraca | Supabase → Redirect URLs: `https://family.fmazurkiewicz.dev/**` |
-| API nie odpowiada | Hetzner: `docker compose ps`, logi Caddy, DNS `api-family` |
-| Baza | Supabase dashboard, `DATABASE_URL` session pooler **:5432** |
+| API nie odpowiada | Render: logs + status serwisu (cold start 30–60 s na Free); DNS CNAME `api-family` |
+| Baza | Supabase dashboard, `DATABASE_URL` przez pooler (produkcja) |
 
 ---
 
@@ -107,7 +107,7 @@ Ustaw `ADMIN_EMAIL` w GitHub Secret (właściciel: `fifmazurkiewicz@gmail.com`) 
 | Usługa | Szacunek |
 |--------|----------|
 | Vercel (frontend) | 0 € (hobby) |
-| Hetzner VPS | ~4–6 €/mies. |
+| Render (API) | 0 € (Free) na start; cold start po bezczynności |
 | Supabase | 0 € (free tier) przy małym ruchu |
 | Domena Cloudflare | wg Twojego planu |
 
@@ -127,4 +127,4 @@ To nie blokuje użytkowania — aplikacja jest **gotowa dla rodziny na produkcji
 
 ## Jedno zdanie podsumowania
 
-**Zbudowaliśmy rodzinny organizer w internecie: ładna strona na Vercel, „mózg” na Twoim serwerze Hetzner, dane i logowanie w Supabase — i wszystko aktualizuje się samo po pushu na GitHub.**
+**Zbudowaliśmy rodzinny organizer w internecie: ładna strona na Vercel, API na Render, dane i logowanie w Supabase — i wszystko aktualizuje się samo po pushu na GitHub.**

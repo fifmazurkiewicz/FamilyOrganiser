@@ -1,7 +1,7 @@
 # Architektura
 
-**Ostatnia aktualizacja:** 2026-07-30  
-**Produkcja:** Vercel (FE) + Hetzner/Caddy (API) + Supabase
+**Ostatnia aktualizacja:** 2026-09-07  
+**Produkcja:** Vercel (FE) + Render (API) + Supabase
 
 ---
 
@@ -17,8 +17,7 @@ graph TB
         FE[React SPA<br/>family.fmazurkiewicz.dev]
     end
 
-    subgraph Hetzner
-        Caddy[Caddy TLS]
+    subgraph Render
         API[FastAPI :8080<br/>api-family.fmazurkiewicz.dev]
     end
 
@@ -123,9 +122,9 @@ Trasy chronione: `/app/*` wymaga `isAuthenticated`.
 **Decyzja:** `is_recurring` na wpisie budżetu.  
 **Powód:** Czynsz/internet wpisywany raz.
 
-### ADR-004: Split deploy Vercel + VPS
-**Decyzja:** Frontend statyczny na Vercel; API w Docker na Hetzner; baza Supabase.  
-**Powód:** Tanio, prosto, auto-deploy obu warstw.
+### ADR-004: Split deploy Vercel + Render
+**Decyzja:** Frontend statyczny na Vercel; API jako Docker Web Service na Render; baza Supabase.  
+**Powód:** Niski ruch — Free tier zamiast stałego VPS. Hetzner/Caddy (2026-07) zastąpione 2026-09-07.
 
 ### ADR-005: Supabase Auth zamiast własnego OAuth
 **Decyzja:** Magic link + Google przez Supabase; backend tylko weryfikuje JWT.  
@@ -146,8 +145,8 @@ Trasy chronione: `/app/*` wymaga `isAuthenticated`.
 | Baza | PostgreSQL 16 (Supabase managed) |
 | Auth | Supabase Auth + PyJWT / JWKS |
 | FE hosting | Vercel |
-| API hosting | Docker + Caddy (Hetzner) |
-| CI/CD API | GitHub Actions + SSH |
+| API hosting | Render (Docker Web Service) |
+| CI/CD API | Render auto-deploy z GitHub `main` |
 
 ---
 
@@ -160,7 +159,6 @@ Trasy chronione: `/app/*` wymaga `isAuthenticated`.
 | `frontend/vercel.json` | SPA + opcjonalny proxy `/api` |
 | `backend/app/api/deps.py` | `get_current_user`, admin |
 | `backend/app/services/user_provisioning.py` | Mapowanie Supabase → `users` |
-| `docker-compose.prod.yml` | Prod stack |
-| `scripts/deploy.sh` | Deploy + migracje + health |
+| Root `Dockerfile` | Obraz API na Render (port 8080, health `/api/health`) |
 
 Szczegóły deploy: [platform-architecture.md](../deployment/platform-architecture.md)

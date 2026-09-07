@@ -1,5 +1,6 @@
 #!/bin/sh
-# API entrypoint (Hetzner / Docker Compose). Port z $PORT, domyślnie 8080.
+# API entrypoint (Render Docker / local Compose). Port from $PORT, default 8080.
+# Alembic is not run here — set a Render start command or extend this script.
 set -eu
 
 mkdir -p /data

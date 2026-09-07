@@ -196,10 +196,7 @@ cython_debug/
 .pypirc
 
 # Cursor
-#  Cursor is an AI-powered code editor. `.cursorignore` specifies files/directories to
-#  exclude from AI features like autocomplete and code analysis. Recommended for sensitive data
-#  refer to https://docs.cursor.com/context/ignore-files
-.cursorignore
+# Commit `.cursorignore` (constitution). Keep indexing-ignore local only.
 .cursorindexingignore
 
 # Marimo
@@ -215,12 +212,24 @@ frontend/.vite/
 # Docker
 docker/certs/
 
-# Environment files (keep .env.example)
-.env.local
-.env.*.local
+# Environment files (templates only)
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+credentials.json
+secrets.toml
+
+# Tutor notes (never commit)
+learning/
 
 # Local database dumps (scripts/backup-supabase.sh)
 backups/
 
 # Cursor hook state (local machine paths, transcript IDs)
 .cursor/hooks/state/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/

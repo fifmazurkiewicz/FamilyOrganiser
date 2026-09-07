@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Deploy backendu na VPS (lokalnie albo przez GitHub Actions → SSH).
-# Gdy DATABASE_URL jest w środowisku (z GitHub Secrets), zapisuje .env na dysku VPS.
+# Archived leftover: Hetzner VPS deploy. Production is Render auto-deploy.
+# Kept so the archived GitHub workflow can still be dispatched if needed.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

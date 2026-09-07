@@ -1,29 +1,62 @@
-## Learned User Preferences
+# FamilyOrganiser
 
-- Respond in Polish unless the user explicitly asks for another language.
-- Prefer Cursor project rules (`.cursor/rules/*.mdc` with `alwaysApply`) for durable guidance such as docs-on-infra changes and secrets handling; keep always-apply rules few and focused.
-- Prefer updating existing docs in `docs/` in the same session when infrastructure, domain, hosting, or Supabase decisions become settled — do not wait for a separate “update docs” request.
-- Prefer Poetry + npm local runs over Docker Desktop when the user wants to develop without Docker.
-- Prefer committing and merging/pushing only when explicitly asked (e.g. “zmerguj do maina”, “zrób mr”).
-- Global custom skills (`~/.cursor/skills/`) and subagents (`~/.cursor/agents/`) are for cross-project reuse; prefer them for specialized roles (e.g. `ux-ui-challenger`) rather than duplicating long prompts per chat.
-- Before significant UI, layout, or navigation changes, prefer UX/UI sparring with the user (skill or subagent `ux-ui-challenger`) over jumping straight to implementation.
-- For full-project reviews, delegate read-only subagents from `~/.cursor/agents/` (`code-reviewer`, `lead-architect`, `ux-ui-challenger`, `creative-strategist`) plus built-in `security-review` (Cursor plugin, not a local `.md` file). Use `cloud-devops` only for explicit infra/deploy work, not as a parallel read-only audit.
-- Folder `learning/` is for tutor notes only and must never be committed (keep it in `.gitignore`).
-- Prefer GitHub Actions auto-deploy for the Hetzner API (SSH + `scripts/deploy.sh`) over repeated manual VPS setup; keep deploy/backend secrets in GitHub Actions Secrets (never commit `.env`).
-- For infra/deploy work, prefer agents to change only repo code/config; DNS, Supabase dashboard, Vercel env, and GitHub Secrets stay as manual panel steps.
+Monorepo: Vite + React frontend, FastAPI + Poetry backend.
 
-## Learned Workspace Facts
+## Stack (production)
 
-- Monorepo: `frontend/` (Vite + React) and `backend/` (FastAPI + Poetry); Poetry/`pyproject.toml` live under `backend/`, not the repo root.
-- Production domain is `fmazurkiewicz.dev` (Cloudflare DNS): `family` → Vercel frontend, `api-family` → Hetzner API (often DNS-only so Caddy can get Let’s Encrypt); frontend Root Directory is `frontend`.
-- Production API is `api-family.fmazurkiewicz.dev` on Hetzner via `docker-compose.prod.yml` + Caddy (port 8080); Coolify is not the production path; deploy is GitHub Actions → SSH → `scripts/deploy.sh` (pull, compose build, alembic, health).
-- Fly.io (historyczny PoC, usunięty z repo) is archive only — not the production hosting direction.
-- Auth and DB target Supabase managed (Postgres + Auth: magic link and Google OAuth); frontend uses `@supabase/supabase-js`; backend does not use `supabase-py` — SQLAlchemy/Alembic to Postgres and verifies Supabase JWT (JWKS / JWT secret), provisioning `users` (including `supabase_auth_id`).
-- Vercel frontend env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (anon/publishable only — never `service_role`); API via `VITE_API_URL` or `frontend/vercel.json` rewrite of `/api/*` to `api-family.fmazurkiewicz.dev`.
-- App routes for authenticated UI are under `/app/...` (e.g. `/app/shopping`, `/app/tasks`, `/app/budget-monthly`, `/app/profile`, `/app/admin`); sidebar links must use that prefix.
-- Authenticated sidebar uses two bottom tabs: **Aplikacja** (family group + product modules including notifications) and **Panel** (profile, app admin, logout); theme toggle lives only in Profile.
-- Local backend typically runs on port 8000; Vite frontend on 3000 with `/api` proxy — leave `VITE_API_URL` empty for LAN/mobile so the phone does not hit its own localhost.
-- Core product modules: family groups, shopping lists, tasks, monthly budget, investments, reports, notifications, and an app-admin panel for users/groups.
-- Access gate: `users.is_approved` (not `is_active` / `is_locked`). New signups wait; `/v1/users/me` is allowed; other feature APIs return 403 `account_pending_approval`. Bootstrap owner `fifmazurkiewicz@gmail.com` (and `ADMIN_EMAIL`) is approved app-admin on every login.
-- Backend settings should load `.env` from both `backend/` and the repo root so env is not hardcoded and root `.env` works when running from `backend/`.
-- Known gaps (2026-07 audit): **Critical (tech)** — brak `require_membership` w modułach produktowych (IDOR); `BudgetPanel` rozjazd `label`/`is_income` vs `name`/`entry_type`; powiadomienia `body` vs `message`. **Critical (product)** — landing/register obiecują więcej niż Supabase flow; dashboard/raporty nie scope’ują `activeGroup`; powiadomienia prawie puste. **Important** — brak CI przed deploy; `create_all` na prod; dark mode `text-gray-*`; docs drift (`simple-expenses`); VPS pooler `:5432`.
+Matches `.cursor/rules/deployment-standard.mdc`.
+
+| Layer | Platform |
+|---|---|
+| Frontend | **Vercel** — `family.fmazurkiewicz.dev` (Root Directory `frontend`) |
+| Backend | **Render** — Docker Web Service, `api-family.fmazurkiewicz.dev` |
+| Database / auth | **Supabase** (managed Postgres + Auth). Backend verifies JWT (PyJWT / JWKS); no `supabase-py`. |
+
+Do not document Hetzner, Coolify, or Fly.io as production. Fly.io and Hetzner leftovers are archive only.
+
+## Commands
+
+### Backend (`backend/`)
+
+```bash
+poetry install
+poetry run pytest -q
+poetry run alembic upgrade head
+poetry run uvicorn app.main:app --reload --port 8000
+```
+
+### Frontend (`frontend/`)
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+Local loop without Docker: [docs/technical/local-setup.md](docs/technical/local-setup.md). Health: `GET /api/health`.
+
+## Learned user preferences
+
+- Constitution language: assistant replies in **English**; product UI already in Polish is preserve.
+- Prefer Cursor project rules in `.cursor/rules/` (alwaysApply) for durable guidance.
+- Update `docs/` in the same session when infra, domain, hosting, or Supabase decisions settle.
+- Prefer Poetry + npm locally over Docker Desktop.
+- Commit / merge / push only when explicitly asked.
+- Global skills (`ux-ui-challenger`, Taste, Superpowers) over duplicating long prompts per chat.
+- Before significant UI/IA changes, spar with `ux-ui-challenger`.
+- Full-project reviews: `code-reviewer`, `lead-architect`, `ux-ui-challenger`, `creative-strategist`, plus built-in `security-review`. Use `cloud-devops` only for explicit infra/deploy work.
+- Folder `learning/` is tutor notes only — never commit (`.gitignore`).
+- Infra/deploy: change repo code/config only; DNS, Supabase dashboard, Vercel env, and Render env stay as manual panel steps.
+
+## Learned workspace facts
+
+- Poetry/`pyproject.toml` live under `backend/`, not the repo root.
+- Cloudflare DNS: `family` → Vercel; `api-family` → Render (`CNAME` to `*.onrender.com`). Frontend Root Directory is `frontend`.
+- Auth: frontend `@supabase/supabase-js`; backend SQLAlchemy/Alembic + JWT verify; provision `users.supabase_auth_id`.
+- Vercel env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (anon only — never `service_role`); `VITE_API_URL` or `frontend/vercel.json` rewrite of `/api/*` to `api-family.fmazurkiewicz.dev`.
+- Authenticated routes are under `/app/...`. Sidebar: **Aplikacja** vs **Panel**. Theme toggle lives only in Profile.
+- Local backend port 8000; Vite 3000 with `/api` proxy — leave `VITE_API_URL` empty for LAN/mobile.
+- Core modules: family groups, shopping, tasks, monthly budget, investments, reports, notifications, app-admin.
+- Access gate: `users.is_approved`. `/v1/users/me` allowed; other feature APIs return 403 `account_pending_approval`. Bootstrap owner `fifmazurkiewicz@gmail.com` (and `ADMIN_EMAIL`) is approved app-admin on every login.
+- Backend settings load `.env` from `backend/` and repo root.
+- Known gaps: frontend **ApiPulse** not implemented (needed for Render Free cold start); leftover Hetzner compose/Caddy/`scripts/deploy.sh`; `docker/entrypoint.sh` does not run Alembic; 2026-07 product audit items (IDOR was later addressed in changelog — re-verify before assuming still open).

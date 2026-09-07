@@ -1,0 +1,15 @@
+﻿# Secrets — never index or send to the model
+.env
+.env.*
+!.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+credentials.json
+secrets.toml
+
+# Graft local cache (regenerate with graft build)
+/graft/
+
+# Tutor notes (never commit)
+learning/

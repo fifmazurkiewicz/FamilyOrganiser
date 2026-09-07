@@ -11,7 +11,8 @@ zaktualizuj odpowiednie pliki w `docs/` w tej samej sesji (zwłaszcza
 
 Nie czekaj na osobne polecenie „zaktualizuj docs”, jeśli fakt jest już ustalony.
 Nie twórz nowych plików docs bez potrzeby — najpierw uzupełniaj istniejące.
-Wykorzystaj skill githubbook do aktualizowania dokumentacji. 
+Stack produkcyjny: **Vercel + Render + Supabase** (`deployment-standard.mdc`, `docs/deployment/platform-architecture.md`).
+Wykorzystaj skill githubbook (write-docs) do aktualizowania dokumentacji. 
 
 
 # Dokumentacja po potwierdzeniu 

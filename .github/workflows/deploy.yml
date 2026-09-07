@@ -1,19 +1,9 @@
-# Auto-deploy backendu na Hetzner. Sekrety aplikacji idą z GitHub Secrets → .env na VPS.
-# Frontend: Vercel (osobno).
+# Archived: Hetzner SSH deploy. Production API is Render (auto-deploy from main).
+# Keep workflow_dispatch only so a leftover VPS is not targeted on every push.
 
-name: Deploy API (Hetzner)
+name: Deploy API (Hetzner, archived)
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "backend/**"
-      - "Dockerfile"
-      - ".dockerignore"
-      - "docker-compose.prod.yml"
-      - "docker/**"
-      - "scripts/deploy.sh"
-      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 concurrency:

@@ -1,0 +1,14 @@
+---
+description: Taste dials overlay — FamilyOrganiser is a family dashboard, not marketing
+alwaysApply: true
+---
+
+# Taste dials (FamilyOrganiser)
+
+Product character: family dashboard / trust-first tool. Not a marketing landing.
+
+| VARIANCE | MOTION | DENSITY |
+|---|---|---|
+| 3 | 2 | 6 |
+
+Use this overlay instead of Taste Skill baseline 8/6/4. Existing Tailwind tokens win; do not invent a parallel palette. `prefers-reduced-motion` required on any new motion.

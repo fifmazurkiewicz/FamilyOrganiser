@@ -1,5 +1,5 @@
-# FamilyOrganiser — obraz produkcyjny API-only (frontend na Vercel).
-# Build context: root repozytorium.
+# FamilyOrganiser — production API-only image (frontend on Vercel).
+# Build context: repository root. Used by Render Web Service.
 # Port: 8080. Health: GET /api/health
 
 FROM python:3.12-slim AS backend-build
@@ -37,7 +37,7 @@ COPY backend/alembic.ini ./alembic.ini
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
-# Fallback SQLite tylko gdy brak env — produkcja: DATABASE_URL z Secrets/Compose.
+# Fallback SQLite only when env is missing — production: DATABASE_URL from Render.
 # CORS: ustaw CORS_ORIGINS_STR=https://family.fmazurkiewicz.dev
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
