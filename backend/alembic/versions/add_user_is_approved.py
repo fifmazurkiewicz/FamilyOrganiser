@@ -15,19 +15,27 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "users",
-        sa.Column("is_approved", sa.Boolean(), nullable=False, server_default="true"),
-    )
-    op.execute(sa.text("UPDATE users SET is_approved = true"))
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {c["name"] for c in inspector.get_columns("users")}
+    if "is_approved" not in columns:
+        op.add_column(
+            "users",
+            sa.Column("is_approved", sa.Boolean(), nullable=True),
+        )
+    op.execute(sa.text("UPDATE users SET is_approved = true WHERE is_approved IS NULL"))
     op.alter_column(
         "users",
         "is_approved",
         existing_type=sa.Boolean(),
-        existing_nullable=False,
-        server_default="false",
+        nullable=False,
+        server_default=sa.false(),
     )
 
 
 def downgrade() -> None:
-    op.drop_column("users", "is_approved")
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    columns = {c["name"] for c in inspector.get_columns("users")}
+    if "is_approved" in columns:
+        op.drop_column("users", "is_approved")
