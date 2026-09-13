@@ -20,11 +20,12 @@ class TestPrivacyExport:
 
 class TestAccountDeletion:
     async def test_delete_anonymises_local_account(self, client, db_session, test_user):
+        user_id = test_user.id
         response = await client.delete("/users/me")
 
         assert response.status_code == 204
         db_session.expire_all()
-        user = await db_session.scalar(select(User).where(User.id == test_user.id))
+        user = await db_session.scalar(select(User).where(User.id == user_id))
         assert user is not None
         assert user.full_name == "Usunięty użytkownik"
         assert user.email.endswith("@invalid.local")

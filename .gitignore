@@ -208,6 +208,9 @@ __marimo__/
 node_modules/
 frontend/dist/
 frontend/.vite/
+frontend/*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
 
 # Docker
 docker/certs/
