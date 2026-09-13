@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     # Supabase Auth (production)
     SUPABASE_URL: str = ""
     SUPABASE_JWT_SECRET: str = ""
+    SUPABASE_SERVICE_ROLE_KEY: str = ""
     SUPABASE_JWT_AUDIENCE: str = "authenticated"
 
     CORS_ORIGINS_STR: str = "http://localhost:3000,http://localhost:3001,http://localhost:80"

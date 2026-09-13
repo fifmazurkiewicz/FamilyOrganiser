@@ -6,15 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { clearClientSession } from "@/lib/session";
+import { Link, useNavigate } from "react-router-dom";
+import { Download, Trash2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
+  const navigate = useNavigate();
   const [name, setName] = useState(user?.full_name ?? "");
   const [currency, setCurrency] = useState(user?.default_currency ?? "PLN");
   const [sessionEmail, setSessionEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState("");
 
   useEffect(() => {
     if (user?.full_name) setName(user.full_name);
@@ -44,6 +51,44 @@ export default function ProfilePage() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    setError("");
+    try {
+      const response = await usersApi.exportMyData();
+      const url = URL.createObjectURL(response.data);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `familyorganiser-dane-${new Date().toISOString().slice(0, 10)}.json`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("Nie udało się przygotować eksportu danych.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (confirmDelete !== "USUŃ KONTO") return;
+    setDeleting(true);
+    setError("");
+    try {
+      await usersApi.deleteMyAccount();
+      await clearClientSession();
+      navigate("/", { replace: true });
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      setError(detail === "Transfer admin role in all groups before deleting your account"
+        ? "Najpierw przekaż rolę administratora we wszystkich grupach rodzinnych."
+        : detail === "account_deletion_not_configured"
+          ? "Usuwanie konta nie zostało jeszcze skonfigurowane przez administratora."
+          : "Nie udało się usunąć konta. Spróbuj ponownie lub skontaktuj się z administratorem.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -88,6 +133,38 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3">
             <Button onClick={handleSave} loading={saving}>Zapisz</Button>
             {saved && <span className="text-sm text-success">Zapisano!</span>}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Prywatność i dane</CardTitle></CardHeader>
+        <CardContent className="space-y-5">
+          <p className="text-sm text-muted-foreground">
+            Pobierz kopię danych zapisanych w FamilyOrganiser lub przeczytaj, jak je przetwarzamy.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Button variant="secondary" onClick={handleExport} loading={exporting}>
+              <Download className="h-4 w-4" /> Pobierz moje dane
+            </Button>
+            <Link to="/privacy" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary underline">
+              Polityka prywatności
+            </Link>
+          </div>
+          <div className="space-y-3 border-t border-border pt-5">
+            <h3 className="font-semibold text-destructive">Usuń konto</h3>
+            <p className="text-sm text-muted-foreground">
+              Prywatne dane zostaną usunięte lub zanonimizowane. Wspólne wpisy mogą pozostać w grupie bez Twojego imienia, aby nie usuwać danych innych członków. Administrator grupy musi najpierw przekazać swoją rolę.
+            </p>
+            <Input
+              label='Wpisz „USUŃ KONTO”, aby potwierdzić'
+              value={confirmDelete}
+              onChange={(e) => setConfirmDelete(e.target.value)}
+              autoComplete="off"
+            />
+            <Button variant="danger" onClick={handleDeleteAccount} loading={deleting} disabled={confirmDelete !== "USUŃ KONTO"}>
+              <Trash2 className="h-4 w-4" /> Usuń konto bezpowrotnie
+            </Button>
           </div>
         </CardContent>
       </Card>

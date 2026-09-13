@@ -14,6 +14,10 @@ export default function RegisterPage() {
           Konta tworzone są automatycznie przy pierwszym logowaniu — magic linkiem
           albo przez Google.
         </p>
+        <p className="text-xs leading-5 text-muted-foreground">
+          Przy pierwszym logowaniu utworzymy profil potrzebny do działania usługi. Dowiedz się,
+          jak chronimy dane, w <Link className="text-primary underline" to="/privacy">Polityce prywatności</Link>.
+        </p>
         <Link
           to="/login"
           className="inline-flex items-center justify-center rounded-lg bg-primary text-white px-4 py-2.5 text-sm font-semibold hover:bg-primary-dark transition-colors"

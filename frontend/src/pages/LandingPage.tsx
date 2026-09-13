@@ -168,7 +168,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
                 <Home className="h-3.5 w-3.5 text-white" />
@@ -177,9 +177,10 @@ export default function LandingPage() {
                 Family<span className="text-primary">Organiser</span>
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              © 2025 FamilyOrganiser. Wszelkie prawa zastrzeżone.
-            </p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <Link to="/privacy" className="hover:text-primary">Polityka prywatności</Link>
+              <span>© 2026 FamilyOrganiser</span>
+            </div>
           </div>
         </div>
       </footer>

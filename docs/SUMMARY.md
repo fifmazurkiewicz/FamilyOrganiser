@@ -5,6 +5,7 @@
 * [FamilyOrganiser — dokumentacja](README.md)
 * [Handover produkcyjny](business/production-handover.md)
 * [Opis funkcji](business/features.md)
+* [Prywatność i prawa do danych](business/privacy-and-data-rights.md)
 * [Changelog](business/CHANGELOG.md)
 
 ## Techniczna

@@ -85,6 +85,9 @@ export default function LoginPage() {
                 Zarejestruj się →
               </Link>
             </p>
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              Logując się, korzystasz z danych zgodnie z <Link to="/privacy" className="text-primary underline">Polityką prywatności</Link>.
+            </p>
           </div>
         </div>
       </div>

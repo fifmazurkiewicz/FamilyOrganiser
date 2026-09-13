@@ -16,6 +16,10 @@ export const usersApi = {
   update: (data: { full_name?: string; default_currency?: string; avatar_url?: string }) =>
     api.patch("/v1/users/me", data).then((r) => r.data),
 
+  exportMyData: () => api.get("/v1/users/me/export", { responseType: "blob" }),
+
+  deleteMyAccount: () => api.delete("/v1/users/me"),
+
   listUsers: (): Promise<AdminUser[]> => api.get("/v1/users/").then((r) => r.data),
 
   lockUser: (userId: string) =>

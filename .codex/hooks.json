@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Read|Grep|Glob|Search|Shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node 'c:\\Users\\MSI\\PycharmProjects\\FamilyOrganiser\\.codex\\hooks\\graft-hooks.cjs' cursor-post-tool"
+          }
+        ]
+      }
+    ]
+  }
+}
